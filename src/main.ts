@@ -35,12 +35,14 @@ const chapterGoals = CHAPTERS.map((chapter) => chapter.required);
 
 function chapterControls(index: number) {
   const driving = CHAPTERS[index]?.mode === 'drive';
+  const maze = CHAPTERS[index]?.mode === 'maze';
+  document.querySelector('#bark-key')!.textContent = maze ? '↓ / Space' : 'Space';
   progressLabel.textContent = driving ? 'CHEERS' : 'STRIPES';
   document.querySelector('#move-label')!.textContent = driving ? 'Drive THE\u00a0CHEZ' : 'Move Teddy';
-  document.querySelector('#hop-label')!.textContent = driving ? 'Bounce' : 'Hop';
-  document.querySelector('#bark-label')!.textContent = driving ? 'Honk' : 'Bark';
-  document.querySelector('#hop')!.textContent = driving ? 'Bounce ↑' : 'Hop ↑';
-  document.querySelector('#bark')!.textContent = driving ? 'Honk!' : 'Bark!';
+  document.querySelector('#hop-label')!.textContent = maze ? 'Up' : driving ? 'Bounce' : 'Hop';
+  document.querySelector('#bark-label')!.textContent = maze ? 'Down' : driving ? 'Honk' : 'Bark';
+  document.querySelector('#hop')!.textContent = maze ? 'Up ↑' : driving ? 'Bounce ↑' : 'Hop ↑';
+  document.querySelector('#bark')!.textContent = maze ? 'Down ↓' : driving ? 'Honk!' : 'Bark!';
 }
 
 async function bundledFiles(): Promise<GameFiles> {

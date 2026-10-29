@@ -7,7 +7,7 @@ export interface ChapterInfo {
   blurb: string;
   startX: number;
   carX: number;
-  mode?: 'drive';
+  mode?: 'drive' | 'maze';
 }
 
 export const CHAPTERS: readonly ChapterInfo[] = [
@@ -41,6 +41,11 @@ export const CHAPTERS: readonly ChapterInfo[] = [
     help: 'Follow an upward stream to the stripes on the cloud ledges.',
     blurb: 'The wind offers a lift. The Z clouds offer a nap nobody ordered.',
     startX: 8, carX: 84 },
+  { name: "Gwinn's Shortcut", required: 10,
+    mission: 'Follow the pawprints. All four arrows move; Space also walks down.',
+    help: 'Check the side nooks for spare stripes. Pawprints lead to the car.',
+    blurb: "Gwinn promises one more turn. Teddy brings eight turns' worth of patience.",
+    startX: 8, carX: 84, mode: 'maze' },
   { name: "Teddy's Victory Lap", required: 10,
     mission: 'Drive left toward HOME. Bounce over marked bumps and gather the flags.',
     help: 'Right backs up to flags you missed. Up bounces over bumps.',

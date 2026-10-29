@@ -1,9 +1,9 @@
 TEDDY'S STRIPE CHASE
 
 LEFT/RIGHT or A/D: walk
-UP or W: hop
-SPACE: bark
-
+UP/W: hop. Maze: move UP.
+SPACE: bark. Maze: DOWN.
+Maze: all four arrows move.
 Find stripes. Reach THE CHEZ.
 Maple Street: hop for kites.
 Clown Club: bark at balloons.

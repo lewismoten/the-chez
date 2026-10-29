@@ -1,14 +1,15 @@
-// Six short, connected road jokes: Teddy earns trust, helps a leaf, and brings the crew home.
+// Seven short, connected road jokes: Teddy earns trust, helps a leaf, and brings the crew home.
 import type { Pixels } from '../../GameMaker/games/kit/pixels.ts';
 import { centered } from '../../GameMaker/games/kit/pcText.ts';
 
-type Gag = 'meter' | 'leaf' | 'puddle' | 'note' | 'balloons' | 'fitting';
+type Gag = 'meter' | 'leaf' | 'puddle' | 'note' | 'balloons' | 'shortcut' | 'fitting';
 export const ROAD_BEATS: readonly { gag: Gag; lines: readonly [string, string] }[] = [
   { gag: 'meter', lines: ["DOC LEO: THAT'S 900% FASTER!", "TEDDY: LET'S TRY FORWARD FIRST."] },
   { gag: 'leaf', lines: ['GWINN: A HIGHLY SUSPICIOUS LEAF!', 'TEDDY: SMALL FRIENDS GET A TURN.'] },
   { gag: 'puddle', lines: ['PUDDLES: TEDDY GETS TEN OUT OF TEN!', 'TEDDY: FOR MY SPLASHING MANNERS.'] },
   { gag: 'note', lines: ['GWINN: THE LEAF SENT A THANK-YOU.', 'TEDDY: KINDNESS HAS GOOD MILEAGE.'] },
   { gag: 'balloons', lines: ['BALLOONS: THANKS FOR ASKING NICELY!', 'TEDDY: ONE WOOF. FOUR NEW FRIENDS.'] },
+  { gag: 'shortcut', lines: ['GWINN: JUST ONE MORE LITTLE TURN!', 'TEDDY: THE NOSE KNOWS THE WAY.'] },
   { gag: 'fitting', lines: ['DOC LEO: READY FOR NINE HUNDRED?', 'TEDDY: TEAMWORK. THEN A LITTLE ZOOM.'] },
 ];
 
@@ -54,6 +55,14 @@ export function paintRoadGag(p: Pixels, gag: Gag, frame: number, c: StoryColors)
         p.disc(x, y, 9, color).disc(x - 6, y - 7, 4, color).disc(x + 6, y - 7, 4, color);
         p.rect(x - 4, y - 2, 2, 2, c.dark).rect(x + 3, y - 2, 2, 2, c.dark);
         p.line(x - 3, y + 3, x, y + 5, c.dark).line(x, y + 5, x + 3, y + 3, c.dark);
+      }
+      break;
+    case 'shortcut':
+      p.rect(118, 48, 96, 29, c.white).frame(118, 48, 96, 29, c.gold);
+      for (let row = 0; row < 3; row++) {
+        const x = 125 + row * 4 + frame % 4;
+        p.line(x, 54 + row * 7, 202 - row * 4, 54 + row * 7, c.dark);
+        p.line(row % 2 ? x : 202 - row * 4, 54 + row * 7, row % 2 ? x : 202 - row * 4, 61 + row * 7, c.dark);
       }
       break;
     case 'fitting':

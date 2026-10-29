@@ -25,7 +25,7 @@ try {
   });
   await page.goto('http://127.0.0.1:4176/');
   await page.locator('#watch-demo').click();
-  await page.waitForFunction(() => document.querySelector('#status')?.textContent === 'Teddy’s grand finale', null, { timeout: 210_000 });
+  await page.waitForFunction(() => document.querySelector('#status')?.textContent === 'Teddy’s grand finale', null, { timeout: 270_000 });
   assert.equal(await page.locator('#chapter-name').textContent(), 'Curtain call');
   assert.equal(await page.locator('#stripe-progress').textContent(), `${CHAPTERS.at(-1).required} / ${CHAPTERS.at(-1).required}`);
   await page.waitForTimeout(2000);

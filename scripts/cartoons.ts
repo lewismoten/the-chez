@@ -1,4 +1,4 @@
-// Skippable DOS FLI cartoons: lost stripes, six little road stories, and a team triumph.
+// Skippable DOS FLI cartoons: lost stripes, seven little road stories, and a team triumph.
 import { Reel } from '../../GameMaker/games/kit/reel.ts';
 import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
 import { centered } from '../../GameMaker/games/kit/pcText.ts';

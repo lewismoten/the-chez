@@ -8,6 +8,9 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { createServer } from 'vite';
 import { CHAPTERS } from '../src/chapters.ts';
+import { MAZE_ROUTE } from './gwinn-maze.ts';
+const DRIVE_SCENE = CHAPTERS.findIndex((chapter) => chapter.mode === 'drive') + 2;
+const MAZE_SCENE = CHAPTERS.findIndex((chapter) => chapter.mode === 'maze') + 2;
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const demo = process.argv.includes('--demo');
@@ -22,8 +25,8 @@ await server.listen();
 let browser;
 
 // This controller uses the package's public input callbacks. It lives only in the test browser.
-function installDriver(chapters) {
-  let scene = 0, firstClock, lastClock, held = new Set(), target = 0, waiting = false, barkAt = -1, noHop = -1, skyStop = 0, skyPhase = 'approach', bounce = 0, bouncedAt = -1, honkedAt = -1;
+function installDriver({ chapters, mazeRoute }) {
+  let scene = 0, firstClock, lastClock, held = new Set(), target = 0, waiting = false, barkAt = -1, noHop = -1, skyStop = 0, skyPhase = 'approach', bounce = 0, bouncedAt = -1, honkedAt = -1, mazeStep = 1;
   window.__chezEnter = (next) => {
     scene = next;
     firstClock = lastClock = undefined;
@@ -35,6 +38,7 @@ function installDriver(chapters) {
     skyPhase = 'approach';
     bounce = 0;
     bouncedAt = honkedAt = -1;
+    mazeStep = 1;
     window.__chezScene = next;
     (window.__chezEntries ??= []).push(next);
     console.log(`CHEZ entered scene ${next}`);
@@ -65,6 +69,15 @@ function installDriver(chapters) {
       const ready = bounce === 0 ? x === 66 && world.chr.x[1] === 0 && world.ci.gravx === 0 : x <= [66, 48, 28][bounce];
       if (bounce < 3 && ready) { key(72, true); bouncedAt = tick; bounce++; }
       if (bouncedAt >= 0 && tick >= bouncedAt + 2) { key(72, false); bouncedAt = -1; }
+      return;
+    }
+    if (info.mode === 'maze') {
+      const point = mazeRoute[mazeStep];
+      if (!point) return;
+      const dx = point.x * 20 - (x * 20 + world.chr.x[1]), dy = point.y * 20 - y;
+      const scan = dx ? dx > 0 ? 77 : 75 : dy > 0 ? 57 : 72;
+      for (const input of [75, 77, 72, 57]) key(input, Boolean(dx || dy) && input === scan);
+      if (!dx && !dy) mazeStep++;
       return;
     }
     if (scene === 7) {
@@ -110,7 +123,7 @@ try {
         await page.locator('#road-atlas').evaluate((atlas) => { atlas.open = true; });
         assert.equal(await page.locator('#road-atlas-list li').count(), CHAPTERS.length);
         const notebook = page.locator('.notebook-grid details');
-        assert.equal(await notebook.count(), 8);
+        assert.equal(await notebook.count(), 9);
         await notebook.first().locator('summary').focus();
         await page.keyboard.press('Enter');
         assert.equal(await notebook.first().getAttribute('open'), '', 'notebook opens with the keyboard');
@@ -130,7 +143,7 @@ try {
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => { if (message.text().startsWith('CHEZ entered')) console.log(message.text()); });
-  await page.addInitScript(installDriver, CHAPTERS);
+  await page.addInitScript(installDriver, { chapters: CHAPTERS, mazeRoute: MAZE_ROUTE });
   await page.addInitScript((watching) => { window.__chezDemo = watching; }, demo);
   await page.addInitScript((takingNaps) => { window.__chezTakeNaps = takingNaps; window.__chezRetryTest = takingNaps; }, retry);
   await page.addInitScript((driving) => { window.__chezLapTest = driving; }, lap);
@@ -146,7 +159,7 @@ try {
           title.files[0] = title.files[1] = '';
         } else if (window.__chezLapTest) {
           const title = session.game.scenes[0];
-          title.links[0] = { ...title.links[0], toScene: 8, to: { x: 84, y: 39 } };
+          title.links[0] = { ...title.links[0], toScene: ${DRIVE_SCENE}, to: { x: 84, y: 39 } };
           title.files[0] = title.files[1] = '';
         }`],
       ['session.onScene = (scene) => {', 'session.onScene = (scene) => { window.__chezEnter(scene);'],
@@ -200,7 +213,13 @@ try {
       await page.waitForFunction(() => window.__chezScene === 7 && window.__chezWorld?.chr.x[0] >= 20 && window.__chezWorld?.chr.x[0] < 32 && window.__chezWorld?.chr.y[0] === 35, null, { timeout: 210_000 });
       await page.screenshot({ path: join(screenshots, 'sky-laundry.png') });
     }
-    await page.waitForFunction(() => window.__chezScene === 8 && window.__chezWorld?.chr.x[0] <= 60 && window.__chezWorld?.chr.x[0] >= 50, null, { timeout: 60_000 });
+    if (!lap) {
+      await page.waitForFunction((scene) => window.__chezScene === scene && window.__chezWorld?.chr.x[0] >= 30 && window.__chezWorld?.chr.x[0] <= 36 && window.__chezWorld?.chr.y[0] === 31, MAZE_SCENE, { timeout: 120_000 });
+      assert.equal(await page.locator('#hop').textContent(), 'Up ↑');
+      assert.equal(await page.locator('#bark').textContent(), 'Down ↓');
+      await page.screenshot({ path: join(screenshots, 'gwinn-shortcut.png') });
+    }
+    await page.waitForFunction((scene) => window.__chezScene === scene && window.__chezWorld?.chr.x[0] <= 60 && window.__chezWorld?.chr.x[0] >= 50, DRIVE_SCENE, { timeout: 120_000 });
     assert.equal(await page.locator('#progress-label').textContent(), 'CHEERS');
     assert.equal(await page.locator('#bark').textContent(), 'Honk!');
     assert.equal(await page.locator('#hop').textContent(), 'Bounce ↑');

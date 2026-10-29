@@ -7,6 +7,7 @@ import { parseCharacter } from '../../GameMaker/web/src/formats/character.ts';
 import { parseGame } from '../../GameMaker/web/src/formats/game.ts';
 import { parseFli } from '../../GameMaker/web/src/formats/fli.ts';
 import { KITE, KITE_STARTS, KITE_POSTS, KITE_INTERVAL, KITE_LIFETIME } from './wind-kites.ts';
+import { MAZE_ROUTE, MAZE_PIECES } from './gwinn-maze.ts';
 import { ROAD_BEATS } from './road-stories.ts';
 import { fliFaults } from '../../GameMaker/web/src/formats/fliLimits.ts';
 import { decodeVoc } from '../../GameMaker/web/src/formats/voc.ts';
@@ -23,6 +24,8 @@ import { parseRecording } from '../../GameMaker/web/src/formats/recording.ts';
 const root = join(import.meta.dirname, '../public/game');
 const bytes = (name: string) => new Uint8Array(readFileSync(join(root, name)));
 const game = parseGame(bytes('stripe.gam'));
+const DRIVE_SCENE = CHAPTERS.findIndex((chapter) => chapter.mode === 'drive') + 2;
+const MAZE_SCENE = CHAPTERS.findIndex((chapter) => chapter.mode === 'maze') + 2;
 assert.equal(game.scenes.length, CHAPTERS.length + 2, 'the page must describe every playable chapter');
 const ci = newCharInfo();
 for (const [index, scene] of game.scenes.entries()) if (index >= 2) {
@@ -46,14 +49,14 @@ for (const [index, scene] of game.scenes.entries()) if (index >= 2) {
     assert.ok(block.effect === 0 || block.effect === 19 + index, `${scene.desc}: only its own stripe counter may be used`);
   }
 }
-for (const name of ['intro.fli', 'drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'drive5.fli', 'drive6.fli', 'win.fli', 'lost.fli']) {
+for (const name of ['intro.fli', 'drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'drive5.fli', 'drive6.fli', 'drive7.fli', 'win.fli', 'lost.fli']) {
   assert.deepEqual(fliFaults(bytes(name)), [], `${name}: animation must fit the original DOS player`);
 }
 assert.equal(ROAD_BEATS.length, CHAPTERS.length - 1, 'every road transition must have a connected story beat');
 for (const beat of ROAD_BEATS) for (const line of beat.lines) {
   assert.ok(line.length <= 38, `Road caption must leave room at the screen edges: ${line}`);
 }
-for (const name of ['drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'drive5.fli', 'drive6.fli']) {
+for (const name of ['drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'drive5.fli', 'drive6.fli', 'drive7.fli']) {
   const movie = parseFli(bytes(name));
   const seconds = movie.frameCount * movie.speed / 70;
   assert.ok(seconds >= 4 && seconds <= 8, `${name}: give the story time to read while keeping road trips short`);
@@ -88,7 +91,7 @@ function stage(chapter: number, startX: number, progress = newCharInfo()) {
 async function play(chapter: number, startX: number, hop: boolean, progress = newCharInfo(), tricks = { lift: false, push: false }, bark = false) {
   const scene = game.scenes[chapter];
   const sim = stage(chapter, startX, progress);
-  if (chapter === 8) {
+  if (chapter === DRIVE_SCENE) {
     let next = 0, bounced = -1;
     sim.press(75);
     await sim.run(500, (tick) => {
@@ -97,6 +100,19 @@ async function play(chapter: number, startX: number, hop: boolean, progress = ne
       if (bounced >= 0 && tick === bounced + 2) { sim.release(72); bounced = -1; }
     });
     sim.release(75);
+    return sim;
+  }
+  if (chapter === MAZE_SCENE && hop) {
+    let target = 1, held = 0;
+    sim.press(77); held = 77;
+    await sim.run(1200, () => {
+      const point = MAZE_ROUTE[target];
+      if (!point) return;
+      const dx = point.x * 20 - sim.pos.x, dy = point.y * 20 - sim.pos.y;
+      if (!dx && !dy) { sim.release(held); held = 0; target++; return; }
+      const scan = dx ? dx > 0 ? 77 : 75 : dy > 0 ? 57 : 72;
+      if (scan !== held) { if (held) sim.release(held); sim.press(scan); held = scan; }
+    });
     return sim;
   }
   const carX = scene.links[0].from.x;
@@ -163,7 +179,7 @@ for (const [index, info] of CHAPTERS.entries()) {
     }
     if (chapter === 4) assert.ok(tricks.lift, 'the park air puff must lift Teddy');
     if (chapter === 5) assert.ok(tricks.push, 'the Downtown arrows must push Teddy');
-    if (chapter === 8) {
+    if (chapter === DRIVE_SCENE) {
       walker.press(75);
       walker.press(72);
       await walker.run(2);
@@ -256,7 +272,30 @@ await closingCrossing.run(20);
 assert.ok(closingCrossing.pos.bx > LEAF_CROSSING, 'Teddy must recover when the light changes during entry');
 console.log('Gwinn’s leaf crossing: WAIT, GO, both directions, and repeated cycles passed');
 
-const vehicle = stage(8, 84);
+const mazeMoves = stage(MAZE_SCENE, 8);
+for (const scan of [77, 75, 72, 80, 57, 72]) {
+  mazeMoves.press(scan); await mazeMoves.run(5); mazeMoves.release(scan);
+}
+assert.deepEqual([mazeMoves.pos.x, mazeMoves.pos.y], [8 * 20, 39 * 20], 'all four arrows and Space-down must make reversible moves');
+await mazeMoves.run(20);
+assert.deepEqual([mazeMoves.pos.x, mazeMoves.pos.y], [8 * 20, 39 * 20], 'the maze must have no gravity or momentum drift');
+const accessible = new Set([39 * 100 + 8]), queue = [39 * 100 + 8];
+for (let at = 0; at < queue.length; at++) for (const shift of [-1, 1, -100, 100]) {
+  const next = queue[at] + shift;
+  if (next < 0 || next >= 10000 || accessible.has(next)) continue;
+  if (mazeMoves.w.bg[mazeMoves.w.map[next]].solid) continue;
+  accessible.add(next); queue.push(next);
+}
+for (const [x,y] of MAZE_PIECES) assert.ok(accessible.has(y*100+x), 'every spare stripe nook must connect to the entrance');
+const mazeGate = stage(MAZE_SCENE, 82);
+mazeGate.press(77); await mazeGate.run(40);
+assert.equal(mazeGate.link, -1, 'the maze car must reject an incomplete stripe quota');
+mazeGate.w.ci.meter[19 + MAZE_SCENE] = 11;
+await mazeGate.run(20);
+assert.equal(mazeGate.link, 0);
+console.log('Gwinn’s Shortcut: four-way controls, no drift, connected nooks, and the counter gate passed');
+
+const vehicle = stage(DRIVE_SCENE, 84);
 vehicle.press(75);
 await vehicle.run(20);
 assert.ok(84 * 20 - vehicle.pos.x > 180, 'the striped car must be faster than Teddy on foot');
@@ -265,12 +304,12 @@ const releasedAt = vehicle.pos.x;
 await vehicle.run(20);
 assert.ok(vehicle.pos.x < releasedAt, 'the vehicle must coast after release');
 assert.equal(Math.abs(vehicle.w.ci.gravx), 0, 'releasing the direction must bring the vehicle to rest');
-const backing = stage(8, 70);
+const backing = stage(DRIVE_SCENE, 70);
 backing.press(77);
 await backing.run(10);
 assert.ok(backing.pos.x > 70 * 20, 'Right must back the car up');
 assert.equal(backing.w.chr.sequences[backing.w.chr.cseq].frames[backing.w.chr.cframe].orient, 0, 'backing must preserve the passenger-side view');
-const honker = stage(8, 84);
+const honker = stage(DRIVE_SCENE, 84);
 honker.press(75);
 await honker.run(20);
 const beforeHonk = honker.pos.x;
@@ -280,14 +319,14 @@ assert.ok(honker.sounds.includes(20), 'Space must play the new victory horn');
 assert.ok(honker.pos.x < beforeHonk, 'honking must keep the car moving');
 
 for (const [start, direction] of [[12, 75], [9, 77]]) {
-  const finish = stage(8, start);
+  const finish = stage(DRIVE_SCENE, start);
   finish.press(direction);
   await finish.run(40);
   assert.equal(finish.link, -1, 'the finish ribbon must reject an empty cheer counter from either side');
-  finish.w.ci.meter[27] = 11;
+  finish.w.ci.meter[19 + DRIVE_SCENE] = 11;
   await finish.run(40);
   assert.equal(finish.link, 0, 'ten cheers must open the finish ribbon from either side');
-  assert.equal(finish.w.ci.meter[27], 1, 'the ribbon must use its ten cheers exactly once');
+  assert.equal(finish.w.ci.meter[19 + DRIVE_SCENE], 1, 'the ribbon must use its ten cheers exactly once');
 }
 
 const tour = new GameSim(readDisk(root));

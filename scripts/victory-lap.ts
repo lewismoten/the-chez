@@ -47,7 +47,7 @@ export function victoryLap(read: (name: string) => Uint8Array, put: (name: strin
   for (let x = 12; x <= 92; x += 3) map.blocks[34 * 100 + x] = 10;
   for (const x of [30, 54, 78]) map.blocks[36 * 100 + x] = 11;
   for (const [id, row] of [[5, 39], [6, 37]]) {
-    blocks[id].effect = 27;
+    blocks[id].effect = 28;
     blocks[id].eamt = 1;
     blocks[id].scorePts = 50;
     blocks[id].touchBl = 0;
@@ -56,7 +56,7 @@ export function victoryLap(read: (name: string) => Uint8Array, put: (name: strin
     for (const x of row === 39 ? CHEERS : BUMPS) map.blocks[row * 100 + x] = id;
   }
   // A finish ribbon uses the same counter gate as the foot chapters.
-  blocks[7] = { ...blocks[3], pixels: blocks[3].pixels.slice(), effect: 27, eamt: -10, nextBl: 7, touchBl: 0 };
+  blocks[7] = { ...blocks[3], pixels: blocks[3].pixels.slice(), effect: 28, eamt: -10, nextBl: 7, touchBl: 0 };
   map.blocks[39 * 100 + 10] = 7;
   const banner = new Pixels(80, 40, black);
   banner.rect(2, 2, 76, 36, sky);
