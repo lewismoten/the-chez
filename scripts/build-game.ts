@@ -111,7 +111,7 @@ bbl[openIndex] = { ...bbl[doorIndex], pixels: bbl[doorIndex].pixels.slice(), sol
 for (let y = 7; y < 16; y++) for (let x = 6; x < 13; x++) bbl[openIndex].pixels[y * 20 + x] = black;
 
 // Draw a dedicated title and finish screen in the DOS picture format.
-function screen(name: string, headline: string, line: string, scenePal = pal, sceneInk = ink) {
+function screen(name: string, headline: string, line: string, scenePal = pal, sceneInk = ink, beat = '') {
   const navy = matchColor(scenePal, 4, 13, 19);
   const cream = matchColor(scenePal, 61, 56, 43);
   const gold = matchColor(scenePal, 63, 46, 21);
@@ -121,16 +121,18 @@ function screen(name: string, headline: string, line: string, scenePal = pal, sc
   p.rect(0, 154, 320, 3, gold);
   p.blit(chezPicture(sceneInk, 'right', 3), 100, 84, 255);
   centered(p, 20, headline, cream, 2);
+  if (beat) centered(p, 58, beat, cream, 1);
   centered(p, 177, line, gold, 1);
   put(name, encodeGif({ width: 320, height: 200, pixels: p.px, palette: scenePal }));
 }
 screen('menu.gif', "TEDDY'S STRIPE CHASE", 'A VERY SMALL CAR. A HUGE QUEST.');
 screen('won.gif', 'TEDDY DID IT!', 'THE CHEZ IS 900% MORE DASHING');
+screen('epilogue.gif', 'THE WHOLE CREW WON', 'TEAMWORK MAKES EVERY ROAD FUN', pal, ink, 'TEDDY FOUND THE WAY HOME.');
 screen('lost.gif', 'ONE MORE TRY?', 'TEDDY BELIEVES IN YOU');
 put('intro.fli', openingCartoon(pal, ink));
 put('drive.fli', driveCartoon(pal, ink, 'MAPLE STREET'));
 put('win.fli', winningCartoon(pal, ink));
-put('won.lst', serializeSlideList([{ name: 'win.fli', pause: 0 }, { name: 'won.gif', pause: 0 }]));
+put('won.lst', serializeSlideList([{ name: 'win.fli', pause: 0 }, { name: 'epilogue.gif', pause: 4 }, { name: 'won.gif', pause: 0 }]));
 put('intro.cmf', openingSong());
 put('yard.cmf', chapterSong(0));
 put('win.cmf', winningSong());
@@ -175,7 +177,7 @@ CHAPTERS.forEach((chapter, index) => {
   const { palette, ink: chapterInk } = buildChapter(chapter, bytes, put);
   const card = `card${index + 2}.gif`;
   const list = `card${index + 2}.lst`;
-  screen(card, chapter.name.toUpperCase(), chapter.quip, palette, chapterInk);
+  screen(card, chapter.name.toUpperCase(), chapter.quip, palette, chapterInk, chapter.beat);
   put(list, serializeSlideList([{ name: card, pause: 2 }]));
   put(`${chapter.stem}.cmf`, chapterSong(index + 1));
   const next = CHAPTERS[index + 1];

@@ -16,23 +16,24 @@ export interface Chapter {
   pieces: { x: number; y: number }[];
   sampleX: number;
   quip: string;
+  beat: string;
 }
 
 export const CHAPTERS: Chapter[] = [
   {
-    source: 'street', stem: 'street', name: 'Maple Street', carX: 83, startX: 8, required: 8, counter: 22, sampleX: 6, quip: 'TEDDY, THAT STRIPE IS FLOATING!',
+    source: 'street', stem: 'street', name: 'Maple Street', carX: 83, startX: 8, required: 8, counter: 22, sampleX: 6, quip: 'TEDDY, THAT STRIPE IS FLOATING!', beat: 'GWINN BLAMES A SNEAKY LEAF.',
     pieces: [12, 17, 22, 27, 32, 37, 42, 47, 52, 57, 62, 67, 72, 77].map((x, i) => ({ x, y: i % 2 ? 38 : 39 })),
   },
   {
-    source: 'park', stem: 'park', name: 'Puddlewick Park', carX: 84, startX: 8, required: 8, counter: 23, sampleX: 17, quip: 'AIR PUFFS HELP TEDDY HOP!',
+    source: 'park', stem: 'park', name: 'Puddlewick Park', carX: 84, startX: 8, required: 8, counter: 23, sampleX: 17, quip: 'AIR PUFFS HELP TEDDY HOP!', beat: 'THE PUDDLES HAVE OPINIONS.',
     pieces: [12, 17, 22, 27, 32, 37, 42, 47, 52, 57, 62, 67, 72, 77].map((x, i) => ({ x, y: i % 3 ? 38 : 39 })),
   },
   {
-    source: 'city', stem: 'city', name: 'Downtown', carX: 80, startX: 8, required: 9, counter: 24, sampleX: 10, quip: 'ARROWS GIVE TEDDY A PUSH!',
+    source: 'city', stem: 'city', name: 'Downtown', carX: 80, startX: 8, required: 9, counter: 24, sampleX: 10, quip: 'ARROWS GIVE TEDDY A PUSH!', beat: 'TRAFFIC: THREE SLOW CLOUDS.',
     pieces: [11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59, 63, 67, 71, 75].map((x, i) => ({ x, y: i % 3 === 0 ? 39 : 38 })),
   },
   {
-    source: 'klub', stem: 'club', name: 'The Clown Club', carX: 78, startX: 8, required: 10, counter: 25, sampleX: 17, quip: 'BALLOON DOGS CHEER TEDDY ON!',
+    source: 'klub', stem: 'club', name: 'The Clown Club', carX: 78, startX: 8, required: 10, counter: 25, sampleX: 17, quip: 'BALLOON DOGS CHEER TEDDY ON!', beat: 'THE WHOLE CREW CHEERS TEDDY.',
     pieces: [11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59, 63, 67, 71].map((x, i) => ({ x, y: i % 4 === 0 ? 39 : 38 })),
   },
 ];

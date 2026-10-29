@@ -52,6 +52,13 @@ export function openingCartoon(pal: Uint8Array, ink: ChezInk): Uint8Array {
     }
     centered(p, 42, 'THE WIND STOLE THE STRIPES!', c.gold, 1, c.dark);
   }, 2);
+  for (let i = 0; i < 8; i++) reel.frame(bg, (p) => {
+    p.blit(car, 120, 81, 255);
+    sprite(p, POSES[i % 2 ? 'walk1' : 'stand'], 70 + i * 4, 105);
+    sprite(p, GWINN[i % 2 ? 'gwinn1' : 'gwinn2'], 264, 105);
+    sprite(p, docLeo(undefined, i % 2 === 0), 214, 63);
+    centered(p, 42, 'TEDDY HAS A PLAN. WOOF!', c.gold, 1, c.dark);
+  }, 2);
   reel.fadeOut(5);
   return reel.fli(5);
 }
@@ -64,6 +71,7 @@ export function driveCartoon(pal: Uint8Array, ink: ChezInk, destination: string)
   for (let i = 0; i < 18; i++) reel.frame(bg, (p) => {
     const x = -110 + i * 25;
     p.blit(car, x, 81, 255);
+    sprite(p, POSES[i % 2 ? 'walk1' : 'walk2'], x + 120, 105);
     for (let dash = 0; dash < 5; dash++) p.rect((dash * 73 - i * 17 + 500) % 320, 179, 34, 3, c.gold);
   }, 1);
   reel.fadeOut(4);
