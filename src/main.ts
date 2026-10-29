@@ -2,6 +2,7 @@
 import './style.css';
 import { GameFiles, Machine, runGame } from '@lewismoten/gamemaker-sandbox-engine';
 import { CHAPTERS } from './chapters';
+import { fillRoadAtlas, roadMessage } from './road-guide';
 import { forgetCheckpoint, loadCheckpoint, rememberCheckpoint } from './checkpoint';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#engine-canvas')!;
@@ -19,6 +20,12 @@ const filesStatus = document.querySelector<HTMLElement>('#files-status')!;
 const chapterName = document.querySelector<HTMLElement>('#chapter-name')!;
 const stripeProgress = document.querySelector<HTMLElement>('#stripe-progress')!;
 const progressLabel = document.querySelector<HTMLElement>('#progress-label')!;
+const roadTip = document.querySelector<HTMLElement>('#road-tip')!;
+fillRoadAtlas(document.querySelector<HTMLOListElement>('#road-atlas-list')!);
+function sayRoad(text: string) {
+  if (roadTip.textContent !== text) roadTip.textContent = text;
+}
+sayRoad(roadMessage(CHAPTERS[0], 0));
 let machine: Machine | undefined;
 let selected: File[] = [];
 let launch = 0;
@@ -67,7 +74,9 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
   if (skipMenu) {
     chapterName.textContent = 'The Stripe Road';
     stripeProgress.textContent = '0 / 10';
+    sayRoad(roadMessage(CHAPTERS[0], 0));
   } else {
+    sayRoad('Playing a selected Game-Maker game. F1 opens its own instructions.');
     chapterName.textContent = 'Selected game';
     stripeProgress.textContent = '—';
   }
@@ -93,6 +102,7 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
               rememberCheckpoint(scene);
             }
             chapterControls(chapterIndex);
+            sayRoad(roadMessage(CHAPTERS[chapterIndex], 0));
             chapterName.textContent = chapterLabels[chapterIndex];
             stripeProgress.textContent = `0 / ${chapterGoals[chapterIndex]}`;
           }
@@ -105,13 +115,19 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
             chapterName.textContent = 'Curtain call';
             stripeProgress.textContent = `${chapterGoals[chapterIndex]} / ${chapterGoals[chapterIndex]}`;
             status.textContent = demo ? 'Teddy’s grand finale' : 'Stripes restored!';
+            sayRoad('Teddy did it! Teamwork was the real turbo button.');
           }
         };
       },
       onFrame: (world) => {
         if (!skipMenu || finished || machine !== current) return;
-        const required = chapterGoals[chapterIndex];
-        const found = Math.min(required, Math.max(0, world.ci.meter[21 + chapterIndex] - 1));
+        const chapter = CHAPTERS[chapterIndex];
+        const required = chapter.required;
+        const gate = world.bg[world.blkmap[world.map[39 * 100 + chapter.carX]]];
+        // An opened native gate has already spent its quota; keep the completed goal visible.
+        const found = gate.solid === 0 ? required : Math.min(required, Math.max(0, world.ci.meter[21 + chapterIndex] - 1));
+        const nearGate = Math.abs(world.chr.x[0] - chapter.carX) <= 3 && Math.abs(world.chr.y[0] - 39) <= 2;
+        sayRoad(roadMessage(chapter, found, nearGate));
         const label = `${found} / ${required}`;
         if (stripeProgress.textContent !== label) stripeProgress.textContent = label;
         if (!demo) {
@@ -128,10 +144,12 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
           if (retryScene === undefined) forgetCheckpoint();
           else rememberCheckpoint(retryScene);
         }
+        if (skipMenu && how !== 'won') sayRoad(how === 'lost' ? 'A tiny nap calls for another go. Try this road again with three fresh tries.' : 'Teddy kept your road. Continue whenever you are ready.');
         status.textContent = skipMenu && how === 'won' ? 'Stripes restored!' : how === 'lost' ? 'Try again' : 'Game finished';
       },
     });
-    if (machine === current && demo) status.textContent = 'Demo finished';
+    if (machine === current && demo) { status.textContent = 'Demo finished'; sayRoad('Teddy showed the route. Your turn to move, hop, bark, and zoom.'); }
+    if (machine === current && !skipMenu) sayRoad('Selected game finished. Restart returns to Teddy’s adventure.');
     if (machine === current && !demo && !finished && outcome === undefined) status.textContent = 'Game finished';
     if (machine === current && skipMenu) {
       overlayTitle.textContent = demo ? 'Your turn, Teddy!' : finished ? 'Teddy did it!' : outcome === 'lost' ? 'Teddy tries again!' : 'Ready for another chase?';
@@ -182,6 +200,7 @@ if (retryScene !== undefined) {
   stripeProgress.textContent = `0 / ${chapter.required}`;
   status.textContent = 'Road saved';
   chapterControls(retryScene - 2);
+  sayRoad(roadMessage(chapter, 0));
 }
 
 startButton.addEventListener('click', () => { void startBundled(); });

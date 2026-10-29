@@ -46,3 +46,31 @@
 .notebook-links a{display:inline-flex;align-items:center;min-height:30px;font-size:12px;font-weight:700;text-underline-offset:3px}
 .notebook-footnote{margin:24px 0 0;font-size:12px}
 @media(max-width:650px){.notebook-section{padding:0 5% 60px}.notebook-grid{grid-template-columns:1fr}.notebook-grid summary{font-size:16px;padding:17px}}
+
+/* Keep gentle, live road guidance beside the game, including on short screens. */
+.road-tip{min-height:60px;display:flex;align-items:center;margin:0;padding:10px 24px;border-top:1px solid #d5cdb7;background:#f4ead3;color:#40545d;font-size:13px;line-height:1.5}
+.road-atlas{max-width:1280px;margin:30px auto 0;background:#fff8e9;border:1px solid #c4bba4;border-radius:10px}
+.road-atlas summary{padding:18px 22px;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:700}
+.road-atlas summary span{margin-left:12px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:#52616a}
+.road-atlas summary:focus-visible{outline:3px solid #b83725;outline-offset:-4px;border-radius:10px}
+.road-atlas-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin:0;padding:8px 22px 24px;list-style:none}
+.road-atlas-list li{display:flex;gap:14px;padding:16px;background:#f4ead3;border-radius:7px}
+.road-atlas-list li:last-child:nth-child(odd){grid-column:1/-1}
+.road-number{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#a93120}
+.road-atlas-list h3{font-size:17px;margin:0 0 6px}
+.road-atlas-list p{font-size:13px;line-height:1.6;color:#40545d;margin:0}
+@media(max-width:650px){
+  .road-tip{padding:5px 12px;font-size:12px;line-height:1.35}
+  .game-toolbar .stat{min-width:0}
+  .game-toolbar .stat strong{min-height:2.2em;line-height:1.1}
+  .game-controls{padding:10px 12px}
+  .road-atlas summary{padding:16px}
+  .road-atlas summary span{display:block;margin:5px 0 0}
+  .road-atlas-list{grid-template-columns:1fr;padding:0 16px 16px;gap:12px}
+}
+@media(max-height:550px){
+  .canvas-wrap canvas{width:min(100%,900px,calc(max(120px,100dvh - 230px)*1.6))}
+  .control-hint{display:none}
+  .game-controls{padding:10px 12px}
+  .touch-controls{width:100%;margin-left:0}
+}
