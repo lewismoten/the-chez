@@ -98,3 +98,23 @@ export function winningCartoon(pal: Uint8Array, ink: ChezInk): Uint8Array {
   reel.fadeOut(5);
   return reel.fli(5);
 }
+
+export function losingCartoon(pal: Uint8Array, ink: ChezInk): Uint8Array {
+  const c = colors(pal);
+  const bg = roadside(c, 'THE WIND GOT THIS ROUND');
+  const car = chezPicture(ink, 'right', 3);
+  const reel = new Reel(pal);
+  for (let i = 0; i < 12; i++) reel.frame(bg, (p) => {
+    p.blit(car, 92, 81, 255);
+    sprite(p, POSES[i % 2 ? 'walk1' : 'stand'], 36 + i * 3, 105);
+    for (let bit = 0; bit < 3; bit++) p.rect(145 + bit * 31 + i * 5, 118 - bit * 12 - i * 2, 9, 3, bit % 2 ? c.white : c.dark);
+  }, 2);
+  for (let i = 0; i < 10; i++) reel.frame(bg, (p) => {
+    sprite(p, GWINN[i % 2 ? 'gwinn1' : 'gwinn2'], 42, 105);
+    sprite(p, POSES[i % 2 ? 'walk1' : 'stand'], 133, 84, 3);
+    sprite(p, docLeo(undefined, i % 2 === 0), 244, 63);
+    centered(p, 42, 'A TEAM CAN TRY AGAIN!', c.gold, 1, c.dark);
+  }, 2);
+  reel.fadeOut(5);
+  return reel.fli(5);
+}

@@ -14,8 +14,8 @@ import { chezPicture } from '../../GameMaker/games/kit/chez.ts';
 import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
 import { centered } from '../../GameMaker/games/kit/pcText.ts';
 import { SPEAKER, mix, osc, sample } from '../../GameMaker/games/kit/sound.ts';
-import { chapterSong, openingSong, winningSong } from './music.ts';
-import { driveCartoon, openingCartoon, winningCartoon } from './cartoons.ts';
+import { chapterSong, openingSong, retrySong, winningSong } from './music.ts';
+import { driveCartoon, losingCartoon, openingCartoon, winningCartoon } from './cartoons.ts';
 import { buildChapter, CHAPTERS } from './chapters.ts';
 
 const here = fileURLToPath(new URL('..', import.meta.url));
@@ -132,10 +132,13 @@ screen('lost.gif', 'ONE MORE TRY?', 'TEDDY BELIEVES IN YOU');
 put('intro.fli', openingCartoon(pal, ink));
 put('drive.fli', driveCartoon(pal, ink, 'MAPLE STREET'));
 put('win.fli', winningCartoon(pal, ink));
+put('lost.fli', losingCartoon(pal, ink));
 put('won.lst', serializeSlideList([{ name: 'win.fli', pause: 0 }, { name: 'epilogue.gif', pause: 4 }, { name: 'won.gif', pause: 0 }]));
+put('lost.lst', serializeSlideList([{ name: 'lost.fli', pause: 0 }, { name: 'lost.gif', pause: 0 }]));
 put('intro.cmf', openingSong());
 put('yard.cmf', chapterSong(0));
 put('win.cmf', winningSong());
+put('retry.cmf', retrySong());
 
 // The stripe's bright two-note chirp and the door's little electric click are new sounds.
 const snd = parseSoundSet(bytes('teddy.snd'));
@@ -165,7 +168,7 @@ text('credits.txt', ["TEDDY'S STRIPE CHASE", '', 'For Lewis Moten, Teddy,', 'Gwi
 const game = newGame('STRIPE CHASE');
 const [title, end] = game.scenes;
 title.files[0] = 'intro.fli'; title.files[1] = 'intro.cmf'; title.files[2] = 'menu.gif'; title.files[3] = 'intro.cmf'; title.files[6] = 'help.txt'; title.files[4] = 'story.txt'; title.files[7] = 'credits.txt';
-end.files[0] = 'won.lst'; end.files[1] = 'win.cmf'; end.files[2] = 'lost.gif';
+end.files[0] = 'won.lst'; end.files[1] = 'win.cmf'; end.files[2] = 'lost.lst'; end.files[3] = 'retry.cmf';
 const level = emptyScene(ADVTYPE);
 level.desc = 'The Stripe Road';
 level.pos = { x: 140, y: 110 };

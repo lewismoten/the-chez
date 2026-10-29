@@ -16,7 +16,7 @@ const root = join(import.meta.dirname, '../public/game');
 const bytes = (name: string) => new Uint8Array(readFileSync(join(root, name)));
 const game = parseGame(bytes('stripe.gam'));
 const ci = newCharInfo();
-for (const name of ['intro.fli', 'drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'win.fli']) {
+for (const name of ['intro.fli', 'drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'win.fli', 'lost.fli']) {
   assert.deepEqual(fliFaults(bytes(name)), [], `${name}: animation must fit the original DOS player`);
 }
 const doorBark = decodeVoc(bytes('gate.voc'));

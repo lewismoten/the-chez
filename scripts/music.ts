@@ -49,3 +49,8 @@ export function winningSong(): Uint8Array {
   ];
   return tune(150, [v(0, lead, join(fanfare), 120), v(1, bass, join(BASS), 100), v(2, bell, join(['C5 h, G5 h', 'F5 h, C6 h', 'A5 h, E6 h', 'G5 h, C6 h']), 78)]);
 }
+
+export function retrySong(): Uint8Array {
+  const gentle = ['C5 q, E5 q, D5 q, C5 q', 'A4 q, C5 q, G4 h', 'F4 q, A4 q, G4 q, E4 q', 'C5 h, r h'];
+  return tune(104, [v(0, pluck, join(gentle), 95), v(1, bass, join(BASS), 64), v(2, pad, join(PAD), 46)]);
+}
