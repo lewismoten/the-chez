@@ -24,15 +24,15 @@ export const CHAPTERS: Chapter[] = [
     pieces: [12, 17, 22, 27, 32, 37, 42, 47, 52, 57, 62, 67, 72, 77].map((x, i) => ({ x, y: i % 2 ? 38 : 39 })),
   },
   {
-    source: 'park', stem: 'park', name: 'Puddlewick Park', carX: 84, startX: 8, required: 8, counter: 23, sampleX: 17, quip: 'TEDDY, HOP LIKE A TOAST SLICE!',
+    source: 'park', stem: 'park', name: 'Puddlewick Park', carX: 84, startX: 8, required: 8, counter: 23, sampleX: 17, quip: 'AIR PUFFS HELP TEDDY HOP!',
     pieces: [12, 17, 22, 27, 32, 37, 42, 47, 52, 57, 62, 67, 72, 77].map((x, i) => ({ x, y: i % 3 ? 38 : 39 })),
   },
   {
-    source: 'city', stem: 'city', name: 'Downtown', carX: 80, startX: 8, required: 9, counter: 24, sampleX: 17, quip: 'TEDDY OUTRUNS A CITY SNEEZE!',
+    source: 'city', stem: 'city', name: 'Downtown', carX: 80, startX: 8, required: 9, counter: 24, sampleX: 10, quip: 'ARROWS GIVE TEDDY A PUSH!',
     pieces: [11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59, 63, 67, 71, 75].map((x, i) => ({ x, y: i % 3 === 0 ? 39 : 38 })),
   },
   {
-    source: 'klub', stem: 'club', name: 'The Clown Club', carX: 78, startX: 8, required: 10, counter: 25, sampleX: 17, quip: 'FINAL ACT: TEDDY TAKES A BOW!',
+    source: 'klub', stem: 'club', name: 'The Clown Club', carX: 78, startX: 8, required: 10, counter: 25, sampleX: 17, quip: 'BALLOON DOGS CHEER TEDDY ON!',
     pieces: [11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59, 63, 67, 71].map((x, i) => ({ x, y: i % 4 === 0 ? 39 : 38 })),
   },
 ];
@@ -72,6 +72,10 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
     if (block.effect || block.obj || block.scorePts || block.chHitPt) map.blocks[at] = map.blocks[y * 100 + sample];
   }
   for (const placed of map.monsters) placed.monnum = 64;
+  if (chapter.source === 'klub') {
+    // Balloon dogs are friendly bonus pickups, never a threat to Teddy.
+    for (const [i, x] of [24, 56].entries()) map.monsters[i] = { monnum: 15, status: 0, xtra: 0, curx: x, cury: 39, extra: 0 };
+  }
   reindexMonsters(map);
 
   // Gwinn keeps the rendezvous by the car, using an unused background block slot.
@@ -101,6 +105,16 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
     }
   }
   for (const { x, y } of chapter.pieces) map.blocks[y * 100 + x] = y === 39 ? pieceIndex : highPieceIndex;
+  if (chapter.source === 'park' || chapter.source === 'city') {
+    const mechanicIndex = free[5];
+    if (mechanicIndex === undefined) throw new Error(`No block slot for ${chapter.name}'s road trick`);
+    const base = map.blocks[39 * 100 + chapter.startX + 1];
+    bbl[mechanicIndex] = { ...bbl[base], pixels: bbl[base].pixels.slice(), grav: chapter.source === 'park' ? 1 : 6, effect: 0, eamt: 0, nextBl: mechanicIndex, touchBl: mechanicIndex };
+    for (let py = 5; py < 15; py++) for (let px = 4; px < 16; px++) {
+      if (chapter.source === 'park' ? Math.abs(px - 10) < (py % 5) + 2 : px >= py % 6 + 4 && px < py % 6 + 8) bbl[mechanicIndex].pixels[py * 20 + px] = py % 2 ? white : red;
+    }
+    for (let x = chapter.source === 'park' ? 44 : 28; x <= (chapter.source === 'park' ? 46 : 34); x++) map.blocks[39 * 100 + x] = mechanicIndex;
+  }
   for (let half = 0; half < 2; half++) {
     const block = bbl[half ? backIndex : doorIndex];
     block.pixels.set(bbl[sky].pixels);

@@ -19,7 +19,7 @@ for (const name of ['intro.fli', 'drive.fli', 'drive2.fli', 'drive3.fli', 'drive
   assert.deepEqual(fliFaults(bytes(name)), [], `${name}: animation must fit the original DOS player`);
 }
 
-async function play(chapter: number, startX: number, hop: boolean, progress = newCharInfo()) {
+async function play(chapter: number, startX: number, hop: boolean, progress = newCharInfo(), tricks = { lift: false, push: false }) {
   const scene = game.scenes[chapter];
   const sim = new Sim({
     map: parseMap(bytes(scene.files[1])),
@@ -33,6 +33,8 @@ async function play(chapter: number, startX: number, hop: boolean, progress = ne
   const carX = scene.links[0].from.x;
   sim.press(77);
   await sim.run(800, (tick) => {
+    if (chapter === 4 && sim.pos.bx >= 44 && sim.pos.bx <= 46 && sim.w.ci.gravy < 0) tricks.lift = true;
+    if (chapter === 5 && sim.pos.bx >= 28 && sim.pos.bx <= 34 && sim.w.ci.gravx > 0) tricks.push = true;
     if (hop && sim.pos.bx >= carX - 9) sim.release(72);
     if (hop && sim.pos.bx < carX - 9 && tick % 25 === 0) sim.press(72);
     if (hop && tick % 25 === 3) { sim.release(72); sim.release(77); sim.press(77); }
@@ -48,8 +50,11 @@ async function play(chapter: number, startX: number, hop: boolean, progress = ne
 
 for (const [chapter, startX] of [[2, 10], [3, 8], [4, 8], [5, 8], [6, 8]]) {
   if (chapter > 2) {
-    const walker = await play(chapter, startX, false);
+    const tricks = { lift: false, push: false };
+    const walker = await play(chapter, startX, false, newCharInfo(), tricks);
     assert.equal(walker.link, -1, `${game.scenes[chapter].desc}: walking should leave the car door closed`);
+    if (chapter === 4) assert.ok(tricks.lift, 'the park air puff must lift Teddy');
+    if (chapter === 5) assert.ok(tricks.push, 'the Downtown arrows must push Teddy');
   }
   const sim = await play(chapter, startX, chapter > 2, ci);
   assert.equal(sim.dead, false, `${game.scenes[chapter].desc}: Teddy must finish safely`);

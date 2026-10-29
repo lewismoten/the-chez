@@ -11,6 +11,8 @@ npm run dev
 
 Open the Vite URL and choose **Start the game**. Move Teddy with the Left and Right arrows (or A and D); hop with Up or W. Gather the required stripe pieces across the yard, Maple Street, Puddlewick Park, Downtown, and the Clown Club, then reach THE CHEZ at the right end of each chapter. F1 shows instructions. Touch buttons are below the game.
 
+Each new road changes the challenge: raised pieces call for hops, the park has a lifting air puff, Downtown adds a conveyor strip, and the Clown Club has friendly balloon dogs.
+
 The **More Game-Maker games** section accepts another DOS game folder with a `.GAM` file and plays it through the same engine. Files stay in the browser.
 
 ## Rebuild the DOS game
