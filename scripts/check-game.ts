@@ -182,10 +182,8 @@ for (const direction of [1, -1]) {
   const signId = crossing.w.map[34 * 100 + LEAF_CROSSING - 1];
   assert.equal(crossing.w.bg[crossing.w.blkmap[gateId]].solid, 15);
   crossing.release(72);
-  crossing.release(scan);
-  crossing.press(scan);
   await crossing.run(24);
-  assert.ok(direction > 0 ? crossing.pos.bx > LEAF_CROSSING : crossing.pos.bx < LEAF_CROSSING, 'GO must let Teddy cross in either direction');
+  assert.ok(direction > 0 ? crossing.pos.bx > LEAF_CROSSING : crossing.pos.bx < LEAF_CROSSING, 'holding a direction through WAIT must continue through GO');
   assert.equal(crossing.w.bg[crossing.w.blkmap[gateId]].solid, 0);
   assert.equal(crossing.w.bg[crossing.w.blkmap[signId]].ntime, LEAF_GO, 'GO sign and passable barrier must stay in phase');
   crossing.release(scan);
