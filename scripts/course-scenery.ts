@@ -7,7 +7,15 @@ import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
 
 export function courseScenery(theme: string, palette: Uint8Array): { map: GameMap; blocks: Block[] } {
   const c = (r: number, g: number, b: number) => matchColor(palette, r, g, b);
-  const sky = c(29, 46, 60),
+  const skies: Record<string, [number, number, number]> = {
+    stripe: [29, 46, 60],
+    street: [60, 47, 35],
+    park: [29, 46, 43],
+    city: [43, 39, 50],
+    club: [28, 33, 51],
+    sky: [24, 43, 60],
+  };
+  const sky = c(...(skies[theme] ?? skies.stripe)),
     white = c(63, 61, 55),
     dark = c(7, 13, 19);
   const red = c(52, 12, 9),
@@ -39,9 +47,23 @@ export function courseScenery(theme: string, palette: Uint8Array): { map: GameMa
   tile(new Pixels(20, 20, sky).px);
   const floor = new Pixels(20, 20, theme === 'city' ? stone : green);
   floor.rect(0, 0, 20, 3, theme === 'city' ? white : leaf);
-  floor.rect(0, 4, 20, 16, earth);
+  const subsoil = theme === 'city' ? dark : theme === 'club' ? c(34, 22, 29) : theme === 'sky' ? c(21, 34, 49) : earth;
+  floor.rect(0, 4, 20, 16, subsoil);
+  const soil = new Pixels(20, 20, subsoil);
+  if (theme === 'sky') floor.rect(0, 0, 20, 5, white).rect(0, 5, 20, 3, c(37, 47, 58));
+  if (theme === 'city' || theme === 'club') {
+    for (const p of [floor, soil]) p.line(0, 10, 19, 10, stone).line(9, 11, 9, 19, stone).line(0, 0, 0, 9, stone);
+  } else if (theme !== 'sky') {
+    for (const [x, y] of [
+      [4, 6],
+      [14, 15],
+      [8, 18],
+    ])
+      soil.rect(x, y, 2, 1, c(35, 28, 20));
+    floor.line(5, 4, 7, 10, earth).line(15, 4, 13, 8, earth);
+  }
   const floorId = tile(floor.px, 15),
-    soilId = tile(new Pixels(20, 20, earth).px, 15);
+    soilId = tile(soil.px, 15);
   for (let y = 40; y < 100; y++) for (let x = 0; x < 100; x++) map.blocks[y * 100 + x] = y === 40 ? floorId : soilId;
   // Objects are drawn completely before tiling. Pickups later composite onto each tile.
   const put = (picture: Pixels, bx: number, by: number) => {
@@ -93,7 +115,12 @@ export function courseScenery(theme: string, palette: Uint8Array): { map: GameMa
     const p = new Pixels(160, 40, sky);
     p.line(0, 4, 159, 4, dark);
     for (const x of [20, 60, 100]) p.rect(x, 5, 20, 24, x === 60 ? red : white).rect(x + 6, 29, 8, 6, dark);
-    for (const x of [20, 40, 60]) put(p, x, 25);
+    for (const [x, y] of [
+      [20, 32],
+      [40, 30],
+      [60, 32],
+    ])
+      put(p, x, y);
   }
   const wall = tile(new Pixels(20, 20, green).frame(0, 0, 20, 20, leaf).px, 15);
   for (const x of [4, 95]) for (let y = 0; y < 40; y++) map.blocks[y * 100 + x] = wall;

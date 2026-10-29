@@ -103,3 +103,5 @@ Every exit has one scene link, on its locked tile. The finish ribbon is checked 
 All walking-course maps are built from a blank map. The source project supplies the cast, rather than level geometry or scenery fragments. Stripe variants preserve the particular background beneath each piece and restore it on collection.
 
 Walking characters use a single jump impulse for each press, instead of repeating the source character’s upward step while held. Every obstacle uses native Game-Maker collision, gravity, or animation; the page does not run additional platforming rules. Both sides of each foam tray have a return lift. The course check verifies recovery in both directions, optional balloon rewards, Doc Leo’s independent squeak, and each playable character’s own block set.
+
+The courses use distinct sky colors and ground treatments. Sky Laundry keeps its complete hanging shirts above each cloud route; its builder adds platforms and air streams without clearing the backdrop.

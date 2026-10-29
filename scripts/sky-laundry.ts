@@ -15,10 +15,6 @@ export function skyLaundry(map: GameMap, blocks: Block[], slots: number[], palet
   const white = color(63, 62, 58),
     blue = color(21, 34, 49),
     purple = color(39, 27, 48);
-  for (let y = 20; y <= 39; y++)
-    for (let x = 8; x <= 78; x++) {
-      map.blocks[y * 100 + x] = blocks[samples[y]].solid ? air : samples[y];
-    }
   const make = (id: number, base = air) => ({
     ...blocks[base],
     pixels: blocks[base].pixels.slice(),
