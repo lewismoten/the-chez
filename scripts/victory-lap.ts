@@ -72,6 +72,9 @@ export function victoryLap(read: (name: string) => Uint8Array, put: (name: strin
 
   const character = newCharacter();
   character.meter[1] = 2;
+  // PLAYGAME can resume frame -1 after two keys arrive together. Neutral spacer
+  // records before each control keep that old memory-read behavior harmless.
+  for (const index of [4, 6, 8, 10, 12, 14, 16]) Object.assign(character.sequences[index], { sound: 0, bloc: 50, jstkBut: 0 });
   const sprites = Array.from({ length: 50 }, (_, i) => emptyBlock(i, true));
   const car = chezPicture(ink, 'left');
   // A 20-pixel actor keeps the car's 2:1 side profile; the large cartoons retain every detail.
@@ -96,10 +99,11 @@ export function victoryLap(read: (name: string) => Uint8Array, put: (name: strin
   set(1, [frame(0), frame(0)]);
   set(2, [frame(0)]);
   const steer = (index: number, scan: number, direction: number) => set(index, [frame(0, direction * 2, 0, direction > 0), frame(1, direction * 2, 0, direction > 0)], { key: scan << 8, momentum: 1 });
-  steer(5, 77, 1); steer(6, 75, -1); steer(16, 32, 1); steer(17, 30, -1);
-  set(7, [frame(0, 0, -10)], { key: 72 << 8, momentum: 1, norepeat: 1, sound: 16 });
-  set(18, [frame(0, 0, -10)], { key: (17 << 8) | 119, momentum: 1, norepeat: 1, sound: 16 });
-  set(8, [{ ...frame(0), pic1: 2, pause: 3 }, { ...frame(1), pause: 3 }], { key: (57 << 8) | 32, momentum: 1, norepeat: 1, sound: 20 });
+  steer(5, 77, 1); steer(7, 75, -1); steer(13, 32, 1); steer(15, 30, -1);
+  const bounce = { ...frame(0, 0, -10), pause: 3 };
+  set(9, [bounce], { key: 72 << 8, momentum: 1, norepeat: 1, ground: 1, sound: 16 });
+  set(17, [{ ...bounce }], { key: (17 << 8) | 119, momentum: 1, norepeat: 1, ground: 1, sound: 16 });
+  set(11, [{ ...frame(0), pic1: 2, pause: 3 }, { ...frame(1), pause: 3 }], { key: (57 << 8) | 32, momentum: 1, norepeat: 1, sound: 20 });
   put('lap.pal', palette);
   put('lap.map', serializeMap(map));
   put('lap.bbl', serializeBlocks(blocks));
