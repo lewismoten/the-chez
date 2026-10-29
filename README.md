@@ -21,6 +21,10 @@ Z clouds send Teddy into a tiny nap and use one try. The status shows the tries 
 
 The **More Game-Maker games** section accepts another DOS game folder with a `.GAM` file and plays it through the same engine. Files stay in the browser.
 
+## Teddy’s road atlas and guidance
+
+The game heading gives each road a short mission. Near a locked exit, it names the pieces still needed and offers a relevant hint. Reaching the quota switches the hint to the destination. The heading reads the engine’s counters, position, and opened gate; it does not change the rules or open a gate. The optional road atlas previews the seven errands with short character blurbs. `src/road-guide.ts` renders the atlas and formats the guidance from `src/chapters.ts`.
+
 ## Teddy’s glovebox notebook
 
 The page’s optional notebook explains the counter gates, timed leaf crossing, bark exchanges, upward gravity and one-way cloud ledges, vehicle character, input recording, and music and cartoons. Each expandable entry names its source builder and links to actual downloadable DOS files. These are inspection examples; playing outside this page needs the complete `public/game/` folder. The notebook uses native HTML details controls and does not run a separate game simulation.
