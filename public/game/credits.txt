@@ -8,5 +8,6 @@ Game-Maker Sandbox Edition
 by Lewis Moten (MIT)
 
 Dog barks/yawn: Lewis Moten
-Game, text, music, sounds:
+Game, art, text, music,
+and sounds:
 OpenAI Codex (GPT-6/6.1)

@@ -21,7 +21,9 @@ export function windKites(map: GameMap, blocks: Block[], monsters: Monster[], pi
   const kite = monsters[KITE];
   Object.assign(kite, { power: 1, newmon: 64, upscore: 0, end: KITE_LIFETIME, thru: 0, towards: 0, activate: 0 });
   kite.march[0].forEach((corner) => Object.assign(corner, { x: 0, y: 0, pic: 0, orient: 0 }));
-  for (const [i, [x, y]] of [[2, -1], [-2, 1], [-2, -1], [2, 1]].entries()) {
+  // PLAYGAME treats normal-path corners as offsets from the starting cell.
+  // Return to (0, 0) before repeating, rather than accumulating relative steps.
+  for (const [i, [x, y]] of [[2, -1], [0, 0], [-2, -1], [0, 0]].entries()) {
     kite.march[0][i] = { x, y, pic: 1, orient: 0 };
   }
   for (const [phase, index] of [kite.pic[0][0], kite.pic[1][0]].entries()) {

@@ -6,6 +6,7 @@ import { parseBlocks } from '../../GameMaker/web/src/formats/blocks.ts';
 import { parseCharacter } from '../../GameMaker/web/src/formats/character.ts';
 import { parseGame } from '../../GameMaker/web/src/formats/game.ts';
 import { parseFli } from '../../GameMaker/web/src/formats/fli.ts';
+import { KITE, KITE_STARTS, KITE_POSTS, KITE_INTERVAL, KITE_LIFETIME } from './wind-kites.ts';
 import { ROAD_BEATS } from './road-stories.ts';
 import { fliFaults } from '../../GameMaker/web/src/formats/fliLimits.ts';
 import { decodeVoc } from '../../GameMaker/web/src/formats/voc.ts';
@@ -36,7 +37,10 @@ for (const [index, scene] of game.scenes.entries()) if (index >= 2) {
   assert.equal(gate.eamt, -CHAPTERS[index - 2].required, `${scene.desc}: the HUD must show the real gate quota`);
   for (const [at, id] of map.blocks.entries()) {
     const block = blocks[id];
-    assert.equal(block.obj || block.birthTime, 0, `${scene.desc}: no inherited pickups or spawners`);
+    const kitePost = scene.files[1] === 'street.map' && Math.floor(at / 100) === 38 && KITE_POSTS.includes(at % 100);
+    assert.equal(block.obj, 0, `${scene.desc}: no inherited inventory objects`);
+    assert.equal(block.birthTime, kitePost ? KITE_INTERVAL : 0, `${scene.desc}: only the marked wind posts may spawn actors`);
+    if (kitePost) assert.equal(block.birthMon, KITE);
     const nap = scene.files[1] === 'sky.map' && Math.floor(at / 100) === 39 && NAP_COLUMNS.includes(at % 100);
     assert.equal(block.chHitPt, nap ? -1000 : 0, `${scene.desc}: only the marked nap clouds may cause a retry`);
     assert.ok(block.effect === 0 || block.effect === 19 + index, `${scene.desc}: only its own stripe counter may be used`);
@@ -180,6 +184,44 @@ for (const [index, info] of CHAPTERS.entries()) {
   assert.equal(sim.link, 0, `${game.scenes[chapter].desc}: the route must leave through the counter gate itself`);
   console.log(`${game.scenes[chapter].desc}: passed in ${sim.ticks} ticks`);
 }
+
+// Wait out the first batch: replacement posts must keep the kite challenge recoverable.
+const patientScout = stage(3, 8);
+let peakKites = 0;
+await patientScout.run(KITE_LIFETIME + KITE_INTERVAL + 5, () => {
+  const live = patientScout.w.mm.flatMap((actor, i) => actor.monnum === KITE ? [patientScout.w.mi[i]] : []);
+  peakKites = Math.max(peakKites, live.length);
+  for (const kite of live) {
+    const x = kite.curx[0] * 20 + kite.curx[1], y = kite.cury[0] * 20 + kite.cury[1];
+    assert.ok(x >= 15 * 20 && x <= 79 * 20, 'kite paths must stay near their wind posts');
+    assert.ok(y >= 37 * 20 && y <= 38 * 20, 'flying kites must stay above a walking Teddy');
+  }
+});
+assert.ok(peakKites <= KITE_STARTS.length + KITE_POSTS.length * (Math.ceil(KITE_LIFETIME / KITE_INTERVAL) + 1), 'kite lifetime must bound the population');
+const replacements = patientScout.w.mm.flatMap((actor, i) => actor.monnum === KITE ? [patientScout.w.mi[i]] : []);
+assert.ok(replacements.length > 0 && replacements.every((kite) => kite.birthTime > 1), 'fresh kites must remain after every initial kite expires');
+assert.equal(patientScout.w.ci.meter[22], 1, 'waiting beneath kites must not collect them');
+patientScout.press(77);
+await patientScout.run(500);
+patientScout.release(77);
+assert.equal(patientScout.w.ci.meter[22], 8, 'walking must collect exactly seven ground pieces, leaving one kite needed');
+assert.equal(patientScout.link, -1);
+patientScout.press(75);
+await patientScout.run(20);
+patientScout.release(75);
+assert.equal(patientScout.pos.bx, 77, 'Teddy can return to the nearest visible wind post');
+await patientScout.run(250, (tick) => {
+  if (patientScout.w.ci.meter[22] >= 9) { patientScout.release(72); return; }
+  if (tick % 25 === 0) patientScout.press(72);
+  if (tick % 25 === 3) patientScout.release(72);
+});
+assert.ok(patientScout.w.ci.meter[22] >= 9, 'hopping at a wind post must catch a replacement kite');
+patientScout.release(72);
+patientScout.press(77);
+await patientScout.run(100);
+assert.equal(patientScout.link, 0, 'Teddy must still finish after the first kite batch is gone');
+assert.equal(patientScout.dead, false);
+console.log('Wind kites: flight bounds, fresh replacements, and delayed safe completion passed');
 
 // Check the actual animated collision variants, including approaching from the far side.
 for (const direction of [1, -1]) {

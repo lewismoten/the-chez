@@ -9,6 +9,7 @@ import { skyLaundry } from './sky-laundry.ts';
 import { victoryLap } from './victory-lap.ts';
 import { leafCrossing } from './leaf-crossing.ts';
 import { stripeCar } from './stripe-car.ts';
+import { windKites } from './wind-kites.ts';
 
 export interface Chapter {
   source: 'street' | 'park' | 'city' | 'klub';
@@ -26,8 +27,8 @@ export interface Chapter {
 
 export const CHAPTERS: Chapter[] = [
   {
-    source: 'street', stem: 'street', name: 'Maple Street', carX: 83, startX: 8, required: 8, counter: 22, sampleX: 6, quip: 'TEDDY, THAT STRIPE IS FLOATING!', beat: 'GWINN BLAMES A SNEAKY LEAF.',
-    pieces: [12, 17, 22, 27, 32, 37, 42, 47, 52, 57, 62, 67, 72, 77].map((x, i) => ({ x, y: i % 2 ? 38 : 39 })),
+    source: 'street', stem: 'street', name: 'Maple Street', carX: 83, startX: 8, required: 8, counter: 22, sampleX: 6, quip: 'HOP TO CATCH FLYING STRIPES!', beat: 'THE WIND ALWAYS SENDS MORE.',
+    pieces: [12, 22, 32, 42, 52, 62, 72].map((x) => ({ x, y: 39 })),
   },
   {
     source: 'park', stem: 'park', name: 'Puddlewick Park', carX: 84, startX: 8, required: 8, counter: 23, sampleX: 17, quip: 'AIR PUFFS HELP TEDDY HOP!', beat: 'THE PUDDLES HAVE OPINIONS.',
@@ -90,8 +91,6 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
     }
     for (const [i, x] of [24, 43, 64, 70].entries()) map.monsters[i] = { monnum: 16, status: 0, xtra: 0, curx: x, cury: 39, extra: 0 };
   }
-  reindexMonsters(map);
-
   // Gwinn keeps the rendezvous by the car, using an unused background block slot.
   const sky = map.blocks[39 * 100 + sample];
   const gwinnBlock = Array.from({ length: 149 }, (_, i) => 148 - i).find((i) => !map.blocks.includes(i));
@@ -131,6 +130,7 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
     }
     for (let x = chapter.source === 'park' ? 44 : 28; x <= (chapter.source === 'park' ? 46 : 34); x++) map.blocks[39 * 100 + x] = mechanicIndex;
   }
+  if (chapter.stem === 'street') windKites(map, bbl, monsters, mbl, free.slice(5), pal, chapter.counter);
   if (chapter.stem === 'city') leafCrossing(map, bbl, free.slice(6), pal);
   for (const { x, y } of chapter.pieces) {
     const slot = pieceSlots.find(([row]) => row === y)?.[1];
@@ -151,6 +151,7 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
   bbl[doorIndex].touchBl = openIndex;
   bbl[openIndex] = { ...bbl[doorIndex], pixels: bbl[doorIndex].pixels.slice(), solid: 0, effect: 0, eamt: 0, nextBl: openIndex, touchBl: openIndex };
   for (let y = 7; y < 16; y++) for (let x = 6; x < 13; x++) bbl[openIndex].pixels[y * 20 + x] = black;
+  reindexMonsters(map);
   put(`${chapter.stem}.pal`, pal);
   put(`${chapter.stem}.bbl`, serializeBlocks(bbl));
   put(`${chapter.stem}.mbl`, serializeBlocks(mbl));
