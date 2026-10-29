@@ -7,6 +7,7 @@ export interface ChapterInfo {
   blurb: string;
   startX: number;
   carX: number;
+  errand?: 'leaf';
   actor?: 'Teddy' | 'Doc Leo' | 'Gwinn';
   mode?: 'drive' | 'maze';
 }
@@ -33,11 +34,12 @@ export const CHAPTERS: readonly ChapterInfo[] = [
   {
     name: 'Puddlewick Park',
     required: 8,
-    mission: 'Pause in the tall upward stream. Ride above the hedge, then walk along the ledge.',
-    help: 'The tall hedge needs a lift. Stop in the tall arrow stream, then drift right.',
-    blurb: 'The puddles have opinions. Teddy earns a splashy round of applause.',
+    mission: 'Ride the tall stream. Turn LEFT above the hedge for Gwinn’s leaf, then return RIGHT.',
+    help: 'The left branch holds the leaf. The far-side stream lets you return if you missed it.',
+    blurb: 'Gwinn’s leaf has booked an upstairs seat. Teddy rescues it from a very tall appointment.',
     startX: 8,
     carX: 84,
+    errand: 'leaf',
   },
   {
     name: 'Downtown',

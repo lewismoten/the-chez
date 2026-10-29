@@ -50,15 +50,11 @@ export const CHAPTERS: Chapter[] = [
     required: 8,
     counter: 23,
     sampleX: 17,
-    quip: 'PAUSE IN WIND. CROSS THE HEDGE.',
-    beat: 'THE PUDDLES HAVE OPINIONS.',
+    quip: "RIDE UP. LEFT FOR GWINN'S LEAF.",
+    beat: 'BRING IT TO THE WOODEN GATE.',
     pieces: [12, 17, 22, 27, 32, 37, 42, 57, 62, 67, 72, 77]
       .map((x, i) => ({ x, y: i % 3 ? 38 : 39 }))
-      .concat([
-        { x: 48, y: 33 },
-        { x: 50, y: 33 },
-        { x: 53, y: 33 },
-      ]),
+      .concat([...[35, 39, 43].map((x) => ({ x, y: 31 })), { x: 48, y: 33 }, { x: 50, y: 33 }, { x: 53, y: 33 }]),
   },
   {
     source: 'city',

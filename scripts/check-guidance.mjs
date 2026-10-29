@@ -10,6 +10,9 @@ import { roadMessage } from '../src/road-guide.ts';
 assert.match(roadMessage(CHAPTERS[1], 7, true), /1 more stripe.*wind post/);
 assert.match(roadMessage(CHAPTERS[3], 2, true), /^Doc Leo needs/);
 assert.match(roadMessage(CHAPTERS[6], 2, true), /^Gwinn needs/);
+assert.match(roadMessage(CHAPTERS[2], 8, true), /wooden gate needs Gwinn’s leaf/);
+assert.match(roadMessage(CHAPTERS[2], 8, false, true), /Leaf rescued!.*Your stripes are ready/);
+assert.match(roadMessage(CHAPTERS[2], 5, false, true), /3 more stripes.*RIGHT/);
 const root = fileURLToPath(new URL('..', import.meta.url));
 const server = await createServer({ root, logLevel: 'error', server: { host: '127.0.0.1', port: 4177, strictPort: true } });
 await server.listen();
@@ -59,7 +62,7 @@ try {
   const goals = await page.evaluate(() => window.__roadGoal);
   const complete = goals.indexOf('8 / 8');
   assert.ok(complete >= 0 && goals.slice(complete).every((goal) => goal === '8 / 8'), 'spending the gate quota must keep the completed goal visible');
-  assert.match(await page.locator('#road-tip').textContent(), /tall upward stream/);
+  assert.match(await page.locator('#road-tip').textContent(), /Gwinn’s leaf/);
   const shell = await page.locator('.game-shell').boundingBox(),
     tip = await page.locator('#road-tip').boundingBox();
   assert.ok(tip.y >= shell.y && tip.y + tip.height <= shell.y + shell.height);

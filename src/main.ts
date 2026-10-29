@@ -1,6 +1,7 @@
 // Play the bundled DOS game or a locally selected game through the same Game-Maker engine.
 import './style.css';
 import { GameFiles, Machine, runGame } from '@lewismoten/gamemaker-sandbox-engine';
+import { PARK_GATE, PARK_LEAF } from './park-route';
 import { CHAPTERS } from './chapters';
 import { fillRoadAtlas, roadMessage } from './road-guide';
 import { createMusicControl } from './music-control';
@@ -144,7 +145,11 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
         // An opened native gate has already spent its quota; keep the completed goal visible.
         const found = gate.solid === 0 ? required : Math.min(required, Math.max(0, world.ci.meter[21 + chapterIndex] - 1));
         const nearGate = Math.abs(world.chr.x[0] - chapter.carX) <= 3 && Math.abs(world.chr.y[0] - 39) <= 2;
-        sayRoad(roadMessage(chapter, found, nearGate));
+        const leafReady =
+          chapter.errand === 'leaf' &&
+          (world.ci.meter[PARK_LEAF.counter] > 1 || world.bg[world.blkmap[world.map[PARK_GATE.y * 100 + PARK_GATE.x]]].solid === 0);
+        const nearLeafGate = chapter.errand === 'leaf' && Math.abs(world.chr.x[0] - PARK_GATE.x) <= 3;
+        sayRoad(roadMessage(chapter, found, nearGate || nearLeafGate, leafReady));
         const label = `${found} / ${required}`;
         if (stripeProgress.textContent !== label) stripeProgress.textContent = label;
         if (!demo) {

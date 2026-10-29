@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { createServer } from 'vite';
 import { CHAPTERS } from '../src/chapters.ts';
+import { roadMessage } from '../src/road-guide.ts';
+import { PARK_LEAF } from '../src/park-route.ts';
 import { MAZE_ROUTE } from './gwinn-maze.ts';
 const DRIVE_SCENE = CHAPTERS.findIndex((chapter) => chapter.mode === 'drive') + 2;
 const MAZE_SCENE = CHAPTERS.findIndex((chapter) => chapter.mode === 'maze') + 2;
@@ -25,7 +27,7 @@ await server.listen();
 let browser;
 
 // This controller uses the package's public input callbacks. It lives only in the test browser.
-function installDriver({ chapters, mazeRoute }) {
+function installDriver({ chapters, mazeRoute, parkCounter }) {
   const clubSteps = [
     { from: 23, to: 26 },
     { from: 27, to: 30 },
@@ -158,17 +160,30 @@ function installDriver({ chapters, mazeRoute }) {
       }
       return;
     }
-    if (scene === 4 && hop && parkPhase !== 'done' && x >= 45) {
+    if (scene === 4 && hop && parkPhase !== 'done' && (parkPhase !== 'approach' || x >= 45)) {
       if (parkPhase === 'approach') {
         key(77, false);
         key(72, false);
         parkPhase = 'rise';
       }
-      if (parkPhase === 'rise' && y <= 640) {
-        key(77, true);
-        parkPhase = 'fly';
+      if (parkPhase === 'rise' && y <= 600) {
+        key(75, true);
+        parkPhase = 'flyLeft';
       }
-      if (parkPhase === 'fly' && x >= 48) {
+      if (parkPhase === 'flyLeft' && x <= 34) {
+        key(75, false);
+        parkPhase = 'landLeft';
+      }
+      if (parkPhase === 'landLeft' && y === 620) {
+        key(75, true);
+        parkPhase = 'leaf';
+      }
+      if (parkPhase === 'leaf' && world.ci.meter[parkCounter] > 1) {
+        key(75, false);
+        key(77, true);
+        parkPhase = 'back';
+      }
+      if (parkPhase === 'back' && x >= 48) {
         key(77, false);
         parkPhase = 'land';
       }
@@ -263,6 +278,12 @@ try {
       const page = await browser.newPage({ viewport: { width, height }, colorScheme });
       try {
         await page.goto('http://127.0.0.1:4175/');
+        for (const hint of [roadMessage(CHAPTERS[2], 0), roadMessage(CHAPTERS[2], 8, true), roadMessage(CHAPTERS[2], 3, false, true)]) {
+          await page.locator('#road-tip').evaluate((node, text) => {
+            node.textContent = text;
+          }, hint);
+          assert.ok((await page.locator('.game-shell').boundingBox()).height <= height, `${width}×${height}: the complete park hint must fit with the game`);
+        }
         const canvas = await page.locator('#engine-canvas').boundingBox();
         const shell = await page.locator('.game-shell').boundingBox();
         assert.ok(canvas.width >= 190 && shell.height <= height, `${width}×${height}: the game must remain usable`);
@@ -307,7 +328,7 @@ try {
   page.on('console', (message) => {
     if (message.text().startsWith('CHEZ entered')) console.log(message.text());
   });
-  await page.addInitScript(installDriver, { chapters: CHAPTERS, mazeRoute: MAZE_ROUTE });
+  await page.addInitScript(installDriver, { chapters: CHAPTERS, mazeRoute: MAZE_ROUTE, parkCounter: PARK_LEAF.counter });
   await page.addInitScript((watching) => {
     window.__chezDemo = watching;
   }, demo);
@@ -383,6 +404,13 @@ try {
         timeout: 90_000,
       });
       await page.screenshot({ path: join(screenshots, 'wind-kites.png') });
+    }
+    if (!lap && !retry) {
+      await page.waitForFunction(() => window.__chezScene === 4 && window.__chezWorld?.ci.meter[20] > 1 && window.__chezWorld?.chr.y[0] === 31, null, {
+        timeout: 90_000,
+      });
+      assert.match(await page.locator('#road-tip').textContent(), /Leaf rescued!/);
+      await page.screenshot({ path: join(screenshots, 'park-leaf.png') });
     }
     if (!lap && !retry && !demo) {
       await page.waitForFunction(() => window.__chezScene === 5 && window.__chezWorld?.chr.x[0] === 44 && window.__chezWorld?.chr.x[1] === 0, null, {

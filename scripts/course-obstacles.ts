@@ -2,6 +2,7 @@
 import type { Block } from '../../GameMaker/web/src/formats/blocks.ts';
 import type { GameMap } from '../../GameMaker/web/src/formats/map.ts';
 import { matchColor } from '../../GameMaker/web/src/formats/palette.ts';
+import { parkErrand } from './park-errand.ts';
 import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
 
 export function courseObstacles(theme: string, map: GameMap, blocks: Block[], palette: Uint8Array, reserved: number[]): void {
@@ -35,15 +36,7 @@ export function courseObstacles(theme: string, map: GameMap, blocks: Block[], pa
     barrier([22, 23, 24]);
     barrier([62, 63], 2);
   }
-  if (theme === 'park') {
-    const hedge = make(new Pixels(20, 20, green).frame(0, 0, 20, 20, leaf));
-    for (let y = 34; y <= 39; y++) for (let x = 50; x <= 53; x++) map.blocks[y * 100 + x] = hedge;
-    const wind = make(new Pixels(20, 20, blocks[0].pixels[0]).line(5, 12, 10, 6, white).line(10, 6, 15, 12, white), 0, 1);
-    // One column asks the player to stop and ride rather than run straight through.
-    for (let y = 30; y <= 39; y++) map.blocks[y * 100 + 45] = wind;
-    const ledge = make(new Pixels(20, 20, blocks[0].pixels[0]).rect(0, 0, 20, 5, gold).rect(0, 5, 20, 2, dark), 1);
-    for (let x = 46; x <= 55; x++) map.blocks[34 * 100 + x] = ledge;
-  }
+  if (theme === 'park') parkErrand(map, blocks, palette, make);
   if (theme === 'club') {
     // A missed stepping stone lands in a foam tray. The lift at its far end returns you.
     const foam = make(new Pixels(20, 20, pink).disc(5, 7, 4, white).disc(15, 14, 4, white));

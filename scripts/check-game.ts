@@ -17,6 +17,7 @@ import { newCharInfo } from '../../GameMaker/web/src/engine/world.ts';
 import { Sim } from '../../GameMaker/games/kit/sceneSim.ts';
 import { LEAF_CROSSING, LEAF_WAIT, LEAF_GO } from './leaf-crossing.ts';
 import { NAP_COLUMNS } from './sky-laundry.ts';
+import { PARK_GATE, PARK_LEAF } from '../src/park-route.ts';
 import { CHAPTERS } from '../src/chapters.ts';
 import { GameSim, readDisk } from '../../GameMaker/games/kit/gameSim.ts';
 import { parseRecording } from '../../GameMaker/web/src/formats/recording.ts';
@@ -56,7 +57,10 @@ for (const [index, scene] of game.scenes.entries())
       if (kitePost) assert.equal(block.birthMon, KITE);
       const nap = scene.files[1] === 'sky.map' && Math.floor(at / 100) === 39 && NAP_COLUMNS.includes(at % 100);
       assert.equal(block.chHitPt, nap ? -1000 : 0, `${scene.desc}: only the marked nap clouds may cause a retry`);
-      assert.ok(block.effect === 0 || block.effect === 19 + index, `${scene.desc}: only its own stripe counter may be used`);
+      assert.ok(
+        block.effect === 0 || block.effect === 19 + index || (scene.files[1] === 'park.map' && block.effect === PARK_LEAF.counter),
+        `${scene.desc}: only its own stripe counter may be used`,
+      );
     }
   }
 for (const name of ['intro.fli', 'drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'drive5.fli', 'drive6.fli', 'drive7.fli', 'win.fli', 'lost.fli']) {
@@ -215,17 +219,30 @@ async function play(chapter: number, startX: number, hop: boolean, progress = ne
       }
       return;
     }
-    if (chapter === 4 && hop && parkPhase !== 'done' && sim.pos.bx >= 45) {
+    if (chapter === 4 && hop && parkPhase !== 'done' && (parkPhase !== 'approach' || sim.pos.bx >= 45)) {
       if (parkPhase === 'approach') {
         sim.release(77);
         sim.release(72);
         parkPhase = 'rise';
       }
-      if (parkPhase === 'rise' && sim.pos.y <= 640) {
-        sim.press(77);
-        parkPhase = 'fly';
+      if (parkPhase === 'rise' && sim.pos.y <= 600) {
+        sim.press(75);
+        parkPhase = 'flyLeft';
       }
-      if (parkPhase === 'fly' && sim.pos.bx >= 48) {
+      if (parkPhase === 'flyLeft' && sim.pos.bx <= 34) {
+        sim.release(75);
+        parkPhase = 'landLeft';
+      }
+      if (parkPhase === 'landLeft' && sim.pos.y === 620) {
+        sim.press(75);
+        parkPhase = 'leaf';
+      }
+      if (parkPhase === 'leaf' && sim.w.ci.meter[PARK_LEAF.counter] > 1) {
+        sim.release(75);
+        sim.press(77);
+        parkPhase = 'back';
+      }
+      if (parkPhase === 'back' && sim.pos.bx >= 48) {
         sim.release(77);
         parkPhase = 'land';
       }
@@ -340,10 +357,45 @@ for (const [index, info] of CHAPTERS.entries()) {
   }
   const sim = await play(chapter, startX, true, ci);
   assert.equal(sim.dead, false, `${game.scenes[chapter].desc}: ${info.actor ?? 'Teddy'} must finish safely`);
-  assert.ok(sim.link >= 0, `${game.scenes[chapter].desc}: stripe trail must lead to the next chapter`);
+  assert.ok(
+    sim.link >= 0,
+    `${game.scenes[chapter].desc}: stripe trail must lead to the next chapter: ${JSON.stringify(sim.pos)}, leaf=${sim.w.ci.meter[20]}, stripes=${sim.w.ci.meter[23]}`,
+  );
   assert.equal(sim.link, 0, `${game.scenes[chapter].desc}: the route must leave through the counter gate itself`);
   console.log(`${game.scenes[chapter].desc}: passed in ${sim.ticks} ticks`);
 }
+
+const leafDoor = stage(4, PARK_GATE.x - 2);
+leafDoor.w.ci.meter[23] = 9;
+leafDoor.press(77);
+await leafDoor.run(80);
+assert.equal(leafDoor.pos.bx, PARK_GATE.x - 1, 'even a full stripe quota must wait for Gwinn’s leaf');
+assert.equal(leafDoor.link, -1);
+assert.equal(leafDoor.w.ci.meter[PARK_LEAF.counter], 1, 'a denied gate must not spend a missing leaf');
+leafDoor.w.ci.meter[PARK_LEAF.counter] = 2;
+await leafDoor.run(200);
+assert.equal(leafDoor.link, 0, 'the leaf and stripe objectives must both allow completion');
+assert.equal(leafDoor.w.ci.meter[PARK_LEAF.counter], 1, 'the wooden gate must use the leaf once');
+const leafOnly = stage(4, PARK_GATE.x - 2);
+leafOnly.w.ci.meter[PARK_LEAF.counter] = 2;
+leafOnly.press(77);
+await leafOnly.run(200);
+assert.equal(leafOnly.link, -1, 'the leaf cannot substitute for the car’s stripe quota');
+const returning = stage(4, PARK_GATE.x - 2);
+returning.press(75);
+await returning.run(4);
+returning.release(75);
+await returning.run(80, () => returning.pos.y <= 600);
+assert.ok(returning.pos.y <= 600, 'the far-side return stream must lift Teddy above the hedge');
+returning.press(75);
+await returning.run(200, () => returning.w.ci.meter[PARK_LEAF.counter] > 1);
+assert.ok(returning.pos.bx < 45 && !returning.dead, `a player who missed the leaf must be able to return to its branch: ${JSON.stringify(returning.pos)}`);
+returning.release(75);
+returning.press(77);
+returning.w.ci.meter[23] = 9;
+await returning.run(400);
+assert.equal(returning.link, 0, 'a wrong-route player must recover the leaf and finish the park');
+console.log('Park leaf: independent objectives, single-use gate, and wrong-route recovery passed');
 
 const hopping = stage(2, 20);
 hopping.press(72);
