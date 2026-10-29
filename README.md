@@ -42,6 +42,10 @@ The builder lives in `scripts/build-game.ts`. `scripts/chapters.ts` constructs t
 
 `assets/gwinn-door.voc`, `assets/teddy-bark.voc`, and `assets/teddy-yawn.voc` are short edits of Lewis Moten's recordings. Gwinn cheers when Teddy opens a car door, Teddy barks at balloon dogs, and his own yawn plays during a tiny nap.
 
+## The stripes return
+
+`scripts/stripe-car.ts` draws the measured CitiCar with only a few racing stripe fragments, then restores a section for each completed walking road. It compares two versions of the project’s own car drawing, changing only the stripe pixels while keeping the roof, door window, wheels, and lights. The victory car uses the complete drawing.
+
 ## Inside Sky Laundry
 
 - The air streams are two animated background blocks with upward gravity. Their arrows move while both animation frames keep the same pull.
