@@ -46,7 +46,7 @@ const { palette: pal, ink } = buildChapter(
 );
 
 // Draw a dedicated title and finish screen in the DOS picture format.
-function screen(name: string, headline: string, line: string, scenePal = pal, sceneInk = ink, beat = '', restored = 0) {
+function screen(name: string, headline: string, line: string, scenePal = pal, sceneInk = ink, beat = '', restored = 0, goal = '') {
   const navy = matchColor(scenePal, 4, 13, 19);
   const cream = matchColor(scenePal, 61, 56, 43);
   const gold = matchColor(scenePal, 63, 46, 21);
@@ -57,9 +57,12 @@ function screen(name: string, headline: string, line: string, scenePal = pal, sc
   p.blit(stripeCar(sceneInk, restored, 'right', 3), 100, 84, 255);
   clubCentered(p, 20, clubArt(headline), cream, 2);
   if (beat) centered(p, 58, beat, cream, 1);
+  if (goal) centered(p, 164, goal, cream, 1);
   centered(p, 177, line, gold, 1);
   put(name, encodeGif({ width: 320, height: 200, pixels: p.px, palette: scenePal }));
 }
+screen('card1.gif', 'THE STRIPE ROAD', 'UP: HOP OVER THE CRATES.', pal, ink, "TEDDY'S NOSE IS ON THE CASE.", 0, 'FIND 10 STRIPE PIECES');
+put('card1.lst', serializeSlideList([{ name: 'card1.gif', pause: 4 }]));
 screen('menu.gif', "TEDDY'S STRIPE CHASE", 'A VERY SMALL CAR. A HUGE QUEST.');
 screen('won.gif', 'TEDDY DID IT!', 'THE CHEZ IS 900% MORE DASHING', pal, ink, '', 1);
 screen('epilogue.gif', 'THE WHOLE CREW WON', 'TEAMWORK MAKES EVERY ROAD FUN', pal, ink, 'TEDDY FOUND THE WAY HOME.', 1);
@@ -219,7 +222,7 @@ level.files = [
   'teddy.cbl',
   'stripe.snd',
   'yard.cmf',
-  '',
+  'card1.lst',
   'drive.fli',
   ...new Array(9).fill(''),
 ];
@@ -230,8 +233,17 @@ CHAPTERS.forEach((chapter, index) => {
   const { palette, ink: chapterInk } = buildChapter(chapter, bytes, put);
   const card = `card${index + 2}.gif`;
   const list = `card${index + 2}.lst`;
-  screen(card, chapter.name.toUpperCase(), chapter.quip, palette, chapterInk, chapter.beat, chapter.stem === 'lap' ? 1 : 0);
-  put(list, serializeSlideList([{ name: card, pause: ['sky', 'maze', 'lap'].includes(chapter.stem) ? 4 : 2 }]));
+  screen(
+    card,
+    chapter.name.toUpperCase(),
+    chapter.quip,
+    palette,
+    chapterInk,
+    chapter.beat,
+    chapter.stem === 'lap' ? 1 : 0,
+    `FIND ${chapter.required} ${chapter.stem === 'lap' ? 'CHEER FLAGS' : 'STRIPE PIECES'}`,
+  );
+  put(list, serializeSlideList([{ name: card, pause: ['park', 'sky', 'maze', 'lap'].includes(chapter.stem) ? 4 : 2 }]));
   put(`${chapter.stem}.cmf`, chapterSong(index + 1));
   const next = CHAPTERS[index + 1];
   const drive = next ? `drive${index + 2}.fli` : '';

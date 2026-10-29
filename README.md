@@ -107,3 +107,5 @@ Walking characters use a single jump impulse for each press, instead of repeatin
 The courses use distinct sky colors and ground treatments. Sky Laundry keeps its complete hanging shirts above each cloud route; its builder adds platforms and air streams without clearing the backdrop.
 
 `scripts/park-errand.ts` builds a leftward upper branch, Gwinn’s leaf, a wooden leaf gate, and a return lift. `src/park-route.ts` shares the coordinates with the page; the native counter and door remain authoritative. The leaf uses extra counter 20, independently of the park’s stripe counter 23. The return lift lets a player who crosses the hedge too early come back for it.
+
+Every native chapter card states its collection target, including ten cheer flags for the victory lap. The first road has its own card teaching the crate hop and ten-piece goal. The opening and park instructions stay up for four seconds and can be skipped with the engine’s normal keys. These instructions are DOS GIF/LST files played by the engine, so the standalone game carries its targets with it.
