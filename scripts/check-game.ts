@@ -11,6 +11,7 @@ import { parseMap } from '../../GameMaker/web/src/formats/map.ts';
 import { parseMonsters } from '../../GameMaker/web/src/formats/monster.ts';
 import { newCharInfo } from '../../GameMaker/web/src/engine/world.ts';
 import { Sim } from '../../GameMaker/games/kit/sceneSim.ts';
+import { NAP_COLUMNS } from './sky-laundry.ts';
 
 const root = join(import.meta.dirname, '../public/game');
 const bytes = (name: string) => new Uint8Array(readFileSync(join(root, name)));
@@ -19,19 +20,24 @@ const ci = newCharInfo();
 for (const [index, scene] of game.scenes.entries()) if (index >= 2) {
   const map = parseMap(bytes(scene.files[1]));
   const blocks = parseBlocks(bytes(scene.files[2]), 150);
-  for (const id of map.blocks) {
+  for (const [at, id] of map.blocks.entries()) {
     const block = blocks[id];
-    assert.equal(block.obj || block.chHitPt || block.birthTime, 0, `${scene.desc}: no inherited pickups, hazards, or spawners`);
+    assert.equal(block.obj || block.birthTime, 0, `${scene.desc}: no inherited pickups or spawners`);
+    const nap = scene.files[1] === 'sky.map' && Math.floor(at / 100) === 39 && NAP_COLUMNS.includes(at % 100);
+    assert.equal(block.chHitPt, nap ? -1000 : 0, `${scene.desc}: only the marked nap clouds may cause a retry`);
     assert.ok(block.effect === 0 || block.effect === 19 + index, `${scene.desc}: only its own stripe counter may be used`);
   }
 }
-for (const name of ['intro.fli', 'drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'win.fli', 'lost.fli']) {
+for (const name of ['intro.fli', 'drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'drive5.fli', 'win.fli', 'lost.fli']) {
   assert.deepEqual(fliFaults(bytes(name)), [], `${name}: animation must fit the original DOS player`);
 }
 const doorBark = decodeVoc(bytes('gate.voc'));
 assert.ok(doorBark.samples.length / doorBark.sampleRate < 0.8, 'Gwinn bark must finish before the next scene starts');
 const teddyBark = decodeVoc(bytes('woof.voc'));
 assert.ok(teddyBark.samples.length / teddyBark.sampleRate < 0.8, 'Teddy bark must stay snappy during play');
+const teddyYawn = decodeVoc(bytes('yawn.voc'));
+assert.ok(teddyYawn.samples.length / teddyYawn.sampleRate < 1.2, 'Teddy yawn must finish during the nap animation');
+assert.equal(parseCharacter(bytes('teddy.chr')).meter[1], 2, 'two extra lives must provide three total tries');
 for (const name of ['story.txt', 'help.txt', 'credits.txt']) {
   const lines = new TextDecoder().decode(bytes(name)).trimEnd().split(/\r?\n/);
   assert.ok(lines.length <= 16 && lines.every((line) => line.length <= 30), `${name}: text must fit the DOS screen`);
@@ -54,8 +60,20 @@ async function play(chapter: number, startX: number, hop: boolean, progress = ne
   let waitingToBark = false;
   let barkAt = -1;
   let noHopUntil = -1;
+  const skyStops = [{ lift: 16, land: 20, row: 35 }, { lift: 36, land: 40, row: 33 }, { lift: 56, land: 60, row: 35 }];
+  let skyStop = 0;
+  let skyPhase = 'approach';
   sim.press(77);
   await sim.run(800, (tick) => {
+    if (chapter === 7 && hop) {
+      const stop = skyStops[skyStop];
+      if (!stop) return;
+      if (skyPhase === 'approach' && sim.pos.bx >= stop.lift) { sim.release(77); skyPhase = 'rise'; }
+      if (skyPhase === 'rise' && sim.pos.y <= stop.row * 20 - 20) { sim.press(77); skyPhase = 'fly'; }
+      if (skyPhase === 'fly' && sim.pos.bx >= stop.land) { sim.release(77); skyPhase = 'land'; }
+      if (skyPhase === 'land' && sim.pos.y === stop.row * 20) { sim.press(77); skyStop++; skyPhase = 'approach'; }
+      return;
+    }
     if (chapter === 4 && sim.pos.bx >= 44 && sim.pos.bx <= 46 && sim.w.ci.gravy < 0) tricks.lift = true;
     if (chapter === 5 && sim.pos.bx >= 28 && sim.pos.bx <= 34 && sim.w.ci.gravx > 0) tricks.push = true;
     if (chapter === 6 && bark) {
@@ -87,11 +105,16 @@ async function play(chapter: number, startX: number, hop: boolean, progress = ne
   return sim;
 }
 
-for (const [chapter, startX] of [[2, 10], [3, 8], [4, 8], [5, 8], [6, 8]]) {
+for (const [chapter, startX] of [[2, 10], [3, 8], [4, 8], [5, 8], [6, 8], [7, 8]]) {
   if (chapter > 2) {
     const tricks = { lift: false, push: false };
     const walker = await play(chapter, startX, false, newCharInfo(), tricks);
     assert.equal(walker.link, -1, `${game.scenes[chapter].desc}: walking should leave the car door closed`);
+    if (chapter === 7) {
+      assert.ok(walker.dead, 'walking into a marked nap cloud must trigger a retry');
+      assert.ok(walker.sounds.includes(18), 'the nap must play Teddy’s yawn');
+      assert.ok(!walker.sounds.includes(17), 'the nap must not play the source game’s hurt sound');
+    }
     if (chapter === 4) assert.ok(tricks.lift, 'the park air puff must lift Teddy');
     if (chapter === 5) assert.ok(tricks.push, 'the Downtown arrows must push Teddy');
   }

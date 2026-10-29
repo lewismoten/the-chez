@@ -10,7 +10,9 @@ import { createServer } from 'vite';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const demo = process.argv.includes('--demo');
+const retry = process.argv.includes('--retry');
 assert.ok(!(demo && process.argv.includes('--record')), 'record the played route, not its replay');
+assert.ok(!(retry && (demo || process.argv.includes('--record'))), 'verify retries separately from a full recording');
 const screenshots = await mkdtemp(join(tmpdir(), 'chez-browser-'));
 const server = await createServer({ root, logLevel: 'error', server: { host: '127.0.0.1', port: 4175, strictPort: true } });
 await server.listen();
@@ -18,7 +20,7 @@ let browser;
 
 // This controller uses the package's public input callbacks. It lives only in the test browser.
 function installDriver() {
-  let scene = 0, firstClock, lastClock, held = new Set(), target = 0, waiting = false, barkAt = -1, noHop = -1;
+  let scene = 0, firstClock, lastClock, held = new Set(), target = 0, waiting = false, barkAt = -1, noHop = -1, skyStop = 0, skyPhase = 'approach';
   window.__chezEnter = (next) => {
     scene = next;
     firstClock = lastClock = undefined;
@@ -26,22 +28,40 @@ function installDriver() {
     target = 0;
     waiting = false;
     barkAt = noHop = -1;
+    skyStop = 0;
+    skyPhase = 'approach';
     window.__chezScene = next;
+    (window.__chezEntries ??= []).push(next);
     console.log(`CHEZ entered scene ${next}`);
   };
   window.__chezDrive = (world, machine) => {
     window.__chezWorld = world;
-    if (scene < 2 || scene > 6 || world.clock === lastClock) return;
+    if (scene < 2 || scene > 7 || world.clock === lastClock) return;
     lastClock = world.clock;
     const key = (scan, down) => {
       if (held.has(scan) === down) return;
       if (down) held.add(scan); else held.delete(scan);
       machine.keyboard.inject(scan, down);
     };
-    if (firstClock === undefined) { firstClock = world.clock; key(77, true); return; }
+    if (firstClock === undefined) {
+      firstClock = world.clock;
+      for (const scan of [75, 77, 72, 57]) machine.keyboard.inject(scan, false);
+      key(77, true);
+      return;
+    }
     const tick = world.clock - firstClock;
     const x = world.chr.x[0], y = world.chr.y[0] * 20 + world.chr.y[1];
-    const car = [77, 83, 84, 80, 78][scene - 2], targets = [24, 43, 64, 70], hop = scene > 2;
+    const car = [77, 83, 84, 80, 78, 84][scene - 2], targets = [24, 43, 64, 70], hop = scene > 2;
+    if (window.__chezTakeNaps) return;
+    if (scene === 7) {
+      const stop = [{ lift: 16, land: 20, row: 35 }, { lift: 36, land: 40, row: 33 }, { lift: 56, land: 60, row: 35 }][skyStop];
+      if (!stop) return;
+      if (skyPhase === 'approach' && x >= stop.lift) { key(77, false); skyPhase = 'rise'; }
+      if (skyPhase === 'rise' && y <= stop.row * 20 - 20) { key(77, true); skyPhase = 'fly'; }
+      if (skyPhase === 'fly' && x >= stop.land) { key(77, false); skyPhase = 'land'; }
+      if (skyPhase === 'land' && y === stop.row * 20) { key(77, true); skyStop++; skyPhase = 'approach'; }
+      return;
+    }
     if (scene === 6) {
       if (target < targets.length && !waiting && barkAt < 0 && x >= targets[target] - 4) {
         key(77, false); key(72, false); waiting = true;
@@ -90,12 +110,18 @@ try {
   page.on('console', (message) => { if (message.text().startsWith('CHEZ entered')) console.log(message.text()); });
   await page.addInitScript(installDriver);
   await page.addInitScript((watching) => { window.__chezDemo = watching; }, demo);
+  await page.addInitScript((takingNaps) => { window.__chezTakeNaps = takingNaps; window.__chezRetryTest = takingNaps; }, retry);
   // Add observation hooks to Vite's response; no diagnostics or autoplayer ship in the app.
   await page.route('**/src/main.ts', async (route) => {
     const response = await route.fetch();
     let body = await response.text();
     for (const [before, after] of [
-      ['onSession: (session) => {', 'onSession: (session) => { window.__chezSession = session;'],
+      ['onSession: (session) => {', `onSession: (session) => { window.__chezSession = session;
+        if (window.__chezRetryTest) {
+          const title = session.game.scenes[0];
+          title.links[0] = { ...title.links[0], toScene: 7, to: { x: 23, y: 39 } };
+          title.files[0] = title.files[1] = '';
+        }`],
       ['session.onScene = (scene) => {', 'session.onScene = (scene) => { window.__chezEnter(scene);'],
       ['onFrame: (world) => {', 'onFrame: (world) => { if (!window.__chezDemo) window.__chezDrive(world, current);'],
       ['onPlayEnd: (_score, how) => {', 'onPlayEnd: (_score, how) => { window.__chezEnd = how;'],
@@ -108,8 +134,31 @@ try {
   await page.goto('http://127.0.0.1:4175/');
   await page.locator(demo ? '#watch-demo' : '#start').click();
   try {
-    await page.waitForFunction(() => window.__chezScene === 1, null, { timeout: 140_000 });
-    assert.equal(await page.locator('#stripe-progress').textContent(), '10 / 10');
+    if (retry) {
+      await page.waitForFunction(() => window.__chezSession?.rec.halted, null, { timeout: 60_000 });
+      await page.waitForTimeout(2000);
+      await page.screenshot({ path: join(screenshots, 'try-again.png') });
+      await page.waitForTimeout(5000);
+      for (let attempt = 0; attempt < 15 && !await page.locator('#game-overlay').isVisible(); attempt++) {
+        await page.keyboard.press('Enter');
+        await page.waitForTimeout(1000);
+      }
+      assert.equal(await page.evaluate(() => window.__chezEnd), 'lost');
+      assert.equal(await page.evaluate(() => window.__chezEntries.filter((scene) => scene === 7).length), 3, 'three naps must use exactly three tries');
+      assert.ok((await page.locator('#overlay-text').textContent()).includes('Sky Laundry'));
+      assert.equal(await page.locator('#start').textContent(), 'Try this road again');
+      await page.evaluate(() => { window.__chezTakeNaps = false; window.__chezRetryTest = false; window.__chezScene = 0; window.__chezEnd = undefined; });
+      await page.locator('#start').click();
+      await page.waitForFunction(() => window.__chezScene !== 0);
+      assert.equal(await page.evaluate(() => window.__chezScene), 7, 'retry must resume Sky Laundry');
+      await page.waitForFunction(() => window.__chezWorld?.ci.lives === 2);
+      assert.equal(await page.locator('#status').textContent(), 'Playing · 3 tries');
+      console.log('Nap loss and chapter checkpoint: passed');
+    }
+    await page.waitForFunction(() => window.__chezScene === 7 && window.__chezWorld?.chr.x[0] >= 20 && window.__chezWorld?.chr.x[0] < 32 && window.__chezWorld?.chr.y[0] === 35, null, { timeout: 210_000 });
+    await page.screenshot({ path: join(screenshots, 'sky-laundry.png') });
+    await page.waitForFunction(() => window.__chezScene === 1, null, { timeout: 60_000 });
+    assert.equal(await page.locator('#stripe-progress').textContent(), '9 / 9');
     assert.equal(await page.locator('#chapter-name').textContent(), 'Curtain call');
     await page.waitForTimeout(2000);
     await page.screenshot({ path: join(screenshots, 'win.png') });
@@ -127,12 +176,12 @@ try {
         await page.keyboard.press('Enter');
       }
       assert.equal(await page.locator('#status').textContent(), 'Demo finished');
-      assert.equal(await page.locator('#overlay-title').textContent(), 'Your turn, stripe scout!');
+      assert.equal(await page.locator('#overlay-title').textContent(), 'Your turn, Teddy!');
       assert.ok(await page.locator('#game-overlay').isVisible(), 'the demo must hand play back to the player');
       assert.ok(await page.locator('#start').isEnabled(), 'the player can start after watching');
     } else await page.waitForFunction(() => window.__chezEnd === 'won', null, { timeout: 15_000 });
     assert.deepEqual(errors, [], 'browser playthrough must have no page errors');
-    console.log(`All five chapters and the win ending${demo ? ' in demo playback' : ''}: passed. Screenshot: ${join(screenshots, 'win.png')}`);
+    console.log(`${retry ? 'Checkpoint recovery' : 'All six chapters'} and the win ending${demo ? ' in demo playback' : ''}: passed. Screenshot: ${join(screenshots, 'win.png')}`);
   } catch (error) {
     await page.screenshot({ path: join(screenshots, 'failure.png') });
     console.error(await page.evaluate(() => ({ scene: window.__chezScene, x: window.__chezWorld?.chr.x, y: window.__chezWorld?.chr.y })));

@@ -1,4 +1,4 @@
-// Build Teddy's five-chapter DOS Game-Maker stripe chase from source art and format helpers.
+// Build Teddy's six-chapter DOS Game-Maker stripe chase from source art and format helpers.
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +10,7 @@ import { matchColor, parsePalette } from '../../GameMaker/web/src/formats/palett
 import { encodeGif } from '../../GameMaker/web/src/formats/gif.ts';
 import { serializeSlideList } from '../../GameMaker/web/src/formats/graphicScripts.ts';
 import { parseSoundSet, serializeSoundSet } from '../../GameMaker/web/src/formats/sound.ts';
+import { parseCharacter, serializeCharacter } from '../../GameMaker/web/src/formats/character.ts';
 import { chezPicture } from '../../GameMaker/games/kit/chez.ts';
 import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
 import { centered } from '../../GameMaker/games/kit/pcText.ts';
@@ -148,25 +149,33 @@ snd.freqs[7] = SPEAKER.arpeggio([784, 1175, 1568]);
 snd.digital[7] = 'stripe';
 snd.freqs[8] = SPEAKER.fall(660, 240);
 snd.digital[8] = 'gate';
+snd.freqs[18] = SPEAKER.arpeggio([392, 330, 262]);
+snd.digital[18] = 'yawn';
 put('stripe.snd', serializeSoundSet(snd));
 put('stripe.voc', sample(0.22, mix([osc.sine(784), 0.42], [osc.sine((t) => 1175 + t * 1500), 0.35])));
 copyFileSync(join(here, 'assets/gwinn-door.voc'), join(output, 'gate.voc'));
+copyFileSync(join(here, 'assets/teddy-yawn.voc'), join(output, 'yawn.voc'));
 
 put('stripe.pal', pal);
 put('stripe.bbl', serializeBlocks(bbl));
 put('stripe.mbl', serializeBlocks(mbl));
 put('stripe.mon', bytes('backyard.mon'));
 put('stripe.map', serializeMap(map));
-for (const name of ['teddy.chr', 'teddy.cbl']) copyFileSync(join(source, name), join(output, name));
+const teddy = parseCharacter(bytes('teddy.chr'));
+// PLAYGAME stores extra lives: two extras plus the current attempt gives three tries.
+teddy.meter[1] = 2;
+teddy.sequences[2].sound = 30;
+put('teddy.chr', serializeCharacter(teddy));
+copyFileSync(join(source, 'teddy.cbl'), join(output, 'teddy.cbl'));
 for (const name of ['blip.voc', 'boing.voc', 'chomp.voc', 'crunch.voc', 'dig.voc', 'flop.voc', 'giggle.voc', 'honk.voc', 'rumble.voc', 'scratch.voc', 'sniff.voc', 'snore.voc', 'splash.voc', 'woof.voc', 'yelp.voc', 'yum.voc']) {
   try { copyFileSync(join(source, name), join(output, name)); } catch { /* Optional sound. */ }
 }
 copyFileSync(join(here, 'assets/teddy-bark.voc'), join(output, 'woof.voc'));
 copyFileSync(join(here, 'assets/teddy-tour.rec'), join(output, 'tour.rec'));
 const text = (name: string, lines: string[]) => put(name, new TextEncoder().encode(lines.join('\r\n') + '\r\n'));
-text('help.txt', ["TEDDY'S STRIPE CHASE", '', 'LEFT/RIGHT or A/D: walk', 'UP or W: hop', 'SPACE: bark', '', 'Find the stripe pieces.', 'The car door opens when', 'Teddy has enough for it.', '', 'High pieces need a hop.', 'At the Clown Club, bark at', 'balloon dogs for more.', '', 'Teddy scouts. Gwinn cheers.', 'Doc Leo drives.']);
-text('story.txt', ["TEDDY'S STRIPE CHASE", '', 'THE CHEZ lost its stripes.', 'Doc Leo says new ones will', 'make it go 900% faster.', 'The wind says: prove it.', '', 'Teddy volunteers his nose.', 'Gwinn volunteers to bark', 'at anything suspicious.', '', 'Five roads. Many stripes.', 'One corgi-sized hero.', '', 'A team goes farther than', 'one very speedy nose.']);
-text('credits.txt', ["TEDDY'S STRIPE CHASE", '', 'For Lewis Moten, Teddy,', 'Gwinn, Doc Leo and THE CHEZ.', '', 'Engine, source art, car:', 'Game-Maker Sandbox Edition', 'by Lewis Moten (MIT)', '', 'Dog barks: Lewis Moten', 'Game, text, music, sounds:', 'OpenAI Codex (GPT-6/6.1)']);
+text('help.txt', ["TEDDY'S STRIPE CHASE", '', 'LEFT/RIGHT or A/D: walk', 'UP or W: hop', 'SPACE: bark', '', 'Find stripes. Reach THE CHEZ.', 'Hop to reach high pieces.', 'Clown Club: bark at balloons.', '', 'Sky Laundry: pause in wind,', 'then walk onto cloud ledges.', 'Z clouds make Teddy nap.', 'Three tries. F5 saves a game.']);
+text('story.txt', ["TEDDY'S STRIPE CHASE", '', 'THE CHEZ lost its stripes.', 'Doc Leo says new ones will', 'make it go 900% faster.', 'The wind says: prove it.', '', 'Teddy volunteers his nose.', 'Gwinn volunteers to bark', 'at anything suspicious.', '', 'Six roads. Many stripes.', 'One corgi-sized hero.', '', 'A team goes farther than', 'one very speedy nose.']);
+text('credits.txt', ["TEDDY'S STRIPE CHASE", '', 'For Lewis Moten, Teddy,', 'Gwinn, Doc Leo and THE CHEZ.', '', 'Engine, source art, car:', 'Game-Maker Sandbox Edition', 'by Lewis Moten (MIT)', '', 'Dog barks/yawn: Lewis Moten', 'Game, text, music, sounds:', 'OpenAI Codex (GPT-6/6.1)']);
 
 const game = newGame('STRIPE CHASE');
 const [title, end] = game.scenes;
@@ -185,7 +194,7 @@ CHAPTERS.forEach((chapter, index) => {
   const card = `card${index + 2}.gif`;
   const list = `card${index + 2}.lst`;
   screen(card, chapter.name.toUpperCase(), chapter.quip, palette, chapterInk, chapter.beat);
-  put(list, serializeSlideList([{ name: card, pause: 2 }]));
+  put(list, serializeSlideList([{ name: card, pause: chapter.stem === 'sky' ? 4 : 2 }]));
   put(`${chapter.stem}.cmf`, chapterSong(index + 1));
   const next = CHAPTERS[index + 1];
   const drive = next ? `drive${index + 2}.fli` : '';
