@@ -95,7 +95,7 @@ function installDriver(chapters) {
 
 try {
   browser = await chromium.launch({ channel: 'chrome', headless: true });
-  for (const [width, height] of [[390, 800], [1440, 900], [844, 390], [568, 320]]) {
+  for (const [width, height] of [[390, 800], [1440, 900], [844, 390], [568, 320], [390, 320]]) {
     for (const colorScheme of ['light', 'dark']) {
       const page = await browser.newPage({ viewport: { width, height }, colorScheme });
       try {
@@ -107,6 +107,8 @@ try {
           const action = await page.locator(selector).boundingBox();
           assert.ok(action.y + action.height <= canvas.y + canvas.height, `${selector} must fit inside the game`);
         }
+        await page.locator('#road-atlas').evaluate((atlas) => { atlas.open = true; });
+        assert.equal(await page.locator('#road-atlas-list li').count(), CHAPTERS.length);
         const notebook = page.locator('.notebook-grid details');
         assert.equal(await notebook.count(), 8);
         await notebook.first().locator('summary').focus();
