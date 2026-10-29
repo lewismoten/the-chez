@@ -27,12 +27,13 @@ export function chapterSong(chapter: number): Uint8Array {
   const order = orders[chapter];
   if (!order) throw new Error(`Unknown chapter song ${chapter}`);
   const melody = order.map((i) => HOOK[i]);
+  const kiteChimes = ['r h, C6 e, G5 e, E5 e, C5 e', 'r h, F6 e, C6 e, A5 e, F5 e', 'r h, E6 e, C6 e, A5 e, E5 e', 'r h, D6 e, B5 e, G5 e, D5 e'];
   const twice = <T>(bars: T[]) => [...bars, ...bars];
   return tune([124, 142, 154, 164, 136, 116, 176][chapter], [
     v(0, chapter === 5 ? bell : chapter === 1 || chapter === 4 ? pluck : lead, join(twice(melody)), 110),
     v(1, bass, join(twice(order.map((i) => BASS[i]))), 91),
     v(2, pad, join(twice(order.map((i) => PAD[i]))), 56),
-    v(3, bell, join(twice(['r q, C5 e, r e, G5 q, r q', 'r q, F5 e, r e, C6 q, r q', 'r q, A5 e, r e, E6 q, r q', 'r q, G5 e, r e, D6 q, r q'])), 51),
+    v(3, bell, join(twice(chapter === 1 ? kiteChimes : ['r q, C5 e, r e, G5 q, r q', 'r q, F5 e, r e, C6 q, r q', 'r q, A5 e, r e, E6 q, r q', 'r q, G5 e, r e, D6 q, r q'])), 51),
   ]);
 }
 
