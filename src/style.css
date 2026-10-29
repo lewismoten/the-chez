@@ -27,3 +27,22 @@
   .overlay-card p:not(.eyebrow){display:none}
   .overlay-card .button{min-height:36px;padding:8px 16px}
 }
+
+/* Teddy's optional notebook reveals the native game tricks after the adventure. */
+.notebook-section{max-width:1480px;margin:auto;padding:0 5.5% 85px}
+.notebook-intro,.notebook-footnote{max-width:850px;color:#52616a;font-size:14px;line-height:1.7}
+.notebook-intro{margin:0 0 24px}
+.notebook-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.notebook-grid details{background:#fff8e9;border:1px solid #c4bba4;border-radius:10px;overflow:hidden}
+.notebook-grid summary{padding:20px;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;line-height:1.4}
+.notebook-grid summary:hover{background:#f2e6ce}
+.notebook-grid summary:focus-visible{outline:3px solid #b83725;outline-offset:-4px}
+.notebook-grid details[open] summary{border-bottom:1px solid #d5cdb7;background:#f2e6ce}
+.notebook-page{padding:0 20px 18px;font-size:14px;line-height:1.65;color:#40545d}
+.notebook-page .notebook-moral{padding-left:13px;border-left:3px solid #ba3a26;color:#793321}
+.notebook-file{font-size:12px}
+.notebook-section code{font-size:.92em;overflow-wrap:anywhere}
+.notebook-links{display:flex;flex-wrap:wrap;gap:8px 18px}
+.notebook-links a{display:inline-flex;align-items:center;min-height:30px;font-size:12px;font-weight:700;text-underline-offset:3px}
+.notebook-footnote{margin:24px 0 0;font-size:12px}
+@media(max-width:650px){.notebook-section{padding:0 5% 60px}.notebook-grid{grid-template-columns:1fr}.notebook-grid summary{font-size:16px;padding:17px}}

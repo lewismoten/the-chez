@@ -21,6 +21,10 @@ Z clouds send Teddy into a tiny nap and use one try. The status shows the tries 
 
 The **More Game-Maker games** section accepts another DOS game folder with a `.GAM` file and plays it through the same engine. Files stay in the browser.
 
+## Teddy’s glovebox notebook
+
+The page’s optional notebook explains the counter gates, bark exchanges, upward gravity and one-way cloud ledges, vehicle character, input recording, and music and cartoons. Each expandable entry names its source builder and links to actual downloadable DOS files. These are inspection examples; playing outside this page needs the complete `public/game/` folder. The notebook uses native HTML details controls and does not run a separate game simulation.
+
 ## Rebuild the DOS game
 
 ```sh
