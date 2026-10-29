@@ -44,7 +44,9 @@ The builder lives in `scripts/build-game.ts`. `scripts/chapters.ts` constructs t
 
 ## The stripes return
 
-`scripts/stripe-car.ts` draws the measured CitiCar with only a few racing stripe fragments, then restores a section for each completed walking road. It compares two versions of the project’s own car drawing, changing only the stripe pixels while keeping the roof, door window, wheels, and lights. The victory car uses the complete drawing.
+`scripts/stripe-car.ts` draws the measured CitiCar with only a few racing stripe fragments, then restores a section for each completed walking road. It compares two versions of the project’s own car drawing, changing only the stripe pixels while keeping the roof, door window, wheels, and lights. The victory car uses the complete drawing. The intro shows the stripes blowing off, parked cars show the repairs so far, and each transition fits another section. The last transition puts Teddy in the passenger window before the crew heads home.
+
+`scripts/road-stories.ts` supplies six connected, captioned jokes and their animated props: Doc Leo’s wildly optimistic speed claim, Gwinn’s suspicious leaf, the puddles’ praise, the leaf’s thank-you, friendly balloon dogs, and fitting the last stripe. `scripts/cartoons.ts` stages the crew, restores the stripes, and drives into the next road. Each short FLI can be skipped with the engine’s normal keys.
 
 ## Inside Sky Laundry
 
