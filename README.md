@@ -49,6 +49,10 @@ The builder lives in `scripts/build-game.ts`. `scripts/chapters.ts` constructs t
 - Marked Z clouds start Teddy's sleep animation. Game-Maker stores extra lives, so the builder gives him two extras and the page shows three total tries. After those tries, the page starts a fresh engine session at the same chapter's safe entrance.
 - Each height gets stripe artwork over its own sky band. Touching a piece replaces it with that same background, so collecting it leaves a clean sky rather than a floating rectangle.
 
+## Inside the leaf crossing
+
+`scripts/leaf-crossing.ts` builds Gwinn’s timed Downtown crossing from fourteen background block slots. Five barrier rows and a two-tile sign share a 36-tick WAIT / 54-tick GO cycle. The closed variants are solid; the open variants are passable. Labels, striped barriers, and directional chevrons explain the state without depending on color. Neither state hurts Teddy or costs a try. This uses PLAYGAME’s global block animation, including collision with the displayed variant, rather than a page timer.
+
 ## Inside the victory ride
 
 The vehicle is a new `.CHR` and `.CBL`, played by the same engine. Its steering frames add momentum instead of moving a fixed distance; the idle sequence lets that momentum decay. A bounce adds an upward impulse while keeping the horizontal momentum, and the horn sequence leaves the car rolling. The car sprite comes from the measured `chezPicture` drawing, reduced to the engine's 20-pixel actor width, with Teddy in the passenger window. The larger cartoons show the full car drawing.
