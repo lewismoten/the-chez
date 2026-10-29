@@ -10,7 +10,8 @@
     "check:release": "tsx scripts/check-release.mjs",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "check:guidance": "tsx scripts/check-guidance.mjs"
   },
   "repository": {
     "type": "git",

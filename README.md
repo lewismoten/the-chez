@@ -23,7 +23,7 @@ The **More Game-Maker games** section accepts another DOS game folder with a `.G
 
 ## Teddy’s road atlas and guidance
 
-The game heading gives each road a short mission. Near a locked exit, it names the pieces still needed and offers a relevant hint. Reaching the quota switches the hint to the destination. The heading reads the engine’s counters, position, and opened gate; it does not change the rules or open a gate. The optional road atlas previews the seven errands with short character blurbs. `src/road-guide.ts` renders the atlas and formats the guidance from `src/chapters.ts`.
+The game’s guidance strip gives each road a short mission. Near a locked exit, it names the pieces still needed and offers a relevant hint. Reaching the quota switches the hint to the destination. The strip reads the engine’s counters, position, and opened gate; it does not change the rules or open a gate. The optional road atlas previews the seven errands with short character blurbs. `src/road-guide.ts` renders the atlas and formats the guidance from `src/chapters.ts`.
 
 ## Teddy’s glovebox notebook
 
@@ -35,6 +35,7 @@ The page’s optional notebook explains the counter gates, timed leaf crossing, 
 npm run build:game
 npm run check:game
 npm run check:browser
+npm run check:guidance
 npm run check
 npm run build
 npm run check:release
@@ -83,4 +84,6 @@ Every exit has one scene link, on its locked tile. The finish ribbon is checked 
 
 `check:browser` needs locally installed Google Chrome. It starts its own temporary Vite server on port 4175, checks layout and accessibility in portrait and landscape, plays all seven chapters through the installed engine package, and checks the win ending. It stops its server afterwards. Add `-- --record` to save the successful run's DOS input recording to `assets/teddy-tour.rec`, `-- --demo` to verify the shipped recording, `-- --lap` to check the vehicle chapter directly, or `-- --retry` to deliberately lose three tries and verify the saved chapter after a page reload, three fresh tries, recovery, and clearing the checkpoint on a win. Rebuild the DOS game after recording a new demonstration.
 
-`check:release` builds into a temporary directory and previews it on port 4176. It uses only the page's public controls to watch the shipped demonstration, checks the mobile finale, then starts a new game. It reports missing assets or browser errors and removes its build and stops its server afterwards. Both browser commands use their own servers and leave the maintainer's port 5173 server alone.
+`check:guidance` runs `scripts/check-guidance.mjs` with its own temporary server on port 4177. It uses the public page controls and keyboard to reach Maple Street’s closed car door at 7/8, read the wind-post hint, catch a replacement kite, and continue. It also checks that spending the native gate quota keeps the completed goal visible through the road transition.
+
+`check:release` builds into a temporary directory and previews it on port 4176. It uses only the page's public controls to watch the shipped demonstration, checks the mobile finale, then starts a new game. It reports missing assets or browser errors and removes its build and stops its server afterwards. These browser commands use their own servers and leave the maintainer's port 5173 server alone.
