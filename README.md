@@ -17,7 +17,7 @@ Each new road changes the challenge: raised pieces call for hops, the park has a
 
 The fitted stripes pay off in **Teddy's Victory Lap**. Doc Leo drives while Teddy calls the corners from the passenger window. Hold Left to drive home, release it to coast to a stop, and use Right to reverse. Up bounces the car over the marked bumps; Space honks without stopping. Checkered flags count as cheers. This final road has no nap clouds.
 
-Z clouds send Teddy into a tiny nap and use one try. The status shows the tries left. After three naps, **Try this road again** resumes the current chapter with three fresh tries. **Restart** starts the whole adventure again. F5 and F6 also provide the engine's save and load screens.
+Z clouds send Teddy into a tiny nap and use one try. The status shows the tries left. After three naps, **Try this road again** resumes the current chapter with three fresh tries. **Restart** starts the whole adventure again. The browser remembers the current road between visits: **Continue with Teddy** begins at its safe entrance with three fresh tries. Watching the demonstration keeps your own saved road. Winning or choosing Restart clears it. If browser storage is unavailable, the current session still keeps its checkpoint. F5 and F6 also provide the engine's save and load screens.
 
 The **More Game-Maker games** section accepts another DOS game folder with a `.GAM` file and plays it through the same engine. Files stay in the browser.
 
@@ -56,6 +56,8 @@ The vehicle is a new `.CHR` and `.CBL`, played by the same engine. Its steering 
 The bounce has three protected ticks so a car stopped against a bump can rise before steering resumes. This avoids the engine's corner adjustment pushing the car down again while it is still too low to clear the bump.
 
 Neutral spacer sequences also make steer-and-bounce inputs safe when both keys arrive in the same tick. They account for the original player's behavior when it resumes a sequence before that sequence's first frame has played.
+
+`src/checkpoint.ts` stores only a validated road entrance in local browser storage, tied to the current chapter order. It never restores live engine objects, inventory, or a demonstration’s position.
 
 `src/chapters.ts` supplies the page's names, goals, entrances, and control labels. The game check compares those values with the built DOS scene graph and gates, including the victory road's entrance on the right.
 

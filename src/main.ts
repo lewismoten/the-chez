@@ -2,6 +2,7 @@
 import './style.css';
 import { GameFiles, Machine, runGame } from '@lewismoten/gamemaker-sandbox-engine';
 import { CHAPTERS } from './chapters';
+import { forgetCheckpoint, loadCheckpoint, rememberCheckpoint } from './checkpoint';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#engine-canvas')!;
 const overlay = document.querySelector<HTMLElement>('#game-overlay')!;
@@ -21,7 +22,7 @@ const progressLabel = document.querySelector<HTMLElement>('#progress-label')!;
 let machine: Machine | undefined;
 let selected: File[] = [];
 let launch = 0;
-let retryScene: number | undefined;
+let retryScene = loadCheckpoint();
 const chapterLabels = CHAPTERS.map((chapter) => chapter.name);
 const chapterGoals = CHAPTERS.map((chapter) => chapter.required);
 
@@ -87,12 +88,20 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
           if (skipMenu && scene >= 2 && scene < chapterLabels.length + 2 && machine === current) {
             chapterIndex = scene - 2;
             lastScene = scene;
+            if (!demo) {
+              retryScene = scene;
+              rememberCheckpoint(scene);
+            }
             chapterControls(chapterIndex);
             chapterName.textContent = chapterLabels[chapterIndex];
             stripeProgress.textContent = `0 / ${chapterGoals[chapterIndex]}`;
           }
           if (skipMenu && scene === 1 && machine === current) {
             finished = true;
+            if (!demo) {
+              retryScene = undefined;
+              forgetCheckpoint();
+            }
             chapterName.textContent = 'Curtain call';
             stripeProgress.textContent = `${chapterGoals[chapterIndex]} / ${chapterGoals[chapterIndex]}`;
             status.textContent = demo ? 'Teddy’s grand finale' : 'Stripes restored!';
@@ -114,7 +123,11 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
       onPlayEnd: (_score, how) => {
         if (machine !== current) return;
         outcome = how;
-        if (skipMenu && !demo) retryScene = how === 'lost' ? lastScene : undefined;
+        if (skipMenu && !demo) {
+          retryScene = how === 'won' ? undefined : lastScene;
+          if (retryScene === undefined) forgetCheckpoint();
+          else rememberCheckpoint(retryScene);
+        }
         status.textContent = skipMenu && how === 'won' ? 'Stripes restored!' : how === 'lost' ? 'Try again' : 'Game finished';
       },
     });
@@ -129,7 +142,9 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
           : outcome === 'lost'
             ? `${chapterLabels[lastScene - 2]} is ready for another go. Three fresh tries!`
             : 'The wind can wait. Teddy and the crew are ready whenever you are.';
-      startButton.textContent = outcome === 'lost' ? 'Try this road again' : 'Play as Teddy';
+      const canContinue = retryScene !== undefined;
+      if (demo && retryScene !== undefined) overlayText.textContent = `${chapterLabels[retryScene - 2]} is saved for you. Continue there with three fresh tries.`;
+      startButton.textContent = outcome === 'lost' ? 'Try this road again' : canContinue ? 'Continue with Teddy' : 'Play as Teddy';
       overlay.hidden = false;
     }
   } finally {
@@ -158,9 +173,20 @@ async function startBundled(demo = false) {
   }
 }
 
+if (retryScene !== undefined) {
+  const chapter = CHAPTERS[retryScene - 2];
+  overlayTitle.textContent = 'Teddy kept your place!';
+  overlayText.textContent = `${chapter.name} is ready. Continue from its safe entrance with three fresh tries, or choose Restart for a brand-new chase.`;
+  startButton.textContent = 'Continue with Teddy';
+  chapterName.textContent = chapter.name;
+  stripeProgress.textContent = `0 / ${chapter.required}`;
+  status.textContent = 'Road saved';
+  chapterControls(retryScene - 2);
+}
+
 startButton.addEventListener('click', () => { void startBundled(); });
-watchButton.addEventListener('click', () => { retryScene = undefined; void startBundled(true); });
-restartButton.addEventListener('click', () => { retryScene = undefined; void startBundled(); });
+watchButton.addEventListener('click', () => { void startBundled(true); });
+restartButton.addEventListener('click', () => { retryScene = undefined; forgetCheckpoint(); void startBundled(); });
 input.addEventListener('change', () => {
   selected = Array.from(input.files ?? []);
   const hasGame = selected.some((file) => file.name.toLowerCase().endsWith('.gam'));
