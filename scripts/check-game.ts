@@ -12,14 +12,25 @@ import { parseMonsters } from '../../GameMaker/web/src/formats/monster.ts';
 import { newCharInfo } from '../../GameMaker/web/src/engine/world.ts';
 import { Sim } from '../../GameMaker/games/kit/sceneSim.ts';
 import { NAP_COLUMNS } from './sky-laundry.ts';
+import { CHAPTERS } from '../src/chapters.ts';
+import { GameSim, readDisk } from '../../GameMaker/games/kit/gameSim.ts';
+import { parseRecording } from '../../GameMaker/web/src/formats/recording.ts';
 
 const root = join(import.meta.dirname, '../public/game');
 const bytes = (name: string) => new Uint8Array(readFileSync(join(root, name)));
 const game = parseGame(bytes('stripe.gam'));
+assert.equal(game.scenes.length, CHAPTERS.length + 2, 'the page must describe every playable chapter');
 const ci = newCharInfo();
 for (const [index, scene] of game.scenes.entries()) if (index >= 2) {
+  assert.equal(scene.desc, CHAPTERS[index - 2].name, 'the HUD and DOS chapter names must match');
+  const entrance = index === 2 ? game.scenes[0].links[0] : game.scenes[index - 1].links[0];
+  assert.equal(entrance.toScene, index, 'the story route must visit chapters in order');
+  assert.equal(entrance.to.x, CHAPTERS[index - 2].startX, 'the route and retry must use the same safe entrance');
+  assert.equal(scene.links.filter((link) => link.toScene !== 65535).length, 1, 'no backup link may bypass a counter gate');
   const map = parseMap(bytes(scene.files[1]));
   const blocks = parseBlocks(bytes(scene.files[2]), 150);
+  const gate = blocks[map.blocks[39 * 100 + CHAPTERS[index - 2].carX]];
+  assert.equal(gate.eamt, -CHAPTERS[index - 2].required, `${scene.desc}: the HUD must show the real gate quota`);
   for (const [at, id] of map.blocks.entries()) {
     const block = blocks[id];
     assert.equal(block.obj || block.birthTime, 0, `${scene.desc}: no inherited pickups or spawners`);
@@ -28,7 +39,7 @@ for (const [index, scene] of game.scenes.entries()) if (index >= 2) {
     assert.ok(block.effect === 0 || block.effect === 19 + index, `${scene.desc}: only its own stripe counter may be used`);
   }
 }
-for (const name of ['intro.fli', 'drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'drive5.fli', 'win.fli', 'lost.fli']) {
+for (const name of ['intro.fli', 'drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'drive5.fli', 'drive6.fli', 'win.fli', 'lost.fli']) {
   assert.deepEqual(fliFaults(bytes(name)), [], `${name}: animation must fit the original DOS player`);
 }
 const doorBark = decodeVoc(bytes('gate.voc'));
@@ -37,23 +48,41 @@ const teddyBark = decodeVoc(bytes('woof.voc'));
 assert.ok(teddyBark.samples.length / teddyBark.sampleRate < 0.8, 'Teddy bark must stay snappy during play');
 const teddyYawn = decodeVoc(bytes('yawn.voc'));
 assert.ok(teddyYawn.samples.length / teddyYawn.sampleRate < 1.2, 'Teddy yawn must finish during the nap animation');
+const horn = decodeVoc(bytes('meep.voc'));
+assert.ok(horn.samples.length / horn.sampleRate < 0.5, 'the victory horn must stay brief');
 assert.equal(parseCharacter(bytes('teddy.chr')).meter[1], 2, 'two extra lives must provide three total tries');
 for (const name of ['story.txt', 'help.txt', 'credits.txt']) {
   const lines = new TextDecoder().decode(bytes(name)).trimEnd().split(/\r?\n/);
   assert.ok(lines.length <= 16 && lines.every((line) => line.length <= 30), `${name}: text must fit the DOS screen`);
 }
 
-async function play(chapter: number, startX: number, hop: boolean, progress = newCharInfo(), tricks = { lift: false, push: false }, bark = false) {
+function stage(chapter: number, startX: number, progress = newCharInfo()) {
   const scene = game.scenes[chapter];
-  const sim = new Sim({
+  return new Sim({
     map: parseMap(bytes(scene.files[1])),
     bbl: parseBlocks(bytes(scene.files[2]), 150),
     mon: parseMonsters(bytes(scene.files[3])),
     mbl: parseBlocks(bytes(scene.files[4]), 100),
     chr: parseCharacter(bytes(scene.files[5])),
     cbl: parseBlocks(bytes(scene.files[6]), 50),
-    links: scene.links.slice(0, 2),
+    links: [scene.links[0]],
   }, { x: startX, y: 39 }, progress);
+}
+
+async function play(chapter: number, startX: number, hop: boolean, progress = newCharInfo(), tricks = { lift: false, push: false }, bark = false) {
+  const scene = game.scenes[chapter];
+  const sim = stage(chapter, startX, progress);
+  if (chapter === 8) {
+    let next = 0, bounced = -1;
+    sim.press(75);
+    await sim.run(500, (tick) => {
+      const ready = next === 0 ? sim.pos.bx === 66 && sim.pos.x % 20 === 0 && sim.w.ci.gravx === 0 : sim.pos.bx <= [66, 48, 28][next];
+      if (hop && next < 3 && ready) { sim.press(72); bounced = tick; next++; }
+      if (bounced >= 0 && tick === bounced + 2) { sim.release(72); bounced = -1; }
+    });
+    sim.release(75);
+    return sim;
+  }
   const carX = scene.links[0].from.x;
   const barkTargets = [24, 43, 64, 70];
   let barkTarget = 0;
@@ -105,7 +134,8 @@ async function play(chapter: number, startX: number, hop: boolean, progress = ne
   return sim;
 }
 
-for (const [chapter, startX] of [[2, 10], [3, 8], [4, 8], [5, 8], [6, 8], [7, 8]]) {
+for (const [index, info] of CHAPTERS.entries()) {
+  const chapter = index + 2, startX = info.startX;
   if (chapter > 2) {
     const tricks = { lift: false, push: false };
     const walker = await play(chapter, startX, false, newCharInfo(), tricks);
@@ -117,6 +147,16 @@ for (const [chapter, startX] of [[2, 10], [3, 8], [4, 8], [5, 8], [6, 8], [7, 8]
     }
     if (chapter === 4) assert.ok(tricks.lift, 'the park air puff must lift Teddy');
     if (chapter === 5) assert.ok(tricks.push, 'the Downtown arrows must push Teddy');
+    if (chapter === 8) {
+      walker.press(75);
+      walker.press(72);
+      await walker.run(2);
+      walker.release(72);
+      await walker.run(30);
+      walker.release(75);
+      assert.ok(walker.pos.x < 64 * 20, 'a stopped driver must be able to bounce over the first bump');
+      assert.equal(walker.dead, false, 'a missed bounce must never cost a try');
+    }
   }
   if (chapter === 6) {
     const silentScout = await play(chapter, startX, true);
@@ -125,5 +165,57 @@ for (const [chapter, startX] of [[2, 10], [3, 8], [4, 8], [5, 8], [6, 8], [7, 8]
   const sim = await play(chapter, startX, chapter > 2, ci, { lift: false, push: false }, chapter === 6);
   assert.equal(sim.dead, false, `${game.scenes[chapter].desc}: Teddy must finish safely`);
   assert.ok(sim.link >= 0, `${game.scenes[chapter].desc}: stripe trail must lead to the next chapter`);
+  assert.equal(sim.link, 0, `${game.scenes[chapter].desc}: the route must leave through the counter gate itself`);
   console.log(`${game.scenes[chapter].desc}: passed in ${sim.ticks} ticks`);
 }
+
+const vehicle = stage(8, 84);
+vehicle.press(75);
+await vehicle.run(20);
+assert.ok(84 * 20 - vehicle.pos.x > 180, 'the striped car must be faster than Teddy on foot');
+vehicle.release(75);
+const releasedAt = vehicle.pos.x;
+await vehicle.run(20);
+assert.ok(vehicle.pos.x < releasedAt, 'the vehicle must coast after release');
+assert.equal(Math.abs(vehicle.w.ci.gravx), 0, 'releasing the direction must bring the vehicle to rest');
+const backing = stage(8, 70);
+backing.press(77);
+await backing.run(10);
+assert.ok(backing.pos.x > 70 * 20, 'Right must back the car up');
+assert.equal(backing.w.chr.sequences[backing.w.chr.cseq].frames[backing.w.chr.cframe].orient, 0, 'backing must preserve the passenger-side view');
+const honker = stage(8, 84);
+honker.press(75);
+await honker.run(20);
+const beforeHonk = honker.pos.x;
+honker.press(57);
+await honker.run(6);
+assert.ok(honker.sounds.includes(20), 'Space must play the new victory horn');
+assert.ok(honker.pos.x < beforeHonk, 'honking must keep the car moving');
+
+for (const [start, direction] of [[12, 75], [9, 77]]) {
+  const finish = stage(8, start);
+  finish.press(direction);
+  await finish.run(40);
+  assert.equal(finish.link, -1, 'the finish ribbon must reject an empty cheer counter from either side');
+  finish.w.ci.meter[27] = 11;
+  await finish.run(40);
+  assert.equal(finish.link, 0, 'ten cheers must open the finish ribbon from either side');
+  assert.equal(finish.w.ci.meter[27], 1, 'the ribbon must use its ten cheers exactly once');
+}
+
+const tour = new GameSim(readDisk(root));
+const events = parseRecording(bytes('tour.rec'));
+let event = 0, due = events[0]?.delta ?? Infinity;
+for (let tick = 1; tick <= 5000 && !tour.ended; tick++) {
+  while (event < events.length && due <= tick) {
+    const key = events[event].key;
+    if (key & 0x80) tour.release(key & 0x7f); else tour.press(key);
+    event++;
+    due += events[event]?.delta ?? Infinity;
+  }
+  await tour.tick();
+}
+assert.equal(tour.ended, 'won', `the shipped tour must win; stopped in scene ${tour.scene} at ${JSON.stringify(tour.pos)}`);
+assert.equal(tour.deaths, 0, 'the demonstration must finish without a nap');
+assert.deepEqual(tour.trail, CHAPTERS.map((_, index) => index + 2), 'the demonstration must visit every chapter');
+console.log('Shipped DOS recording: all chapters passed');

@@ -1,6 +1,7 @@
 // Play the bundled DOS game or a locally selected game through the same Game-Maker engine.
 import './style.css';
 import { GameFiles, Machine, runGame } from '@lewismoten/gamemaker-sandbox-engine';
+import { CHAPTERS } from './chapters';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#engine-canvas')!;
 const overlay = document.querySelector<HTMLElement>('#game-overlay')!;
@@ -16,12 +17,23 @@ const playSelected = document.querySelector<HTMLButtonElement>('#play-engine')!;
 const filesStatus = document.querySelector<HTMLElement>('#files-status')!;
 const chapterName = document.querySelector<HTMLElement>('#chapter-name')!;
 const stripeProgress = document.querySelector<HTMLElement>('#stripe-progress')!;
+const progressLabel = document.querySelector<HTMLElement>('#progress-label')!;
 let machine: Machine | undefined;
 let selected: File[] = [];
 let launch = 0;
 let retryScene: number | undefined;
-const chapterLabels = ['The Stripe Road', 'Maple Street', 'Puddlewick Park', 'Downtown', 'The Clown Club', 'Sky Laundry'];
-const chapterGoals = [10, 8, 8, 9, 10, 9];
+const chapterLabels = CHAPTERS.map((chapter) => chapter.name);
+const chapterGoals = CHAPTERS.map((chapter) => chapter.required);
+
+function chapterControls(index: number) {
+  const driving = CHAPTERS[index]?.mode === 'drive';
+  progressLabel.textContent = driving ? 'CHEERS' : 'STRIPES';
+  document.querySelector('#move-label')!.textContent = driving ? 'Drive THE\u00a0CHEZ' : 'Move Teddy';
+  document.querySelector('#hop-label')!.textContent = driving ? 'Bounce' : 'Hop';
+  document.querySelector('#bark-label')!.textContent = driving ? 'Honk' : 'Bark';
+  document.querySelector('#hop')!.textContent = driving ? 'Bounce ↑' : 'Hop ↑';
+  document.querySelector('#bark')!.textContent = driving ? 'Honk!' : 'Bark!';
+}
 
 async function bundledFiles(): Promise<GameFiles> {
   const names = await fetch('/game/manifest.json').then((response) => {
@@ -50,6 +62,7 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
   machine = current;
   overlay.hidden = true;
   status.textContent = demo ? 'Teddy’s demo' : 'Playing';
+  chapterControls(0);
   if (skipMenu) {
     chapterName.textContent = 'The Stripe Road';
     stripeProgress.textContent = '0 / 10';
@@ -67,13 +80,14 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
       onSession: (session) => {
         if (skipMenu && resume !== undefined) {
           const title = session.game.scenes[0];
-          title.links[0] = { ...title.links[0], toScene: resume, to: { x: resume === 2 ? 10 : 8, y: 39 } };
+          title.links[0] = { ...title.links[0], toScene: resume, to: { x: CHAPTERS[resume - 2].startX, y: 39 } };
           title.files[0] = title.files[1] = '';
         }
         session.onScene = (scene) => {
           if (skipMenu && scene >= 2 && scene < chapterLabels.length + 2 && machine === current) {
             chapterIndex = scene - 2;
             lastScene = scene;
+            chapterControls(chapterIndex);
             chapterName.textContent = chapterLabels[chapterIndex];
             stripeProgress.textContent = `0 / ${chapterGoals[chapterIndex]}`;
           }
@@ -111,7 +125,7 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
       overlayText.textContent = demo
         ? 'Teddy showed the way. Move, hop, and bark the stripes home.'
         : finished
-          ? 'THE CHEZ is 900% more dashing. Teamwork was the real turbo button.'
+          ? 'THE\u00a0CHEZ is 900% more dashing. Teamwork was the real turbo button.'
           : outcome === 'lost'
             ? `${chapterLabels[lastScene - 2]} is ready for another go. Three fresh tries!`
             : 'The wind can wait. Teddy and the crew are ready whenever you are.';

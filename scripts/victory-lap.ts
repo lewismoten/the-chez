@@ -81,6 +81,7 @@ export function victoryLap(read: (name: string) => Uint8Array, put: (name: strin
   for (let y = 0; y < 10; y++) for (let x = 0; x < 20; x++) sprites[0].pixels[(y + 10) * 20 + x] = car.px[(y * 2 + 1) * 40 + x * 2 + 1];
   for (let x = 3; x < 18; x++) {
     const rise = x > 13 ? 1 : 0;
+    if (sprites[0].pixels[(15 - rise) * 20 + x] === red) sprites[0].pixels[(15 - rise) * 20 + x] = white;
     for (const y of [16 - rise, 18 - rise]) if (sprites[0].pixels[y * 20 + x] === red) sprites[0].pixels[y * 20 + x] = black;
   }
   // Teddy's matching ears and white blaze peek out of the passenger door window.
@@ -89,7 +90,7 @@ export function victoryLap(read: (name: string) => Uint8Array, put: (name: strin
   for (const x of [5, 15]) if (sprites[1].pixels[18 * 20 + x] !== 255) sprites[1].pixels[18 * 20 + x] = white;
   for (let y = 12; y < 18; y++) sprites[2].pixels[y * 20 + 3] = gold;
   sprites[2].pixels[19 * 20 + 3] = gold;
-  const frame = (pic: number, x = 0, y = 0, right = false): Frame => ({ ...emptyFrame(), pic1: 50, pic2: pic, pause: 1, x, y, orient: right ? 0x40 : 0 });
+  const frame = (pic: number, x = 0, y = 0): Frame => ({ ...emptyFrame(), pic1: 50, pic2: pic, pause: 1, x, y });
   const set = (index: number, frames: Frame[], options: Partial<Sequence> = {}) => {
     const sequence = character.sequences[index];
     sequence.frames = [...frames, ...Array.from({ length: 10 - frames.length }, () => emptyFrame(true))];
@@ -98,7 +99,8 @@ export function victoryLap(read: (name: string) => Uint8Array, put: (name: strin
   set(0, [frame(0)]);
   set(1, [frame(0), frame(0)]);
   set(2, [frame(0)]);
-  const steer = (index: number, scan: number, direction: number) => set(index, [frame(0, direction * 2, 0, direction > 0), frame(1, direction * 2, 0, direction > 0)], { key: scan << 8, momentum: 1 });
+  // Reversing backs up the car, keeping Teddy and the passenger side in view.
+  const steer = (index: number, scan: number, direction: number) => set(index, [frame(0, direction * 2), frame(1, direction * 2)], { key: scan << 8, momentum: 1 });
   steer(5, 77, 1); steer(7, 75, -1); steer(13, 32, 1); steer(15, 30, -1);
   const bounce = { ...frame(0, 0, -10), pause: 3 };
   set(9, [bounce], { key: 72 << 8, momentum: 1, norepeat: 1, ground: 1, sound: 16 });

@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { build, preview } from 'vite';
+import { CHAPTERS } from '../src/chapters.ts';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const directory = await mkdtemp(join(tmpdir(), 'chez-release-'));
@@ -26,7 +27,7 @@ try {
   await page.locator('#watch-demo').click();
   await page.waitForFunction(() => document.querySelector('#status')?.textContent === 'Teddy’s grand finale', null, { timeout: 210_000 });
   assert.equal(await page.locator('#chapter-name').textContent(), 'Curtain call');
-  assert.equal(await page.locator('#stripe-progress').textContent(), '9 / 9');
+  assert.equal(await page.locator('#stripe-progress').textContent(), `${CHAPTERS.at(-1).required} / ${CHAPTERS.at(-1).required}`);
   await page.waitForTimeout(2000);
   await page.screenshot({ path: join(screenshots, 'mobile-finale.png') });
   await page.waitForTimeout(8000);
@@ -45,6 +46,9 @@ try {
   await page.locator('#start').click();
   await page.waitForFunction(() => document.querySelector('#chapter-name')?.textContent === 'The Stripe Road' && document.querySelector('#status')?.textContent === 'Playing · 3 tries');
   assert.equal(await page.locator('#game-overlay').isVisible(), false);
+  assert.equal(await page.locator('#progress-label').textContent(), 'STRIPES');
+  assert.equal(await page.locator('#bark').textContent(), 'Bark!');
+  assert.equal(await page.locator('#hop').textContent(), 'Hop ↑');
   assert.deepEqual(errors, [], 'production playback must have no browser errors');
   assert.deepEqual(missing, [], 'production assets must all load');
   console.log(`Production demo, mobile finale, and handoff to play: passed. Screenshots: ${screenshots}`);

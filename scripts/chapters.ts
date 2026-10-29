@@ -6,6 +6,7 @@ import { matchColor, parsePalette } from '../../GameMaker/web/src/formats/palett
 import { chezPicture, type ChezInk } from '../../GameMaker/games/kit/chez.ts';
 import { clearInheritedInteractions } from './scenery.ts';
 import { skyLaundry } from './sky-laundry.ts';
+import { victoryLap } from './victory-lap.ts';
 
 export interface Chapter {
   source: 'street' | 'park' | 'city' | 'klub';
@@ -42,10 +43,14 @@ export const CHAPTERS: Chapter[] = [
     source: 'park', stem: 'sky', name: 'Sky Laundry', carX: 84, startX: 8, required: 9, counter: 26, sampleX: 17, quip: 'PAUSE IN WIND. AVOID Z CLOUDS.', beat: 'THE WIND WASHED THE STRIPES.',
     pieces: [{ x: 11, y: 39 }, { x: 76, y: 39 }, ...[20, 24, 28, 60, 64, 68].map((x) => ({ x, y: 35 })), ...[40, 44, 48].map((x) => ({ x, y: 33 }))],
   },
+  {
+    source: 'city', stem: 'lap', name: "Teddy's Victory Lap", carX: 10, startX: 84, required: 10, counter: 27, sampleX: 10, quip: 'LEFT: DRIVE. UP: BOUNCE.', beat: 'TEDDY FITTED EVERY STRIPE.', pieces: [],
+  },
 ];
 
 /** Generate a chapter's real DOS palette, map, block sets and monsters. */
 export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Array, put: (name: string, data: Uint8Array) => void): { palette: Uint8Array; ink: ChezInk } {
+  if (chapter.stem === 'lap') return victoryLap(read, put);
   const pal = parsePalette(read(`${chapter.source}.pal`));
   const bbl = parseBlocks(read(`${chapter.source}.bbl`), 150);
   const mbl = parseBlocks(read(`${chapter.source}.mbl`), 100);

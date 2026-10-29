@@ -6,8 +6,8 @@
     "dev": "vite",
     "build:game": "tsx scripts/build-game.ts",
     "check:game": "tsx scripts/check-game.ts",
-    "check:browser": "node scripts/check-browser.mjs",
-    "check:release": "node scripts/check-release.mjs",
+    "check:browser": "tsx scripts/check-browser.mjs",
+    "check:release": "tsx scripts/check-release.mjs",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "check": "tsc --noEmit"
