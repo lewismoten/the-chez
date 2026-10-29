@@ -1,10 +1,10 @@
-// Later stripe trails built from Teddy's original scenery and Game-Maker files.
+// Original stripe courses using shared cast art and native Game-Maker files.
 import { parseBlocks, serializeBlocks } from '../../GameMaker/web/src/formats/blocks.ts';
-import { parseMap, reindexMonsters, serializeMap } from '../../GameMaker/web/src/formats/map.ts';
+import { reindexMonsters, serializeMap } from '../../GameMaker/web/src/formats/map.ts';
 import { parseMonsters, serializeMonsters } from '../../GameMaker/web/src/formats/monster.ts';
 import { matchColor, parsePalette } from '../../GameMaker/web/src/formats/palette.ts';
 import type { ChezInk } from '../../GameMaker/games/kit/chez.ts';
-import { clearInheritedInteractions } from './scenery.ts';
+import { courseScenery, placeStripes } from './course-scenery.ts';
 import { skyLaundry } from './sky-laundry.ts';
 import { victoryLap } from './victory-lap.ts';
 import { leafCrossing } from './leaf-crossing.ts';
@@ -13,7 +13,7 @@ import { windKites } from './wind-kites.ts';
 import { gwinnMaze } from './gwinn-maze.ts';
 
 export interface Chapter {
-  source: 'street' | 'park' | 'city' | 'klub';
+  source: 'backyard' | 'street' | 'park' | 'city' | 'klub';
   stem: string;
   name: string;
   carX: number;
@@ -59,12 +59,10 @@ export const CHAPTERS: Chapter[] = [
 export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Array, put: (name: string, data: Uint8Array) => void): { palette: Uint8Array; ink: ChezInk } {
   if (chapter.stem === 'lap') return victoryLap(read, put);
   if (chapter.stem === 'maze') return gwinnMaze(read, put, 0);
-  const pal = parsePalette(read(`${chapter.source}.pal`));
-  const bbl = parseBlocks(read(`${chapter.source}.bbl`), 150);
+  const pal = parsePalette(read('backyard.pal'));
+  const { map, blocks: bbl } = courseScenery(chapter.stem, pal);
   const mbl = parseBlocks(read(`${chapter.source}.mbl`), 100);
   const monsters = parseMonsters(read(`${chapter.source}.mon`));
-  const map = parseMap(read(`${chapter.source}.map`));
-  clearInheritedInteractions(map, bbl, chapter.sampleX);
   const color = (r: number, g: number, b: number) => matchColor(pal, r, g, b);
   const black = color(9, 12, 15), red = color(52, 12, 9), white = color(62, 61, 57);
   const ink: ChezInk = { body: [red, red, red], trim: black, glass: [black, white], roof: black, tire: black, hub: white, bumper: black, lamp: white, tail: red, pin: white, rim: white };
@@ -81,11 +79,6 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
     }
   }
 
-  const sample = chapter.sampleX;
-  for (let x = chapter.startX; x <= chapter.carX + 1; x++) {
-    for (const y of [37, 38, 39]) map.blocks[y * 100 + x] = map.blocks[y * 100 + sample];
-    map.blocks[40 * 100 + x] = map.blocks[40 * 100 + sample];
-  }
   for (const placed of map.monsters) placed.monnum = 64;
   if (chapter.source === 'klub') {
     // Friendly balloon dogs hand over their stripe pieces when Teddy says woof.
@@ -97,7 +90,7 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
     for (const [i, x] of [24, 43, 64, 70].entries()) map.monsters[i] = { monnum: 16, status: 0, xtra: 0, curx: x, cury: 39, extra: 0 };
   }
   // Gwinn keeps the rendezvous by the car, using an unused background block slot.
-  const sky = map.blocks[39 * 100 + sample];
+  const sky = map.blocks[39 * 100 + chapter.carX - 4];
   const gwinnBlock = Array.from({ length: 149 }, (_, i) => 148 - i).find((i) => !map.blocks.includes(i));
   if (gwinnBlock === undefined) throw new Error(`No block slot for Gwinn in ${chapter.name}`);
   bbl[gwinnBlock] = { ...bbl[sky], pixels: bbl[sky].pixels.slice(), nextBl: gwinnBlock, touchBl: gwinnBlock };
@@ -107,23 +100,13 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
 
   const car = stripeCar(ink, 0);
   const free = Array.from({ length: 149 }, (_, i) => 148 - i).filter((i) => i !== gwinnBlock && !map.blocks.includes(i));
-  const [doorIndex, backIndex, openIndex, pieceIndex, highPieceIndex] = free;
-  if ([doorIndex, backIndex, openIndex, pieceIndex, highPieceIndex].some((index) => index === undefined)) throw new Error(`No block slots for THE CHEZ in ${chapter.name}`);
-  const carBase = map.blocks[39 * 100 + chapter.startX + 1];
+  const [doorIndex, backIndex, openIndex] = free;
+  if ([doorIndex, backIndex, openIndex].some((index) => index === undefined)) throw new Error(`No block slots for THE CHEZ in ${chapter.name}`);
+  const carBase = map.blocks[39 * 100 + chapter.carX];
   bbl[doorIndex] = { ...bbl[carBase], pixels: bbl[carBase].pixels.slice(), nextBl: doorIndex, touchBl: doorIndex };
   bbl[backIndex] = { ...bbl[carBase], pixels: bbl[carBase].pixels.slice(), nextBl: backIndex, touchBl: backIndex };
   map.blocks[39 * 100 + chapter.carX] = doorIndex;
   map.blocks[39 * 100 + chapter.carX + 1] = backIndex;
-  const pieceSlots = chapter.stem === 'sky' ? [[39, pieceIndex], [35, highPieceIndex], [33, free[10]]] : [[39, pieceIndex], [38, highPieceIndex]];
-  for (const [y, index] of pieceSlots) {
-    if (index === undefined) throw new Error(`No stripe slot for row ${y} in ${chapter.name}`);
-    const base = map.blocks[y * 100 + (chapter.stem === 'sky' ? chapter.sampleX : chapter.startX + 1)];
-    bbl[index] = { ...bbl[base], pixels: bbl[base].pixels.slice(), effect: chapter.counter, eamt: 1, scorePts: 25, nextBl: index, touchBl: base };
-    for (let py = 6; py <= 13; py++) for (let px = 2; px <= 17; px++) {
-      const dx = px - 2;
-      bbl[index].pixels[py * 20 + px] = py === 6 || py === 13 || px === 2 || px === 17 ? white : dx < 5 || dx > 10 ? black : red;
-    }
-  }
   if (chapter.stem === 'sky') skyLaundry(map, bbl, free.slice(5), pal, chapter.sampleX);
   else if (chapter.source === 'park' || chapter.source === 'city') {
     const mechanicIndex = free[5];
@@ -137,14 +120,9 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
   }
   if (chapter.stem === 'street') windKites(map, bbl, monsters, mbl, free.slice(5), pal, chapter.counter);
   if (chapter.stem === 'city') leafCrossing(map, bbl, free.slice(6), pal);
-  for (const { x, y } of chapter.pieces) {
-    const slot = pieceSlots.find(([row]) => row === y)?.[1];
-    if (slot === undefined) throw new Error(`No stripe artwork for row ${y} in ${chapter.name}`);
-    map.blocks[y * 100 + x] = slot;
-  }
   for (let half = 0; half < 2; half++) {
     const block = bbl[half ? backIndex : doorIndex];
-    block.pixels.set(bbl[sky].pixels);
+    block.pixels.set(bbl[map.blocks[39 * 100 + chapter.carX + half]].pixels);
     for (let y = 0; y < 20; y++) for (let x = 0; x < 20; x++) {
       const c = car.px[y * 40 + x + half * 20];
       if (c !== 255) block.pixels[y * 20 + x] = c;
@@ -156,6 +134,7 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
   bbl[doorIndex].touchBl = openIndex;
   bbl[openIndex] = { ...bbl[doorIndex], pixels: bbl[doorIndex].pixels.slice(), solid: 0, effect: 0, eamt: 0, nextBl: openIndex, touchBl: openIndex };
   for (let y = 7; y < 16; y++) for (let x = 6; x < 13; x++) bbl[openIndex].pixels[y * 20 + x] = black;
+  placeStripes(map, bbl, chapter.pieces, chapter.counter, [black, red, white], [openIndex]);
   reindexMonsters(map);
   put(`${chapter.stem}.pal`, pal);
   put(`${chapter.stem}.bbl`, serializeBlocks(bbl));

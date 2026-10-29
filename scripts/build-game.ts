@@ -2,11 +2,8 @@
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseBlocks, serializeBlocks } from '../../GameMaker/web/src/formats/blocks.ts';
 import { ADVTYPE, emptyScene, newGame, serializeGame } from '../../GameMaker/web/src/formats/game.ts';
-import { parseMap, reindexMonsters, serializeMap } from '../../GameMaker/web/src/formats/map.ts';
-import { parseMonsters } from '../../GameMaker/web/src/formats/monster.ts';
-import { matchColor, parsePalette } from '../../GameMaker/web/src/formats/palette.ts';
+import { matchColor } from '../../GameMaker/web/src/formats/palette.ts';
 import { encodeGif } from '../../GameMaker/web/src/formats/gif.ts';
 import { serializeSlideList } from '../../GameMaker/web/src/formats/graphicScripts.ts';
 import { parseSoundSet, serializeSoundSet } from '../../GameMaker/web/src/formats/sound.ts';
@@ -19,7 +16,6 @@ import { SPEAKER, mix, osc, sample } from '../../GameMaker/games/kit/sound.ts';
 import { chapterSong, openingSong, retrySong, winningSong } from './music.ts';
 import { driveCartoon, losingCartoon, openingCartoon, winningCartoon } from './cartoons.ts';
 import { buildChapter, CHAPTERS } from './chapters.ts';
-import { clearInheritedInteractions } from './scenery.ts';
 
 const here = fileURLToPath(new URL('..', import.meta.url));
 const source = join(here, '../GameMaker/games/teddy/disk');
@@ -29,90 +25,8 @@ mkdirSync(output, { recursive: true });
 const bytes = (name: string) => new Uint8Array(readFileSync(join(source, name)));
 const put = (name: string, data: Uint8Array) => writeFileSync(join(output, name), data);
 
-// Reuse Teddy's character, sounds, and morning palette. Draw new stripe pieces into the
-// ticket monster's two animation frames, so each piece increments counter 21 on touch.
-const pal = parsePalette(bytes('backyard.pal'));
-const bbl = parseBlocks(bytes('backyard.bbl'), 150);
-const mbl = parseBlocks(bytes('backyard.mbl'), 100);
-const monsters = parseMonsters(bytes('backyard.mon'));
-const ticket = monsters[12];
-const black = matchColor(pal, 9, 12, 15);
-const red = matchColor(pal, 52, 12, 9);
-const white = matchColor(pal, 62, 61, 57);
-for (const index of [ticket.pic[0][0], ticket.pic[1][0]]) {
-  const block = mbl[index];
-  block.pixels.fill(255);
-  for (let y = 6; y <= 13; y++) for (let x = 2; x <= 17; x++) {
-    const dx = x - 2;
-    const edge = y === 6 || y === 13 || x === 2 || x === 17;
-    block.pixels[y * 20 + x] = edge ? white : dx < 5 || dx > 10 ? black : red;
-  }
-}
-
-// A level road leads from Teddy's house to Doc Leo and THE CHEZ. A few spare pieces
-// allow a missed pickup; the car door opens only after ten have been collected.
-const map = parseMap(bytes('backyard.map'));
-const originalDoorIndex = map.blocks[39 * 100 + 77];
-const originalBackIndex = map.blocks[39 * 100 + 78];
-clearInheritedInteractions(map, bbl, 6);
-const sky = map.blocks[39 * 100 + 6];
-const upperSky = map.blocks[38 * 100 + 6];
-const hedgeSky = map.blocks[37 * 100 + 6];
-const grass = map.blocks[40 * 100 + 11];
-const dirt = map.blocks[41 * 100 + 11];
-for (let x = 10; x <= 79; x++) {
-  map.blocks[37 * 100 + x] = hedgeSky;
-  map.blocks[38 * 100 + x] = upperSky;
-  map.blocks[39 * 100 + x] = sky;
-  map.blocks[40 * 100 + x] = grass;
-  map.blocks[41 * 100 + x] = dirt;
-}
-for (const placed of map.monsters) placed.monnum = 64;
-const spots = [11, 16, 21, 26, 31, 36, 41, 46, 51, 56, 61, 66, 71];
-reindexMonsters(map);
-
-// Gwinn waits near the car to meet Teddy at the end of the stripe trail.
-const gwinnBlock = Array.from({ length: 149 }, (_, i) => 148 - i).find((i) => i !== originalDoorIndex && i !== originalBackIndex && !map.blocks.includes(i));
-if (gwinnBlock === undefined) throw new Error('No background block slot for Gwinn');
-bbl[gwinnBlock] = { ...bbl[sky], pixels: bbl[sky].pixels.slice(), nextBl: gwinnBlock, touchBl: gwinnBlock };
-const gwinnPixels = mbl[monsters[10].pic[0][0]].pixels;
-for (let i = 0; i < 400; i++) if (gwinnPixels[i] !== 255) bbl[gwinnBlock].pixels[i] = gwinnPixels[i];
-map.blocks[39 * 100 + 73] = gwinnBlock;
-
-// The car uses the source project's measured CitiCar drawing. Preserve the existing
-// door's touch behavior, but require all ten stripe pieces before it opens.
-const doorIndex = originalDoorIndex;
-const backIndex = originalBackIndex;
-map.blocks[39 * 100 + 77] = doorIndex;
-map.blocks[39 * 100 + 78] = backIndex;
-const openIndex = Array.from({ length: 149 }, (_, i) => 148 - i).find((i) => i !== gwinnBlock && !map.blocks.includes(i));
-if (openIndex === undefined) throw new Error('No background block slot for the open car door');
-const pieceIndex = Array.from({ length: 149 }, (_, i) => 148 - i).find((i) => i !== gwinnBlock && i !== openIndex && !map.blocks.includes(i));
-if (pieceIndex === undefined) throw new Error('No background block slot for stripe pieces');
-const pieceBase = map.blocks[39 * 100 + 12];
-bbl[pieceIndex] = { ...bbl[pieceBase], pixels: bbl[pieceBase].pixels.slice(), effect: 21, eamt: 1, scorePts: 25, nextBl: pieceIndex, touchBl: pieceBase };
-for (let y = 6; y <= 13; y++) for (let x = 2; x <= 17; x++) {
-  const dx = x - 2;
-  bbl[pieceIndex].pixels[y * 20 + x] = y === 6 || y === 13 || x === 2 || x === 17 ? white : dx < 5 || dx > 10 ? black : red;
-}
-for (const x of spots) map.blocks[39 * 100 + x] = pieceIndex;
-const ink = { body: [red, red, red] as [number, number, number], trim: black, glass: [black, white] as [number, number], roof: black, tire: black, hub: white, bumper: black, lamp: white, tail: red, pin: white, rim: white };
-const car = stripeCar(ink, 0);
-for (let half = 0; half < 2; half++) {
-  const block = bbl[half ? backIndex : doorIndex];
-  block.pixels.set(bbl[sky].pixels);
-  for (let y = 0; y < 20; y++) for (let x = 0; x < 20; x++) {
-    const c = car.px[y * 40 + x + half * 20];
-    if (c !== 255) block.pixels[y * 20 + x] = c;
-  }
-}
-bbl[doorIndex].effect = 21;
-bbl[doorIndex].eamt = -10;
-bbl[doorIndex].scorePts = 0;
-bbl[doorIndex].solid = 15;
-bbl[doorIndex].touchBl = openIndex;
-bbl[openIndex] = { ...bbl[doorIndex], pixels: bbl[doorIndex].pixels.slice(), solid: 0, effect: 0, eamt: 0, nextBl: openIndex, touchBl: openIndex };
-for (let y = 7; y < 16; y++) for (let x = 6; x < 13; x++) bbl[openIndex].pixels[y * 20 + x] = black;
+// The tutorial is an original course, built by the same native pipeline as the later roads.
+const { palette: pal, ink } = buildChapter({ source: 'backyard', stem: 'stripe', name: 'The Stripe Road', carX: 77, startX: 10, required: 10, counter: 21, sampleX: 6, quip: '', beat: '', pieces: [11,16,21,26,31,36,41,46,51,56,61,66,71].map(x => ({ x, y: 39 })) }, bytes, put);
 
 // Draw a dedicated title and finish screen in the DOS picture format.
 function screen(name: string, headline: string, line: string, scenePal = pal, sceneInk = ink, beat = '', restored = 0) {
@@ -160,11 +74,6 @@ put('meep.voc', sample(0.3, mix([osc.sine((t) => t < 0.14 ? 440 : 660), 0.5], [o
 copyFileSync(join(here, 'assets/gwinn-door.voc'), join(output, 'gate.voc'));
 copyFileSync(join(here, 'assets/teddy-yawn.voc'), join(output, 'yawn.voc'));
 
-put('stripe.pal', pal);
-put('stripe.bbl', serializeBlocks(bbl));
-put('stripe.mbl', serializeBlocks(mbl));
-put('stripe.mon', bytes('backyard.mon'));
-put('stripe.map', serializeMap(map));
 const teddy = parseCharacter(bytes('teddy.chr'));
 // PLAYGAME stores extra lives: two extras plus the current attempt gives three tries.
 teddy.meter[1] = 2;
