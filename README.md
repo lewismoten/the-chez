@@ -68,6 +68,10 @@ The builder lives in `scripts/build-game.ts`. `scripts/chapters.ts` constructs t
 
 `scripts/leaf-crossing.ts` builds Gwinn’s timed Downtown crossing from eighteen background block slots. Five barrier rows, a two-tile sign, and a leaf that swaps sides share a 54-tick WAIT / 54-tick GO cycle. The closed variants are solid; the open variants are passable. Labels, striped barriers, and directional chevrons explain the state without depending on color. Neither state hurts Teddy or costs a try. This uses PLAYGAME’s global block animation, including collision with the displayed variant, rather than a page timer.
 
+## Inside Gwinn’s shortcut
+
+`scripts/gwinn-maze.ts` builds a garden maze and a native four-way Teddy character. All scenery has zero gravity; character frames move in fixed steps, so Up and Down walk instead of hopping. Three-cell corridors give room to turn, pawprints indicate the exit route, and side nooks hold spare stripes. The maze has no hazards or disappearing paths. `MAZE_ROUTE` describes a safe route for verification.
+
 ## Inside the victory ride
 
 The vehicle is a new `.CHR` and `.CBL`, played by the same engine. Its steering frames add momentum instead of moving a fixed distance; the idle sequence lets that momentum decay. A bounce adds an upward impulse while keeping the horizontal momentum, and the horn sequence leaves the car rolling. The car sprite comes from the measured `chezPicture` drawing, reduced to the engine's 20-pixel actor width, with Teddy in the passenger window. The larger cartoons show the full car drawing.
