@@ -1,11 +1,15 @@
-STRIPE CHASE
+TEDDY'S STRIPE CHASE
 
-Move Teddy with LEFT and RIGHT
-or A and D. UP or W hops.
+LEFT/RIGHT or A/D: walk
+UP or W: hop
 
-Collect the stripe pieces on
-the road. Find ten to open
-the door of THE CHEZ.
+Find the stripe pieces.
+The car door opens when
+Teddy has enough for it.
 
-Gwinn is cheering you on!
-Doc Leo waits by the car.
+High pieces need a hop.
+Try a hop BEFORE the stripe.
+
+Teddy scouts. Gwinn cheers.
+Doc Leo drives. Everybody
+gets a turn to help.

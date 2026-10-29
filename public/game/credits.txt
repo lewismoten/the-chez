@@ -1,9 +1,11 @@
-THE CHEZ: STRIPE CHASE
+TEDDY'S STRIPE CHASE
 
-For Lewis Moten and his
-CitiCar, Teddy, and Gwinn.
+For Lewis Moten, Teddy,
+Gwinn, Doc Leo and THE CHEZ.
 
-Game-Maker engine and art:
+Engine, source art, car:
 Game-Maker Sandbox Edition
+by Lewis Moten (MIT)
 
-Game and text: Codex GPT-6
+Game, text, music, sounds:
+OpenAI Codex (GPT-6)

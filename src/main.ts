@@ -11,6 +11,8 @@ const engineStatus = document.querySelector<HTMLElement>('#engine-status')!;
 const input = document.querySelector<HTMLInputElement>('#game-files')!;
 const playSelected = document.querySelector<HTMLButtonElement>('#play-engine')!;
 const filesStatus = document.querySelector<HTMLElement>('#files-status')!;
+const chapterName = document.querySelector<HTMLElement>('#chapter-name')!;
+const stripeProgress = document.querySelector<HTMLElement>('#stripe-progress')!;
 let machine: Machine | undefined;
 let selected: File[] = [];
 
@@ -35,6 +37,13 @@ async function run(files: GameFiles, skipMenu: boolean) {
   machine = current;
   overlay.hidden = true;
   status.textContent = 'Playing';
+  if (skipMenu) {
+    chapterName.textContent = 'The Stripe Road';
+    stripeProgress.textContent = '0 / 10';
+  } else {
+    chapterName.textContent = 'Selected game';
+    stripeProgress.textContent = '—';
+  }
   canvas.focus();
   await current.audio.resume();
   try {
@@ -42,8 +51,20 @@ async function run(files: GameFiles, skipMenu: boolean) {
       record: skipMenu,
       onSession: (session) => {
         session.onScene = (scene) => {
+          if (skipMenu && scene >= 2 && scene <= 4 && machine === current) {
+            chapterName.textContent = ['The Stripe Road', 'Maple Street', 'Puddlewick Park'][scene - 2];
+            stripeProgress.textContent = `0 / ${[10, 8, 8][scene - 2]}`;
+          }
           if (skipMenu && scene === 1 && machine === current) status.textContent = 'Stripes restored!';
         };
+      },
+      onFrame: (world) => {
+        if (!skipMenu || machine !== current) return;
+        const chapter = chapterName.textContent;
+        const required = chapter === 'The Stripe Road' ? 10 : 8;
+        const found = Math.max(0, world.ci.meter[chapter === 'The Stripe Road' ? 21 : chapter === 'Maple Street' ? 22 : 23] - 1);
+        const label = `${found} / ${required}`;
+        if (stripeProgress.textContent !== label) stripeProgress.textContent = label;
       },
       onPlayEnd: (_score, how) => {
         if (machine === current) status.textContent = skipMenu && how === 'won' ? 'Stripes restored!' : how === 'lost' ? 'Try again' : 'Game finished';
