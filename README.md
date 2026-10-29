@@ -13,7 +13,7 @@ Open the Vite URL and choose **Play as Teddy**. Move Teddy with the Left and Rig
 
 **Watch Teddy** plays a complete demonstration using a DOS `.REC` input recording through the same engine. Choose **Restart** to start your own game at any time. The recording stores keys and timing, not a video or a second implementation of the game.
 
-Each new road changes the challenge: raised pieces call for hops, the park has a lifting air puff, Downtown adds a conveyor strip and a timed WAIT / GO crossing for Gwinn’s very important leaf, and the Clown Club has friendly balloon dogs who share stripe pieces when Teddy barks. Sky Laundry takes the route upward: pause in an air stream, drift onto a cloud ledge, and gather the stripes above the marked Z clouds.
+Each new road changes the challenge: Maple Street’s flying stripe kites call for hops, the park has a lifting air puff, Downtown adds a conveyor strip and a timed WAIT / GO crossing for Gwinn’s very important leaf, and the Clown Club has friendly balloon dogs who share stripe pieces when Teddy barks. Sky Laundry takes the route upward: pause in an air stream, drift onto a cloud ledge, and gather the stripes above the marked Z clouds.
 
 The fitted stripes pay off in **Teddy's Victory Lap**. Doc Leo drives while Teddy calls the corners from the passenger window. Hold Left to drive home, release it to coast to a stop, and use Right to reverse. Up bounces the car over the marked bumps; Space honks without stopping. Checkered flags count as cheers. This final road has no nap clouds.
 
@@ -57,7 +57,7 @@ The builder lives in `scripts/build-game.ts`. `scripts/chapters.ts` constructs t
 
 ## Inside the wind kites
 
-`scripts/wind-kites.ts` turns stripe pieces into native moving actors on a closed four-corner path above Maple Street. Touching a kite collects it. Wind posts send replacements every 64 ticks, so barking away or missing the first batch cannot strand Teddy. Kites expire after 320 ticks to keep the population bounded. Seven ground pieces leave only one kite needed for the eight-piece quota.
+`scripts/wind-kites.ts` turns stripe pieces into native moving actors on a closed four-corner path above Maple Street. PLAYGAME measures these normal-path corners from the starting cell; the last corner returns to (0, 0) so each loop stays in the same patch of sky. Touching a kite collects it. Wind posts send replacements every 64 ticks, so barking away or missing the first batch cannot strand Teddy. Kites expire after 320 ticks to keep the population bounded. Seven ground pieces leave only one kite needed for the eight-piece quota.
 
 ## Inside the leaf crossing
 
