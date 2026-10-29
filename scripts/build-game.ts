@@ -1,4 +1,4 @@
-// Build Teddy's three-chapter DOS Game-Maker stripe chase from source art and format helpers.
+// Build Teddy's five-chapter DOS Game-Maker stripe chase from source art and format helpers.
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -156,7 +156,7 @@ for (const name of ['blip.voc', 'boing.voc', 'chomp.voc', 'crunch.voc', 'dig.voc
 }
 const text = (name: string, lines: string[]) => put(name, new TextEncoder().encode(lines.join('\r\n') + '\r\n'));
 text('help.txt', ["TEDDY'S STRIPE CHASE", '', 'LEFT/RIGHT or A/D: walk', 'UP or W: hop', '', 'Find the stripe pieces.', 'The car door opens when', 'Teddy has enough for it.', '', 'High pieces need a hop.', 'Try a hop BEFORE the stripe.', '', 'Teddy scouts. Gwinn cheers.', 'Doc Leo drives. Everybody', 'gets a turn to help.']);
-text('story.txt', ["TEDDY'S STRIPE CHASE", '', 'THE CHEZ lost its stripes.', 'Doc Leo says new ones will', 'make it go 900% faster.', 'The wind says: prove it.', '', 'Teddy volunteers his nose.', 'Gwinn volunteers to bark', 'at anything suspicious.', '', 'Three roads. Many stripes.', 'One corgi-sized hero.', '', 'A team goes farther than', 'one very speedy nose.']);
+text('story.txt', ["TEDDY'S STRIPE CHASE", '', 'THE CHEZ lost its stripes.', 'Doc Leo says new ones will', 'make it go 900% faster.', 'The wind says: prove it.', '', 'Teddy volunteers his nose.', 'Gwinn volunteers to bark', 'at anything suspicious.', '', 'Five roads. Many stripes.', 'One corgi-sized hero.', '', 'A team goes farther than', 'one very speedy nose.']);
 text('credits.txt', ["TEDDY'S STRIPE CHASE", '', 'For Lewis Moten, Teddy,', 'Gwinn, Doc Leo and THE CHEZ.', '', 'Engine, source art, car:', 'Game-Maker Sandbox Edition', 'by Lewis Moten (MIT)', '', 'Game, text, music, sounds:', 'OpenAI Codex (GPT-6)']);
 
 const game = newGame('STRIPE CHASE');
@@ -168,13 +168,14 @@ level.desc = 'The Stripe Road';
 level.pos = { x: 140, y: 110 };
 level.files = ['stripe.pal', 'stripe.map', 'stripe.bbl', 'stripe.mon', 'stripe.mbl', 'teddy.chr', 'teddy.cbl', 'stripe.snd', 'yard.cmf', '', 'drive.fli', ...new Array(9).fill('')];
 level.links[0] = { toScene: 3, from: { x: 77, y: 39 }, to: { x: CHAPTERS[0].startX, y: 39 } };
+level.links[1] = { ...level.links[0], from: { x: 78, y: 39 } };
 title.links[0] = { toScene: 2, from: { x: 0, y: 0 }, to: { x: 10, y: 39 } };
 game.scenes.push(level);
 CHAPTERS.forEach((chapter, index) => {
   const { palette, ink: chapterInk } = buildChapter(chapter, bytes, put);
   const card = `card${index + 2}.gif`;
   const list = `card${index + 2}.lst`;
-  screen(card, chapter.name.toUpperCase(), index ? 'TEDDY, HOP LIKE A TOAST SLICE!' : 'TEDDY, THAT STRIPE IS FLOATING!', palette, chapterInk);
+  screen(card, chapter.name.toUpperCase(), chapter.quip, palette, chapterInk);
   put(list, serializeSlideList([{ name: card, pause: 2 }]));
   put(`${chapter.stem}.cmf`, chapterSong(index + 1));
   const next = CHAPTERS[index + 1];
@@ -184,7 +185,8 @@ CHAPTERS.forEach((chapter, index) => {
   scene.desc = chapter.name;
   scene.pos = { x: 190 + index * 50, y: 110 };
   scene.files = [`${chapter.stem}.pal`, `${chapter.stem}.map`, `${chapter.stem}.bbl`, `${chapter.stem}.mon`, `${chapter.stem}.mbl`, 'teddy.chr', 'teddy.cbl', 'stripe.snd', `${chapter.stem}.cmf`, list, drive, ...new Array(9).fill('')];
-  scene.links[0] = { toScene: next ? 4 : 1, from: { x: chapter.carX, y: 39 }, to: next ? { x: next.startX, y: 39 } : { x: 0, y: 0 } };
+  scene.links[0] = { toScene: next ? index + 4 : 1, from: { x: chapter.carX, y: 39 }, to: next ? { x: next.startX, y: 39 } : { x: 0, y: 0 } };
+  scene.links[1] = { ...scene.links[0], from: { x: chapter.carX + 1, y: 39 } };
   game.scenes.push(scene);
 });
 put('stripe.gam', serializeGame(game));

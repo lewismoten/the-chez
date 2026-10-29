@@ -1,6 +1,6 @@
 # THE CHEZ: Stripe Chase
 
-A Vite app with an original, three-chapter RSD Game-Maker game. Teddy gathers fresh racing stripe pieces for Doc Leo's tomato-red CitiCar, while Gwinn cheers the crew on. The game runs through `@lewismoten/gamemaker-sandbox-engine` in the browser.
+A Vite app with an original, five-chapter RSD Game-Maker game. Teddy gathers fresh racing stripe pieces for Doc Leo's tomato-red CitiCar, while Gwinn cheers the crew on. The game runs through `@lewismoten/gamemaker-sandbox-engine` in the browser.
 
 ## Run locally
 
@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-Open the Vite URL and choose **Start the game**. Move Teddy with the Left and Right arrows (or A and D); hop with Up or W. Gather the required stripe pieces in the yard, street, and park, then reach THE CHEZ at the right end of each chapter. F1 shows instructions. Touch buttons are below the game.
+Open the Vite URL and choose **Start the game**. Move Teddy with the Left and Right arrows (or A and D); hop with Up or W. Gather the required stripe pieces across the yard, Maple Street, Puddlewick Park, Downtown, and the Clown Club, then reach THE CHEZ at the right end of each chapter. F1 shows instructions. Touch buttons are below the game.
 
 The **More Game-Maker games** section accepts another DOS game folder with a `.GAM` file and plays it through the same engine. Files stay in the browser.
 

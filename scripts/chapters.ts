@@ -1,4 +1,4 @@
-// Two new stripe trails built from Teddy's original street and park scenery and Game-Maker files.
+// Later stripe trails built from Teddy's original scenery and Game-Maker files.
 import { parseBlocks, serializeBlocks } from '../../GameMaker/web/src/formats/blocks.ts';
 import { parseMap, reindexMonsters, serializeMap } from '../../GameMaker/web/src/formats/map.ts';
 import { parseMonsters } from '../../GameMaker/web/src/formats/monster.ts';
@@ -6,7 +6,7 @@ import { matchColor, parsePalette } from '../../GameMaker/web/src/formats/palett
 import { chezPicture, type ChezInk } from '../../GameMaker/games/kit/chez.ts';
 
 export interface Chapter {
-  source: 'street' | 'park';
+  source: 'street' | 'park' | 'city' | 'klub';
   stem: string;
   name: string;
   carX: number;
@@ -15,16 +15,25 @@ export interface Chapter {
   counter: number;
   pieces: { x: number; y: number }[];
   sampleX: number;
+  quip: string;
 }
 
 export const CHAPTERS: Chapter[] = [
   {
-    source: 'street', stem: 'street', name: 'Maple Street', carX: 83, startX: 8, required: 8, counter: 22, sampleX: 6,
+    source: 'street', stem: 'street', name: 'Maple Street', carX: 83, startX: 8, required: 8, counter: 22, sampleX: 6, quip: 'TEDDY, THAT STRIPE IS FLOATING!',
     pieces: [12, 17, 22, 27, 32, 37, 42, 47, 52, 57, 62, 67, 72, 77].map((x, i) => ({ x, y: i % 2 ? 38 : 39 })),
   },
   {
-    source: 'park', stem: 'park', name: 'Puddlewick Park', carX: 84, startX: 8, required: 8, counter: 23, sampleX: 17,
+    source: 'park', stem: 'park', name: 'Puddlewick Park', carX: 84, startX: 8, required: 8, counter: 23, sampleX: 17, quip: 'TEDDY, HOP LIKE A TOAST SLICE!',
     pieces: [12, 17, 22, 27, 32, 37, 42, 47, 52, 57, 62, 67, 72, 77].map((x, i) => ({ x, y: i % 3 ? 38 : 39 })),
+  },
+  {
+    source: 'city', stem: 'city', name: 'Downtown', carX: 80, startX: 8, required: 9, counter: 24, sampleX: 17, quip: 'TEDDY OUTRUNS A CITY SNEEZE!',
+    pieces: [11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59, 63, 67, 71, 75].map((x, i) => ({ x, y: i % 3 === 0 ? 39 : 38 })),
+  },
+  {
+    source: 'klub', stem: 'club', name: 'The Clown Club', carX: 78, startX: 8, required: 10, counter: 25, sampleX: 17, quip: 'FINAL ACT: TEDDY TAKES A BOW!',
+    pieces: [11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59, 63, 67, 71].map((x, i) => ({ x, y: i % 4 === 0 ? 39 : 38 })),
   },
 ];
 
@@ -51,13 +60,13 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
   }
 
   const sample = chapter.sampleX;
-  for (let x = chapter.startX; x < chapter.carX - 3; x++) {
+  for (let x = chapter.startX; x <= chapter.carX + 1; x++) {
     for (const y of [37, 38, 39]) map.blocks[y * 100 + x] = map.blocks[y * 100 + sample];
     map.blocks[40 * 100 + x] = map.blocks[40 * 100 + sample];
   }
   // Remove old Teddy-game prizes above the route. Their pictures would otherwise look
   // like extra stripe pieces and alter counters this quest never uses.
-  for (let x = chapter.startX; x < chapter.carX - 3; x++) for (let y = 25; y < 37; y++) {
+  for (let x = chapter.startX; x <= chapter.carX + 1; x++) for (let y = 25; y < 37; y++) {
     const at = y * 100 + x;
     const block = bbl[map.blocks[at]];
     if (block.effect || block.obj || block.scorePts || block.chHitPt) map.blocks[at] = map.blocks[y * 100 + sample];
@@ -75,13 +84,14 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
   map.blocks[39 * 100 + chapter.carX - 4] = gwinnBlock;
 
   const car = chezPicture(ink);
-  const doorIndex = map.blocks[39 * 100 + chapter.carX];
-  const backIndex = map.blocks[39 * 100 + chapter.carX + 1];
-  const openIndex = Array.from({ length: 149 }, (_, i) => 148 - i).find((i) => i !== gwinnBlock && !map.blocks.includes(i));
-  if (openIndex === undefined) throw new Error(`No block slot for the open car door in ${chapter.name}`);
-  const pieceIndex = Array.from({ length: 149 }, (_, i) => 148 - i).find((i) => i !== gwinnBlock && i !== openIndex && !map.blocks.includes(i));
-  const highPieceIndex = Array.from({ length: 149 }, (_, i) => 148 - i).find((i) => i !== gwinnBlock && i !== openIndex && i !== pieceIndex && !map.blocks.includes(i));
-  if (pieceIndex === undefined || highPieceIndex === undefined) throw new Error(`No block slot for stripe pieces in ${chapter.name}`);
+  const free = Array.from({ length: 149 }, (_, i) => 148 - i).filter((i) => i !== gwinnBlock && !map.blocks.includes(i));
+  const [doorIndex, backIndex, openIndex, pieceIndex, highPieceIndex] = free;
+  if ([doorIndex, backIndex, openIndex, pieceIndex, highPieceIndex].some((index) => index === undefined)) throw new Error(`No block slots for THE CHEZ in ${chapter.name}`);
+  const carBase = map.blocks[39 * 100 + chapter.startX + 1];
+  bbl[doorIndex] = { ...bbl[carBase], pixels: bbl[carBase].pixels.slice(), nextBl: doorIndex, touchBl: doorIndex };
+  bbl[backIndex] = { ...bbl[carBase], pixels: bbl[carBase].pixels.slice(), nextBl: backIndex, touchBl: backIndex };
+  map.blocks[39 * 100 + chapter.carX] = doorIndex;
+  map.blocks[39 * 100 + chapter.carX + 1] = backIndex;
   for (const [y, index] of [[39, pieceIndex], [38, highPieceIndex]]) {
     const base = map.blocks[y * 100 + chapter.startX + 1];
     bbl[index] = { ...bbl[base], pixels: bbl[base].pixels.slice(), effect: chapter.counter, eamt: 1, scorePts: 25, nextBl: index, touchBl: base };
