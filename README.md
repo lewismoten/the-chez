@@ -21,6 +21,8 @@ Gwinn’s Shortcut changes to four-way walking: all four arrows move Teddy, and 
 
 Z clouds send Teddy into a tiny nap and use one try. The status shows the tries left. After three naps, **Try this road again** resumes the current chapter with three fresh tries. **Restart** starts the whole adventure again. The browser remembers the current road between visits: **Continue with Teddy** begins at its safe entrance with three fresh tries. Watching the demonstration keeps your own saved road. Winning or choosing Restart clears it. If browser storage is unavailable, the current session still keeps its checkpoint. F5 and F6 also provide the engine's save and load screens.
 
+The **Music on/off** button controls music separately from barks and other effects. Its setting is remembered between visits.
+
 The **More Game-Maker games** section accepts another DOS game folder with a `.GAM` file and plays it through the same engine. Files stay in the browser.
 
 ## Teddy’s road atlas and guidance
@@ -34,10 +36,12 @@ The page’s optional notebook explains the counter gates, timed leaf crossing, 
 ## Rebuild the DOS game
 
 ```sh
+npm run build:art
 npm run build:game
 npm run check:game
 npm run check:browser
 npm run check:guidance
+npm run check:music
 npm run check
 npm run build
 npm run check:release
@@ -51,7 +55,7 @@ The builder lives in `scripts/build-game.ts`. `scripts/chapters.ts` constructs t
 
 ## The stripes return
 
-`scripts/stripe-car.ts` draws the measured CitiCar with only a few racing stripe fragments, then restores a section for each completed walking road. It compares two versions of the project’s own car drawing, changing only the stripe pixels while keeping the roof, door window, wheels, and lights. The victory car uses the complete drawing. The intro shows the stripes blowing off, parked cars show the repairs so far, and each transition fits another section. The last transition puts Teddy in the passenger window before the crew heads home.
+`scripts/stripe-car.ts` draws the measured CitiCar with only a few racing stripe fragments, then restores the full pattern during the final fitting cartoon. It compares two versions of the project’s own car drawing, changing only the stripe pixels while keeping the roof, door window, wheels, and lights. The car stays worn during the search, including the title, chapter cards, and landing-page art. The final fitting cartoon restores all the stripes, then puts Teddy in the passenger window before the victory lap.
 
 `scripts/road-stories.ts` supplies seven connected, captioned jokes and their animated props: Doc Leo’s wildly optimistic speed claim, Gwinn’s suspicious leaf, the puddles’ praise, the leaf’s thank-you, friendly balloon dogs, Gwinn’s extraordinarily long shortcut, and fitting the last stripe. `scripts/cartoons.ts` stages the crew, restores the stripes, and drives into the next road. Each short FLI can be skipped with the engine’s normal keys.
 
@@ -93,3 +97,5 @@ Every exit has one scene link, on its locked tile. The finish ribbon is checked 
 `check:guidance` runs `scripts/check-guidance.mjs` with its own temporary server on port 4177. It uses the public page controls and keyboard to reach Maple Street’s closed car door at 7/8, read the wind-post hint, catch a replacement kite, and continue. It also checks that spending the native gate quota keeps the completed goal visible through the road transition.
 
 `check:release` builds into a temporary directory and previews it on port 4176. It uses only the page's public controls to watch the shipped demonstration, checks the mobile finale, then starts a new game. It reports missing assets or browser errors and removes its build and stops its server afterwards. These browser commands use their own servers and leave the maintainer's port 5173 server alone.
+
+`build:art` renders the landing page’s worn CitiCar using the measured drawing. `src/music-control.ts` remembers the music setting and controls the engine’s song playback independently of effects. `check:music` checks muted intros, chapter changes, resumed songs, persistent settings, and audible barks with its own server on port 4178.

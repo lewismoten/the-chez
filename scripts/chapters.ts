@@ -40,8 +40,8 @@ export const CHAPTERS: Chapter[] = [
     pieces: [11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59, 63, 67, 71, 75].map((x, i) => ({ x, y: i % 3 === 0 ? 39 : 38 })),
   },
   {
-    source: 'klub', stem: 'club', name: 'The Clown Club', carX: 78, startX: 8, required: 10, counter: 25, sampleX: 17, quip: 'SPACE: BARK AT BALLOON DOGS!', beat: 'FRIENDLY BALLOONS ASK: WOOF?',
-    pieces: [11, 15, 19, 27, 31, 35, 51, 55, 59].map((x, i) => ({ x, y: i % 3 === 0 ? 39 : 38 })),
+    source: 'klub', stem: 'club', name: 'The Clown Club', carX: 78, startX: 8, required: 10, counter: 25, sampleX: 17, quip: 'BARK FOR BONUS BALLOON STRIPES!', beat: 'TWELVE PIECES. TEN FOR THE CAR.',
+    pieces: [...[11, 15, 19, 27, 31, 35, 51, 55, 59].map((x, i) => ({ x, y: i % 3 === 0 ? 39 : 38 })), ...[39, 47, 60].map((x) => ({ x, y: 39 }))],
   },
   {
     source: 'park', stem: 'sky', name: 'Sky Laundry', carX: 84, startX: 8, required: 9, counter: 26, sampleX: 17, quip: 'PAUSE IN WIND. AVOID Z CLOUDS.', beat: 'THE WIND WASHED THE STRIPES.',
@@ -58,7 +58,7 @@ export const CHAPTERS: Chapter[] = [
 /** Generate a chapter's real DOS palette, map, block sets and monsters. */
 export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Array, put: (name: string, data: Uint8Array) => void): { palette: Uint8Array; ink: ChezInk } {
   if (chapter.stem === 'lap') return victoryLap(read, put);
-  if (chapter.stem === 'maze') return gwinnMaze(read, put, (chapter.counter - 21) / CHAPTERS.length);
+  if (chapter.stem === 'maze') return gwinnMaze(read, put, 0);
   const pal = parsePalette(read(`${chapter.source}.pal`));
   const bbl = parseBlocks(read(`${chapter.source}.bbl`), 150);
   const mbl = parseBlocks(read(`${chapter.source}.mbl`), 100);
@@ -105,7 +105,7 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
   for (let i = 0; i < 400; i++) if (gwinn[i] !== 255) bbl[gwinnBlock].pixels[i] = gwinn[i];
   map.blocks[39 * 100 + chapter.carX - 4] = gwinnBlock;
 
-  const car = stripeCar(ink, (chapter.counter - 21) / CHAPTERS.length);
+  const car = stripeCar(ink, 0);
   const free = Array.from({ length: 149 }, (_, i) => 148 - i).filter((i) => i !== gwinnBlock && !map.blocks.includes(i));
   const [doorIndex, backIndex, openIndex, pieceIndex, highPieceIndex] = free;
   if ([doorIndex, backIndex, openIndex, pieceIndex, highPieceIndex].some((index) => index === undefined)) throw new Error(`No block slots for THE CHEZ in ${chapter.name}`);

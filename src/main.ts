@@ -3,6 +3,7 @@ import './style.css';
 import { GameFiles, Machine, runGame } from '@lewismoten/gamemaker-sandbox-engine';
 import { CHAPTERS } from './chapters';
 import { fillRoadAtlas, roadMessage } from './road-guide';
+import { createMusicControl } from './music-control';
 import { forgetCheckpoint, loadCheckpoint, rememberCheckpoint } from './checkpoint';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#engine-canvas')!;
@@ -12,6 +13,7 @@ const overlayText = document.querySelector<HTMLElement>('#overlay-text')!;
 const startButton = document.querySelector<HTMLButtonElement>('#start')!;
 const watchButton = document.querySelector<HTMLButtonElement>('#watch-demo')!;
 const restartButton = document.querySelector<HTMLButtonElement>('#restart')!;
+const attachMusic = createMusicControl(document.querySelector<HTMLButtonElement>('#music-toggle')!);
 const status = document.querySelector<HTMLElement>('#status')!;
 const engineStatus = document.querySelector<HTMLElement>('#engine-status')!;
 const input = document.querySelector<HTMLInputElement>('#game-files')!;
@@ -65,6 +67,7 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
   const playback = demo ? files.get('tour.rec') : undefined;
   if (demo && !playback) throw new Error('Teddy’s demonstration could not be loaded.');
   const current = new Machine(canvas, files);
+  const musicLink = attachMusic(current.audio, () => canvas.focus({ preventScroll: true }));
   const entrance = resume ?? 2;
   let chapterIndex = skipMenu ? entrance - 2 : 0;
   let finished = false;
@@ -91,12 +94,14 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
       record: skipMenu && !demo,
       playback,
       onSession: (session) => {
+        musicLink.session(session);
         if (skipMenu && resume !== undefined) {
           const title = session.game.scenes[0];
           title.links[0] = { ...title.links[0], toScene: resume, to: { x: CHAPTERS[resume - 2].startX, y: 39 } };
           title.files[0] = title.files[1] = '';
         }
         session.onScene = (scene) => {
+          if (scene >= 2) musicLink.track(files.get(session.game.scenes[scene]?.files[8]));
           if (skipMenu && scene >= 2 && scene < chapterLabels.length + 2 && machine === current) {
             chapterIndex = scene - 2;
             lastScene = scene;
@@ -169,6 +174,7 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
       overlay.hidden = false;
     }
   } finally {
+    musicLink.release();
     current.destroy();
     if (machine === current) machine = undefined;
   }

@@ -37,6 +37,11 @@ for (const [index, scene] of game.scenes.entries()) if (index >= 2) {
   const map = parseMap(bytes(scene.files[1]));
   const blocks = parseBlocks(bytes(scene.files[2]), 150);
   const gate = blocks[map.blocks[39 * 100 + CHAPTERS[index - 2].carX]];
+  if (scene.desc === 'The Clown Club') {
+    const visible = Array.from(map.blocks.entries()).filter(([, id]) => blocks[id].effect === 25 && blocks[id].eamt > 0);
+    assert.ok(visible.length >= 12, 'the Clown Club must offer twelve visible course pieces without needing balloon rewards');
+    for (const [at] of visible) assert.ok(!map.monsters.some((actor) => actor.monnum < 64 && actor.curx === at % 100 && actor.cury === Math.floor(at / 100)), 'a mandatory course pickup must not be hidden behind a balloon');
+  }
   assert.equal(gate.eamt, -CHAPTERS[index - 2].required, `${scene.desc}: the HUD must show the real gate quota`);
   for (const [at, id] of map.blocks.entries()) {
     const block = blocks[id];
@@ -192,7 +197,7 @@ for (const [index, info] of CHAPTERS.entries()) {
   }
   if (chapter === 6) {
     const silentScout = await play(chapter, startX, true);
-    assert.equal(silentScout.link, -1, 'hopping alone must not earn every stripe in the finale');
+    assert.equal(silentScout.link, 0, 'the visible course must be completable without discovering balloon rewards');
   }
   const sim = await play(chapter, startX, chapter > 2, ci, { lift: false, push: false }, chapter === 6);
   assert.equal(sim.dead, false, `${game.scenes[chapter].desc}: Teddy must finish safely`);

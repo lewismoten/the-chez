@@ -2,7 +2,7 @@
 import { Reel } from '../../GameMaker/games/kit/reel.ts';
 import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
 import { centered } from '../../GameMaker/games/kit/pcText.ts';
-import { chezPicture, type ChezInk } from '../../GameMaker/games/kit/chez.ts';
+import type { ChezInk } from '../../GameMaker/games/kit/chez.ts';
 import { matchColor } from '../../GameMaker/web/src/formats/palette.ts';
 import { POSES } from '../../GameMaker/games/teddy/src/sprites/teddy.ts';
 import { GWINN } from '../../GameMaker/games/teddy/src/sprites/gwinn.ts';
@@ -89,7 +89,7 @@ export function driveCartoon(pal: Uint8Array, ink: ChezInk, destination: string,
   const facing = riding ? 'left' : 'right';
   const reel = new Reel(pal);
   for (let i = 0; i < 56; i++) reel.frame(bg, (p) => {
-    const repaired = (road - 1 + Math.min(1, i / 30)) / ROAD_BEATS.length;
+    const repaired = riding ? Math.min(1, i / 30) : 0;
     const car = stripeCar(ink, repaired, facing, 3);
     const board = riding && i >= 30 ? Math.min(1, (i - 30) / 14) : 0;
     if (board === 1) passengerTeddy(car, ink);
@@ -102,7 +102,7 @@ export function driveCartoon(pal: Uint8Array, ink: ChezInk, destination: string,
     centered(p, 159, beat.lines[0], c.white);
     centered(p, 178, beat.lines[1], c.gold);
   });
-  const car = stripeCar(ink, road / ROAD_BEATS.length, facing, 3);
+  const car = stripeCar(ink, riding ? 1 : 0, facing, 3);
   if (riding) passengerTeddy(car, ink);
   for (let i = 0; i < 18; i++) reel.frame(bg, (p) => {
     const x = riding ? 320 - i * 25 : -110 + i * 25;
@@ -139,7 +139,7 @@ export function winningCartoon(pal: Uint8Array, ink: ChezInk): Uint8Array {
 export function losingCartoon(pal: Uint8Array, ink: ChezInk): Uint8Array {
   const c = colors(pal);
   const bg = roadside(c, 'THE WIND GOT THIS ROUND');
-  const car = chezPicture(ink, 'right', 3);
+  const car = stripeCar(ink, 0, 'right', 3);
   const reel = new Reel(pal);
   for (let i = 0; i < 12; i++) reel.frame(bg, (p) => {
     p.blit(car, 92, 81, 255);

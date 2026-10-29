@@ -11,7 +11,9 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "check": "tsc --noEmit",
-    "check:guidance": "tsx scripts/check-guidance.mjs"
+    "check:guidance": "tsx scripts/check-guidance.mjs",
+    "build:art": "tsx scripts/build-art.ts",
+    "check:music": "tsx scripts/check-music.mjs"
   },
   "repository": {
     "type": "git",

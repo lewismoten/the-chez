@@ -74,3 +74,7 @@
   .game-controls{padding:10px 12px}
   .touch-controls{width:100%;margin-left:0}
 }
+
+/* Music is an ordinary, keyboard-reachable game control; keep all six targets visible. */
+@media(max-width:650px){.touch-controls{grid-template-columns:repeat(6,minmax(0,1fr))}}
+#music-toggle[aria-pressed="false"]{background:#e2dac8}

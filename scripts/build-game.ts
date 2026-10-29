@@ -11,7 +11,6 @@ import { encodeGif } from '../../GameMaker/web/src/formats/gif.ts';
 import { serializeSlideList } from '../../GameMaker/web/src/formats/graphicScripts.ts';
 import { parseSoundSet, serializeSoundSet } from '../../GameMaker/web/src/formats/sound.ts';
 import { parseCharacter, serializeCharacter } from '../../GameMaker/web/src/formats/character.ts';
-import { chezPicture } from '../../GameMaker/games/kit/chez.ts';
 import { stripeCar } from './stripe-car.ts';
 import { clubArt, centered as clubCentered } from '../../GameMaker/games/teddy/src/art/draw.ts';
 import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
@@ -116,7 +115,7 @@ bbl[openIndex] = { ...bbl[doorIndex], pixels: bbl[doorIndex].pixels.slice(), sol
 for (let y = 7; y < 16; y++) for (let x = 6; x < 13; x++) bbl[openIndex].pixels[y * 20 + x] = black;
 
 // Draw a dedicated title and finish screen in the DOS picture format.
-function screen(name: string, headline: string, line: string, scenePal = pal, sceneInk = ink, beat = '') {
+function screen(name: string, headline: string, line: string, scenePal = pal, sceneInk = ink, beat = '', restored = 0) {
   const navy = matchColor(scenePal, 4, 13, 19);
   const cream = matchColor(scenePal, 61, 56, 43);
   const gold = matchColor(scenePal, 63, 46, 21);
@@ -124,15 +123,15 @@ function screen(name: string, headline: string, line: string, scenePal = pal, sc
   const p = new Pixels(320, 200, navy);
   p.rect(0, 151, 320, 49, dark);
   p.rect(0, 154, 320, 3, gold);
-  p.blit(chezPicture(sceneInk, 'right', 3), 100, 84, 255);
+  p.blit(stripeCar(sceneInk, restored, 'right', 3), 100, 84, 255);
   clubCentered(p, 20, clubArt(headline), cream, 2);
   if (beat) centered(p, 58, beat, cream, 1);
   centered(p, 177, line, gold, 1);
   put(name, encodeGif({ width: 320, height: 200, pixels: p.px, palette: scenePal }));
 }
 screen('menu.gif', "TEDDY'S STRIPE CHASE", 'A VERY SMALL CAR. A HUGE QUEST.');
-screen('won.gif', 'TEDDY DID IT!', 'THE CHEZ IS 900% MORE DASHING');
-screen('epilogue.gif', 'THE WHOLE CREW WON', 'TEAMWORK MAKES EVERY ROAD FUN', pal, ink, 'TEDDY FOUND THE WAY HOME.');
+screen('won.gif', 'TEDDY DID IT!', 'THE CHEZ IS 900% MORE DASHING', pal, ink, '', 1);
+screen('epilogue.gif', 'THE WHOLE CREW WON', 'TEAMWORK MAKES EVERY ROAD FUN', pal, ink, 'TEDDY FOUND THE WAY HOME.', 1);
 screen('lost.gif', 'ONE MORE TRY?', 'TEDDY BELIEVES IN YOU');
 put('intro.fli', openingCartoon(pal, ink));
 put('drive.fli', driveCartoon(pal, ink, 'MAPLE STREET', 1));
@@ -178,7 +177,7 @@ for (const name of ['blip.voc', 'boing.voc', 'chomp.voc', 'crunch.voc', 'dig.voc
 copyFileSync(join(here, 'assets/teddy-bark.voc'), join(output, 'woof.voc'));
 copyFileSync(join(here, 'assets/teddy-tour.rec'), join(output, 'tour.rec'));
 const text = (name: string, lines: string[]) => put(name, new TextEncoder().encode(lines.join('\r\n') + '\r\n'));
-text('help.txt', ["TEDDY'S STRIPE CHASE", '', 'LEFT/RIGHT or A/D: walk', 'UP/W: hop. Maze: move UP.', 'SPACE: bark. Maze: DOWN.', 'Maze: all four arrows move.', 'Find stripes. Reach THE CHEZ.', 'Maple Street: hop for kites.', 'Clown Club: bark at balloons.', 'Downtown: WAIT, then GO.', 'Sky Laundry: pause in wind,', 'then walk onto cloud ledges.', 'Z clouds make Teddy nap.', 'Three tries. F5 saves a game.', 'Victory Lap: LEFT drives home.', 'UP bounces. SPACE honks.']);
+text('help.txt', ["TEDDY'S STRIPE CHASE", '', 'LEFT/RIGHT or A/D: walk', 'UP/W: hop. Maze: move UP.', 'SPACE: bark. Maze: DOWN.', 'Maze: all four arrows move.', 'Find stripes. Reach THE CHEZ.', 'Maple Street: hop for kites.', 'Club: bark for bonus stripes.', 'Downtown: WAIT, then GO.', 'Sky Laundry: pause in wind,', 'then walk onto cloud ledges.', 'Z clouds make Teddy nap.', 'Three tries. F5 saves a game.', 'Victory Lap: LEFT drives home.', 'UP bounces. SPACE honks.']);
 text('story.txt', ["TEDDY'S STRIPE CHASE", '', 'THE CHEZ lost its stripes.', 'Doc Leo says new ones will', 'make it go 900% faster.', 'The wind says: prove it.', '', 'Teddy volunteers his nose.', 'Gwinn volunteers to bark', 'at anything suspicious.', '', 'Eight roads. Many stripes.', 'One corgi-sized hero.', '', 'A team goes farther than', 'one very speedy nose.']);
 text('credits.txt', ["TEDDY'S STRIPE CHASE", '', 'For Lewis Moten, Teddy,', 'Gwinn, Doc Leo and THE CHEZ.', '', 'Engine, source art, car:', 'Game-Maker Sandbox Edition', 'by Lewis Moten (MIT)', '', 'Dog barks/yawn: Lewis Moten', 'Game, art, text, music,', 'and sounds:', 'OpenAI Codex (GPT-6/6.1)']);
 
@@ -197,7 +196,7 @@ CHAPTERS.forEach((chapter, index) => {
   const { palette, ink: chapterInk } = buildChapter(chapter, bytes, put);
   const card = `card${index + 2}.gif`;
   const list = `card${index + 2}.lst`;
-  screen(card, chapter.name.toUpperCase(), chapter.quip, palette, chapterInk, chapter.beat);
+  screen(card, chapter.name.toUpperCase(), chapter.quip, palette, chapterInk, chapter.beat, chapter.stem === 'lap' ? 1 : 0);
   put(list, serializeSlideList([{ name: card, pause: ['sky', 'maze', 'lap'].includes(chapter.stem) ? 4 : 2 }]));
   put(`${chapter.stem}.cmf`, chapterSong(index + 1));
   const next = CHAPTERS[index + 1];

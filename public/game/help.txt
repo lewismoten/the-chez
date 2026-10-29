@@ -6,7 +6,7 @@ SPACE: bark. Maze: DOWN.
 Maze: all four arrows move.
 Find stripes. Reach THE CHEZ.
 Maple Street: hop for kites.
-Clown Club: bark at balloons.
+Club: bark for bonus stripes.
 Downtown: WAIT, then GO.
 Sky Laundry: pause in wind,
 then walk onto cloud ledges.
