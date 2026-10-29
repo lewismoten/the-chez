@@ -156,10 +156,11 @@ for (const name of ['teddy.chr', 'teddy.cbl']) copyFileSync(join(source, name), 
 for (const name of ['blip.voc', 'boing.voc', 'chomp.voc', 'crunch.voc', 'dig.voc', 'flop.voc', 'giggle.voc', 'honk.voc', 'rumble.voc', 'scratch.voc', 'sniff.voc', 'snore.voc', 'splash.voc', 'woof.voc', 'yelp.voc', 'yum.voc']) {
   try { copyFileSync(join(source, name), join(output, name)); } catch { /* Optional sound. */ }
 }
+copyFileSync(join(here, 'assets/teddy-bark.voc'), join(output, 'woof.voc'));
 const text = (name: string, lines: string[]) => put(name, new TextEncoder().encode(lines.join('\r\n') + '\r\n'));
-text('help.txt', ["TEDDY'S STRIPE CHASE", '', 'LEFT/RIGHT or A/D: walk', 'UP or W: hop', '', 'Find the stripe pieces.', 'The car door opens when', 'Teddy has enough for it.', '', 'High pieces need a hop.', 'Try a hop BEFORE the stripe.', '', 'Teddy scouts. Gwinn cheers.', 'Doc Leo drives. Everybody', 'gets a turn to help.']);
+text('help.txt', ["TEDDY'S STRIPE CHASE", '', 'LEFT/RIGHT or A/D: walk', 'UP or W: hop', 'SPACE: bark', '', 'Find the stripe pieces.', 'The car door opens when', 'Teddy has enough for it.', '', 'High pieces need a hop.', 'At the Clown Club, bark at', 'balloon dogs for more.', '', 'Teddy scouts. Gwinn cheers.', 'Doc Leo drives.']);
 text('story.txt', ["TEDDY'S STRIPE CHASE", '', 'THE CHEZ lost its stripes.', 'Doc Leo says new ones will', 'make it go 900% faster.', 'The wind says: prove it.', '', 'Teddy volunteers his nose.', 'Gwinn volunteers to bark', 'at anything suspicious.', '', 'Five roads. Many stripes.', 'One corgi-sized hero.', '', 'A team goes farther than', 'one very speedy nose.']);
-text('credits.txt', ["TEDDY'S STRIPE CHASE", '', 'For Lewis Moten, Teddy,', 'Gwinn, Doc Leo and THE CHEZ.', '', 'Engine, source art, car:', 'Game-Maker Sandbox Edition', 'by Lewis Moten (MIT)', '', 'Gwinn bark: Lewis Moten', 'Game, text, music, sounds:', 'OpenAI Codex (GPT-6)']);
+text('credits.txt', ["TEDDY'S STRIPE CHASE", '', 'For Lewis Moten, Teddy,', 'Gwinn, Doc Leo and THE CHEZ.', '', 'Engine, source art, car:', 'Game-Maker Sandbox Edition', 'by Lewis Moten (MIT)', '', 'Dog barks: Lewis Moten', 'Game, text, music, sounds:', 'OpenAI Codex (GPT-6)']);
 
 const game = newGame('STRIPE CHASE');
 const [title, end] = game.scenes;

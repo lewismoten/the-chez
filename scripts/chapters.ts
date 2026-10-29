@@ -1,7 +1,7 @@
 // Later stripe trails built from Teddy's original scenery and Game-Maker files.
 import { parseBlocks, serializeBlocks } from '../../GameMaker/web/src/formats/blocks.ts';
 import { parseMap, reindexMonsters, serializeMap } from '../../GameMaker/web/src/formats/map.ts';
-import { parseMonsters } from '../../GameMaker/web/src/formats/monster.ts';
+import { parseMonsters, serializeMonsters } from '../../GameMaker/web/src/formats/monster.ts';
 import { matchColor, parsePalette } from '../../GameMaker/web/src/formats/palette.ts';
 import { chezPicture, type ChezInk } from '../../GameMaker/games/kit/chez.ts';
 
@@ -33,8 +33,8 @@ export const CHAPTERS: Chapter[] = [
     pieces: [11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59, 63, 67, 71, 75].map((x, i) => ({ x, y: i % 3 === 0 ? 39 : 38 })),
   },
   {
-    source: 'klub', stem: 'club', name: 'The Clown Club', carX: 78, startX: 8, required: 10, counter: 25, sampleX: 17, quip: 'BALLOON DOGS CHEER TEDDY ON!', beat: 'THE WHOLE CREW CHEERS TEDDY.',
-    pieces: [11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59, 63, 67, 71].map((x, i) => ({ x, y: i % 4 === 0 ? 39 : 38 })),
+    source: 'klub', stem: 'club', name: 'The Clown Club', carX: 78, startX: 8, required: 10, counter: 25, sampleX: 17, quip: 'SPACE: BARK AT BALLOON DOGS!', beat: 'FRIENDLY BALLOONS ASK: WOOF?',
+    pieces: [11, 15, 19, 27, 31, 35, 51, 55, 59].map((x, i) => ({ x, y: i % 3 === 0 ? 39 : 38 })),
   },
 ];
 
@@ -54,6 +54,7 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
   for (const index of [monsters[12].pic[0][0], monsters[12].pic[1][0]]) {
     const block = mbl[index];
     block.pixels.fill(255);
+    if (chapter.source === 'klub') { block.effect = chapter.counter; block.eamt = 1; }
     for (let y = 6; y <= 13; y++) for (let x = 2; x <= 17; x++) {
       const dx = x - 2;
       block.pixels[y * 20 + x] = y === 6 || y === 13 || x === 2 || x === 17 ? white : dx < 5 || dx > 10 ? black : red;
@@ -74,8 +75,10 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
   }
   for (const placed of map.monsters) placed.monnum = 64;
   if (chapter.source === 'klub') {
-    // Balloon dogs are friendly bonus pickups, never a threat to Teddy.
-    for (const [i, x] of [24, 56].entries()) map.monsters[i] = { monnum: 15, status: 0, xtra: 0, curx: x, cury: 39, extra: 0 };
+    // Friendly balloon dogs hand over their stripe pieces when Teddy says woof.
+    // Their power keeps a simple touch from popping them; Teddy's bark is stronger.
+    monsters[16] = { ...monsters[15], power: 102, newmon: 12, end: 0, towards: 0 };
+    for (const [i, x] of [24, 43, 64, 70].entries()) map.monsters[i] = { monnum: 16, status: 0, xtra: 0, curx: x, cury: 39, extra: 0 };
   }
   reindexMonsters(map);
 
@@ -133,7 +136,7 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
   put(`${chapter.stem}.pal`, pal);
   put(`${chapter.stem}.bbl`, serializeBlocks(bbl));
   put(`${chapter.stem}.mbl`, serializeBlocks(mbl));
-  put(`${chapter.stem}.mon`, read(`${chapter.source}.mon`));
+  put(`${chapter.stem}.mon`, serializeMonsters(monsters));
   put(`${chapter.stem}.map`, serializeMap(map));
   return { palette: pal, ink };
 }

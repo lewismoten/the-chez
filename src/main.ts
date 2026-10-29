@@ -119,7 +119,7 @@ playSelected.addEventListener('click', async () => {
 });
 
 // The engine's Keyboard.inject is the same input path used for touch controls in GameMaker.
-for (const [id, scan] of [['left', 75], ['right', 77], ['hop', 72]] as const) {
+for (const [id, scan] of [['left', 75], ['right', 77], ['hop', 72], ['bark', 57]] as const) {
   const button = document.querySelector<HTMLButtonElement>(`#${id}`)!;
   button.addEventListener('pointerdown', (event) => { event.preventDefault(); button.setPointerCapture(event.pointerId); machine?.keyboard.inject(scan, true); });
   for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(type, () => machine?.keyboard.inject(scan, false));

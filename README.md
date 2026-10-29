@@ -9,9 +9,9 @@ npm install
 npm run dev
 ```
 
-Open the Vite URL and choose **Start the game**. Move Teddy with the Left and Right arrows (or A and D); hop with Up or W. Gather the required stripe pieces across the yard, Maple Street, Puddlewick Park, Downtown, and the Clown Club, then reach THE CHEZ at the right end of each chapter. F1 shows instructions. Touch buttons are below the game.
+Open the Vite URL and choose **Start the game**. Move Teddy with the Left and Right arrows (or A and D); hop with Up or W; bark with Space. Gather the required stripe pieces across the yard, Maple Street, Puddlewick Park, Downtown, and the Clown Club, then reach THE CHEZ at the right end of each chapter. F1 shows instructions. Touch buttons are below the game.
 
-Each new road changes the challenge: raised pieces call for hops, the park has a lifting air puff, Downtown adds a conveyor strip, and the Clown Club has friendly balloon dogs.
+Each new road changes the challenge: raised pieces call for hops, the park has a lifting air puff, Downtown adds a conveyor strip, and the Clown Club has friendly balloon dogs who share stripe pieces when Teddy barks.
 
 The **More Game-Maker games** section accepts another DOS game folder with a `.GAM` file and plays it through the same engine. Files stay in the browser.
 
@@ -28,4 +28,4 @@ npm run build
 
 The builder lives in `scripts/build-game.ts`. `scripts/chapters.ts` constructs the later stripe trails, `scripts/cartoons.ts` renders the intro, drive, and win animations, and `scripts/music.ts` composes the chapter themes. See [NOTICE.md](NOTICE.md) for credits.
 
-`assets/gwinn-door.voc` is a short edit of Lewis Moten's Gwinn bark recording. It plays when Teddy opens a car door.
+`assets/gwinn-door.voc` and `assets/teddy-bark.voc` are short edits of Lewis Moten's dog bark recordings. Gwinn cheers when Teddy opens a car door, and Teddy barks at balloon dogs.
