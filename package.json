@@ -6,6 +6,7 @@
     "dev": "vite",
     "build:game": "tsx scripts/build-game.ts",
     "check:game": "tsx scripts/check-game.ts",
+    "check:browser": "node scripts/check-browser.mjs",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "check": "tsc --noEmit"
@@ -29,6 +30,8 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
+    "axe-core": "^4.14.0",
+    "playwright-core": "^1.64.1",
     "tsx": "^4.23.15"
   }
 }

@@ -20,6 +20,7 @@ The **More Game-Maker games** section accepts another DOS game folder with a `.G
 ```sh
 npm run build:game
 npm run check:game
+npm run check:browser
 npm run check
 npm run build
 ```
@@ -29,3 +30,5 @@ npm run build
 The builder lives in `scripts/build-game.ts`. `scripts/chapters.ts` constructs the later stripe trails, `scripts/cartoons.ts` renders the intro, drive, win, and try-again animations, and `scripts/music.ts` composes the chapter and ending themes. See [NOTICE.md](NOTICE.md) for credits.
 
 `assets/gwinn-door.voc` and `assets/teddy-bark.voc` are short edits of Lewis Moten's dog bark recordings. Gwinn cheers when Teddy opens a car door, and Teddy barks at balloon dogs.
+
+`check:browser` needs locally installed Google Chrome. It starts its own temporary Vite server on port 4175, checks layout and accessibility in portrait and landscape, plays all five chapters through the installed engine package, and checks the win ending. It stops its server afterwards. Add `-- --record` to save the successful run's DOS input recording to `assets/teddy-tour.rec`.
