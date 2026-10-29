@@ -26,19 +26,43 @@ let browser;
 
 // This controller uses the package's public input callbacks. It lives only in the test browser.
 function installDriver({ chapters, mazeRoute }) {
-  let scene = 0, firstClock, lastClock, held = new Set(), target = 0, waiting = false, barkAt = -1, noHop = -1, skyStop = 0, skyPhase = 'approach', bounce = 0, bouncedAt = -1, honkedAt = -1, mazeStep = 1;
+  const clubSteps = [
+    { from: 23, to: 26 },
+    { from: 27, to: 30 },
+    { from: 31, to: 34 },
+    { from: 47, to: 50 },
+    { from: 51, to: 54 },
+    { from: 55, to: 58 },
+  ];
+  let yardJump = 0,
+    jumpedAt = -1,
+    clubStep = 0,
+    clubPhase = 'approach',
+    parkPhase = 'approach',
+    skyGap = 0,
+    gapPhase = 'approach';
+  let scene = 0,
+    firstClock,
+    lastClock,
+    held = new Set(),
+    skyStop = 0,
+    skyPhase = 'approach',
+    bounce = 0,
+    bouncedAt = -1,
+    honkedAt = -1,
+    mazeStep = 1;
   window.__chezEnter = (next) => {
     scene = next;
     firstClock = lastClock = undefined;
     held = new Set();
-    target = 0;
-    waiting = false;
-    barkAt = noHop = -1;
     skyStop = 0;
     skyPhase = 'approach';
     bounce = 0;
     bouncedAt = honkedAt = -1;
     mazeStep = 1;
+    yardJump = clubStep = skyGap = 0;
+    jumpedAt = -1;
+    clubPhase = parkPhase = gapPhase = 'approach';
     window.__chezScene = next;
     (window.__chezEntries ??= []).push(next);
     console.log(`CHEZ entered scene ${next}`);
@@ -50,7 +74,8 @@ function installDriver({ chapters, mazeRoute }) {
     lastClock = world.clock;
     const key = (scan, down) => {
       if (held.has(scan) === down) return;
-      if (down) held.add(scan); else held.delete(scan);
+      if (down) held.add(scan);
+      else held.delete(scan);
       machine.keyboard.inject(scan, down);
     };
     if (firstClock === undefined) {
@@ -60,55 +85,180 @@ function installDriver({ chapters, mazeRoute }) {
       return;
     }
     const tick = world.clock - firstClock;
-    const x = world.chr.x[0], y = world.chr.y[0] * 20 + world.chr.y[1];
-    const car = info.carX, targets = [24, 43, 64, 70], hop = scene > 2;
+    const x = world.chr.x[0],
+      y = world.chr.y[0] * 20 + world.chr.y[1];
+    const car = info.carX,
+      hop = true;
     if (window.__chezTakeNaps) return;
     if (info.mode === 'drive') {
-      if (honkedAt < 0 && x <= 80) { key(57, true); honkedAt = tick; }
+      if (honkedAt < 0 && x <= 80) {
+        key(57, true);
+        honkedAt = tick;
+      }
       if (honkedAt >= 0 && tick >= honkedAt + 3) key(57, false);
       const ready = bounce === 0 ? x === 66 && world.chr.x[1] === 0 && world.ci.gravx === 0 : x <= [66, 48, 28][bounce];
-      if (bounce < 3 && ready) { key(72, true); bouncedAt = tick; bounce++; }
-      if (bouncedAt >= 0 && tick >= bouncedAt + 2) { key(72, false); bouncedAt = -1; }
+      if (bounce < 3 && ready) {
+        key(72, true);
+        bouncedAt = tick;
+        bounce++;
+      }
+      if (bouncedAt >= 0 && tick >= bouncedAt + 2) {
+        key(72, false);
+        bouncedAt = -1;
+      }
       return;
     }
     if (info.mode === 'maze') {
       const point = mazeRoute[mazeStep];
       if (!point) return;
-      const dx = point.x * 20 - (x * 20 + world.chr.x[1]), dy = point.y * 20 - y;
-      const scan = dx ? dx > 0 ? 77 : 75 : dy > 0 ? 57 : 72;
+      const dx = point.x * 20 - (x * 20 + world.chr.x[1]),
+        dy = point.y * 20 - y;
+      const scan = dx ? (dx > 0 ? 77 : 75) : dy > 0 ? 57 : 72;
       for (const input of [75, 77, 72, 57]) key(input, Boolean(dx || dy) && input === scan);
       if (!dx && !dy) mazeStep++;
       return;
     }
-    if (scene === 7) {
-      const stop = [{ lift: 16, land: 20, row: 35 }, { lift: 36, land: 40, row: 33 }, { lift: 56, land: 60, row: 35 }][skyStop];
-      if (!stop) return;
-      if (skyPhase === 'approach' && x >= stop.lift) { key(77, false); skyPhase = 'rise'; }
-      if (skyPhase === 'rise' && y <= stop.row * 20 - 20) { key(77, true); skyPhase = 'fly'; }
-      if (skyPhase === 'fly' && x >= stop.land) { key(77, false); skyPhase = 'land'; }
-      if (skyPhase === 'land' && y === stop.row * 20) { key(77, true); skyStop++; skyPhase = 'approach'; }
+    if (scene === 2 && hop) {
+      if (yardJump < 2 && x >= [26, 50][yardJump]) {
+        key(72, true);
+        jumpedAt = tick;
+        yardJump++;
+      }
+      if (jumpedAt >= 0 && tick >= jumpedAt + 2) {
+        key(72, false);
+        jumpedAt = -1;
+      }
       return;
     }
-    if (scene === 6) {
-      if (target < targets.length && !waiting && barkAt < 0 && x >= targets[target] - 4) {
-        key(77, false); key(72, false); waiting = true;
+    if (scene === 6 && hop) {
+      const step = clubSteps[clubStep];
+      if (!step) return;
+      if (clubPhase === 'approach' && x >= step.from) {
+        key(77, false);
+        clubPhase = 'ready';
       }
-      if (waiting && y >= 780) {
-        noHop = targets[target] + 2; key(57, true); barkAt = tick; waiting = false; target++;
+      if (clubPhase === 'ready' && y === 780) {
+        key(77, true);
+        key(72, true);
+        jumpedAt = tick;
+        clubPhase = 'fly';
       }
-      if (barkAt >= 0 && tick >= barkAt + 2) key(57, false);
-      if (barkAt >= 0 && tick >= barkAt + 12) { key(77, true); barkAt = -1; }
+      if (jumpedAt >= 0 && tick >= jumpedAt + 2) {
+        key(72, false);
+        jumpedAt = -1;
+      }
+      if (clubPhase === 'fly' && x >= step.to) {
+        key(77, false);
+        clubPhase = 'land';
+      }
+      if (clubPhase === 'land' && y === 780) {
+        key(77, true);
+        clubStep++;
+        clubPhase = 'approach';
+      }
+      return;
+    }
+    if (scene === 4 && hop && parkPhase !== 'done' && x >= 45) {
+      if (parkPhase === 'approach') {
+        key(77, false);
+        key(72, false);
+        parkPhase = 'rise';
+      }
+      if (parkPhase === 'rise' && y <= 640) {
+        key(77, true);
+        parkPhase = 'fly';
+      }
+      if (parkPhase === 'fly' && x >= 48) {
+        key(77, false);
+        parkPhase = 'land';
+      }
+      if (parkPhase === 'land' && y === 660) {
+        key(77, true);
+        parkPhase = 'done';
+      }
+      return;
+    }
+    if (scene === 4 && parkPhase === 'done' && x <= 55) return;
+    if (scene === 7) {
+      if (skyGap < skyStop) {
+        const gap = [
+          { from: 24, to: 29, row: 35 },
+          { from: 44, to: 49, row: 33 },
+          { from: 64, to: 69, row: 35 },
+        ][skyGap];
+        if (gapPhase === 'approach' && x >= gap.from) {
+          key(77, false);
+          gapPhase = 'ready';
+        }
+        if (gapPhase === 'ready' && y === gap.row * 20) {
+          key(77, true);
+          key(72, true);
+          jumpedAt = tick;
+          gapPhase = 'fly';
+        }
+        if (jumpedAt >= 0 && tick >= jumpedAt + 2) {
+          key(72, false);
+          jumpedAt = -1;
+        }
+        if (gapPhase === 'fly' && x >= gap.to) {
+          key(77, false);
+          gapPhase = 'land';
+        }
+        if (gapPhase === 'land' && y === gap.row * 20) {
+          key(77, true);
+          skyGap++;
+          gapPhase = 'approach';
+        }
+        return;
+      }
+      const stop = [
+        { lift: 16, land: 20, row: 35 },
+        { lift: 36, land: 40, row: 33 },
+        { lift: 56, land: 60, row: 35 },
+      ][skyStop];
+      if (!stop) return;
+      if (skyPhase === 'approach' && x >= stop.lift) {
+        key(77, false);
+        skyPhase = 'rise';
+      }
+      if (skyPhase === 'rise' && y <= stop.row * 20 - 20) {
+        key(77, true);
+        skyPhase = 'fly';
+      }
+      if (skyPhase === 'fly' && x >= stop.land) {
+        key(77, false);
+        skyPhase = 'land';
+      }
+      if (skyPhase === 'land' && y === stop.row * 20) {
+        key(77, true);
+        skyStop++;
+        skyPhase = 'approach';
+      }
+      return;
     }
     if (hop && x >= car - 9) key(72, false);
-    if (hop && !waiting && barkAt < 0 && x >= noHop && x < car - 9 && tick % 25 === 0) key(72, true);
-    if (hop && !waiting && barkAt < 0 && tick % 25 === 3) { key(72, false); key(77, false); key(77, true); }
-    if (tick > 700 && x > car) { key(77, false); key(75, true); }
+    if (hop && x < car - 9 && tick % 25 === 0) key(72, true);
+    if (hop && tick % 25 === (scene === 5 ? 6 : 3)) {
+      key(72, false);
+      key(77, false);
+      key(77, true);
+    }
+    if (tick > 700 && x > car) {
+      key(77, false);
+      key(75, true);
+    }
   };
 }
 
 try {
   browser = await chromium.launch({ channel: 'chrome', headless: true });
-  for (const [width, height] of [[390, 800], [1440, 900], [844, 390], [568, 320], [390, 320]]) {
+  for (const [width, height] of [
+    [390, 800],
+    [1440, 900],
+    [844, 390],
+    [568, 320],
+    [390, 320],
+  ]) {
     for (const colorScheme of ['light', 'dark']) {
       const page = await browser.newPage({ viewport: { width, height }, colorScheme });
       try {
@@ -120,21 +270,33 @@ try {
           const action = await page.locator(selector).boundingBox();
           assert.ok(action.y + action.height <= canvas.y + canvas.height, `${selector} must fit inside the game`);
         }
-        await page.locator('#road-atlas').evaluate((atlas) => { atlas.open = true; });
+        await page.locator('#road-atlas').evaluate((atlas) => {
+          atlas.open = true;
+        });
         assert.equal(await page.locator('#road-atlas-list li').count(), CHAPTERS.length);
         const notebook = page.locator('.notebook-grid details');
-        assert.equal(await notebook.count(), 9);
+        assert.equal(await notebook.count(), 11);
         await notebook.first().locator('summary').focus();
         await page.keyboard.press('Enter');
         assert.equal(await notebook.first().getAttribute('open'), '', 'notebook opens with the keyboard');
-        await notebook.evaluateAll((pages) => pages.forEach((entry) => { entry.open = true; }));
+        await notebook.evaluateAll((pages) =>
+          pages.forEach((entry) => {
+            entry.open = true;
+          }),
+        );
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width, 'no horizontal scroll, including the open notebook');
         await page.addScriptTag({ path: join(root, 'node_modules/axe-core/axe.min.js') });
-        const violations = await page.evaluate(async () => (await window.axe.run(document, {
-          runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] },
-        })).violations.map(({ id, nodes }) => ({ id, targets: nodes.map((node) => node.target) })));
+        const violations = await page.evaluate(async () =>
+          (
+            await window.axe.run(document, {
+              runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] },
+            })
+          ).violations.map(({ id, nodes }) => ({ id, targets: nodes.map((node) => node.target) })),
+        );
         assert.deepEqual(violations, [], `${width}×${height} ${colorScheme}: accessibility`);
-      } finally { await page.close(); }
+      } finally {
+        await page.close();
+      }
     }
   }
   console.log('Layout and accessibility: passed');
@@ -142,17 +304,28 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  page.on('console', (message) => { if (message.text().startsWith('CHEZ entered')) console.log(message.text()); });
+  page.on('console', (message) => {
+    if (message.text().startsWith('CHEZ entered')) console.log(message.text());
+  });
   await page.addInitScript(installDriver, { chapters: CHAPTERS, mazeRoute: MAZE_ROUTE });
-  await page.addInitScript((watching) => { window.__chezDemo = watching; }, demo);
-  await page.addInitScript((takingNaps) => { window.__chezTakeNaps = takingNaps; window.__chezRetryTest = takingNaps; }, retry);
-  await page.addInitScript((driving) => { window.__chezLapTest = driving; }, lap);
+  await page.addInitScript((watching) => {
+    window.__chezDemo = watching;
+  }, demo);
+  await page.addInitScript((takingNaps) => {
+    window.__chezTakeNaps = takingNaps;
+    window.__chezRetryTest = takingNaps;
+  }, retry);
+  await page.addInitScript((driving) => {
+    window.__chezLapTest = driving;
+  }, lap);
   // Add observation hooks to Vite's response; no diagnostics or autoplayer ship in the app.
   await page.route('**/src/main.ts', async (route) => {
     const response = await route.fetch();
     let body = await response.text();
     for (const [before, after] of [
-      ['onSession: (session) => {', `onSession: (session) => { window.__chezSession = session;
+      [
+        'onSession: (session) => {',
+        `onSession: (session) => { window.__chezSession = session;
         if (window.__chezRetryTest) {
           const title = session.game.scenes[0];
           title.links[0] = { ...title.links[0], toScene: 7, to: { x: 23, y: 39 } };
@@ -161,7 +334,8 @@ try {
           const title = session.game.scenes[0];
           title.links[0] = { ...title.links[0], toScene: ${DRIVE_SCENE}, to: { x: 84, y: 39 } };
           title.files[0] = title.files[1] = '';
-        }`],
+        }`,
+      ],
       ['session.onScene = (scene) => {', 'session.onScene = (scene) => { window.__chezEnter(scene);'],
       ['onFrame: (world) => {', 'onFrame: (world) => { window.__chezWorld = world; if (!window.__chezDemo) window.__chezDrive(world, current);'],
       ['onPlayEnd: (_score, how) => {', 'onPlayEnd: (_score, how) => { window.__chezEnd = how;'],
@@ -179,7 +353,7 @@ try {
       await page.waitForTimeout(2000);
       await page.screenshot({ path: join(screenshots, 'try-again.png') });
       await page.waitForTimeout(5000);
-      for (let attempt = 0; attempt < 15 && !await page.locator('#game-overlay').isVisible(); attempt++) {
+      for (let attempt = 0; attempt < 15 && !(await page.locator('#game-overlay').isVisible()); attempt++) {
         await page.keyboard.press('Enter');
         await page.waitForTimeout(1000);
       }
@@ -191,7 +365,12 @@ try {
       await page.reload();
       assert.equal(await page.locator('#start').textContent(), 'Continue with Teddy', 'reload offers the saved road');
       assert.equal(await page.locator('#chapter-name').textContent(), 'Sky Laundry');
-      await page.evaluate(() => { window.__chezTakeNaps = false; window.__chezRetryTest = false; window.__chezScene = 0; window.__chezEnd = undefined; });
+      await page.evaluate(() => {
+        window.__chezTakeNaps = false;
+        window.__chezRetryTest = false;
+        window.__chezScene = 0;
+        window.__chezEnd = undefined;
+      });
       await page.locator('#start').click();
       await page.waitForFunction(() => window.__chezScene !== 0);
       assert.equal(await page.evaluate(() => window.__chezScene), 7, 'retry must resume Sky Laundry');
@@ -200,26 +379,44 @@ try {
       console.log('Nap loss, saved chapter after reload, and three fresh tries: passed');
     }
     if (!lap && !retry) {
-      await page.waitForFunction(() => window.__chezScene === 3 && window.__chezWorld?.chr.x[0] >= 16 && window.__chezWorld?.chr.x[0] <= 22, null, { timeout: 90_000 });
+      await page.waitForFunction(() => window.__chezScene === 3 && window.__chezWorld?.chr.x[0] >= 16 && window.__chezWorld?.chr.x[0] <= 22, null, {
+        timeout: 90_000,
+      });
       await page.screenshot({ path: join(screenshots, 'wind-kites.png') });
     }
     if (!lap && !retry && !demo) {
-      await page.waitForFunction(() => window.__chezScene === 5 && window.__chezWorld?.chr.x[0] === 44 && window.__chezWorld?.chr.x[1] === 0, null, { timeout: 120_000 });
+      await page.waitForFunction(() => window.__chezScene === 5 && window.__chezWorld?.chr.x[0] === 44 && window.__chezWorld?.chr.x[1] === 0, null, {
+        timeout: 120_000,
+      });
       await page.screenshot({ path: join(screenshots, 'leaf-crossing-wait.png') });
       await page.waitForFunction(() => window.__chezScene === 5 && window.__chezWorld?.chr.x[0] >= 46);
       await page.screenshot({ path: join(screenshots, 'leaf-crossing-go.png') });
     }
     if (!lap) {
-      await page.waitForFunction(() => window.__chezScene === 7 && window.__chezWorld?.chr.x[0] >= 20 && window.__chezWorld?.chr.x[0] < 32 && window.__chezWorld?.chr.y[0] === 35, null, { timeout: 210_000 });
+      await page.waitForFunction(
+        () => window.__chezScene === 7 && window.__chezWorld?.chr.x[0] >= 20 && window.__chezWorld?.chr.x[0] < 32 && window.__chezWorld?.chr.y[0] === 35,
+        null,
+        { timeout: 210_000 },
+      );
       await page.screenshot({ path: join(screenshots, 'sky-laundry.png') });
     }
     if (!lap) {
-      await page.waitForFunction((scene) => window.__chezScene === scene && window.__chezWorld?.chr.x[0] >= 30 && window.__chezWorld?.chr.x[0] <= 36 && window.__chezWorld?.chr.y[0] === 31, MAZE_SCENE, { timeout: 120_000 });
+      await page.waitForFunction(
+        (scene) =>
+          window.__chezScene === scene && window.__chezWorld?.chr.x[0] >= 30 && window.__chezWorld?.chr.x[0] <= 36 && window.__chezWorld?.chr.y[0] === 31,
+        MAZE_SCENE,
+        { timeout: 120_000 },
+      );
       assert.equal(await page.locator('#hop').textContent(), 'Up ↑');
       assert.equal(await page.locator('#bark').textContent(), 'Down ↓');
+      assert.equal(await page.locator('#move-label').textContent(), 'Move Gwinn');
       await page.screenshot({ path: join(screenshots, 'gwinn-shortcut.png') });
     }
-    await page.waitForFunction((scene) => window.__chezScene === scene && window.__chezWorld?.chr.x[0] <= 60 && window.__chezWorld?.chr.x[0] >= 50, DRIVE_SCENE, { timeout: 120_000 });
+    await page.waitForFunction(
+      (scene) => window.__chezScene === scene && window.__chezWorld?.chr.x[0] <= 60 && window.__chezWorld?.chr.x[0] >= 50,
+      DRIVE_SCENE,
+      { timeout: 120_000 },
+    );
     assert.equal(await page.locator('#progress-label').textContent(), 'CHEERS');
     assert.equal(await page.locator('#bark').textContent(), 'Honk!');
     assert.equal(await page.locator('#hop').textContent(), 'Bounce ↑');
@@ -239,7 +436,7 @@ try {
     await page.waitForTimeout(8000);
     await page.keyboard.press('Enter');
     if (demo) {
-      for (let attempt = 0; attempt < 10 && await page.locator('#status').textContent() !== 'Demo finished'; attempt++) {
+      for (let attempt = 0; attempt < 10 && (await page.locator('#status').textContent()) !== 'Demo finished'; attempt++) {
         await page.waitForTimeout(1000);
         await page.keyboard.press('Enter');
       }
@@ -249,7 +446,9 @@ try {
       assert.ok(await page.locator('#start').isEnabled(), 'the player can start after watching');
     } else await page.waitForFunction(() => window.__chezEnd === 'won', null, { timeout: 15_000 });
     assert.deepEqual(errors, [], 'browser playthrough must have no page errors');
-    console.log(`${lap ? 'Victory lap' : retry ? 'Checkpoint recovery' : `All ${CHAPTERS.length} chapters`} and the win ending${demo ? ' in demo playback' : ''}: passed. Screenshot: ${join(screenshots, 'win.png')}`);
+    console.log(
+      `${lap ? 'Victory lap' : retry ? 'Checkpoint recovery' : `All ${CHAPTERS.length} chapters`} and the win ending${demo ? ' in demo playback' : ''}: passed. Screenshot: ${join(screenshots, 'win.png')}`,
+    );
   } catch (error) {
     await page.screenshot({ path: join(screenshots, 'failure.png') });
     console.error(await page.evaluate(() => ({ scene: window.__chezScene, x: window.__chezWorld?.chr.x, y: window.__chezWorld?.chr.y })));

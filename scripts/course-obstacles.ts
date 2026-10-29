@@ -6,12 +6,21 @@ import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
 
 export function courseObstacles(theme: string, map: GameMap, blocks: Block[], palette: Uint8Array, reserved: number[]): void {
   const used = new Set([...map.blocks, ...reserved]);
-  for (const id of [...used]) { used.add(blocks[id].nextBl); used.add(blocks[id].touchBl); }
-  const free = Array.from({ length: 150 }, (_, i) => 149 - i).filter(id => !used.has(id));
+  for (const id of [...used]) {
+    used.add(blocks[id].nextBl);
+    used.add(blocks[id].touchBl);
+  }
+  const free = Array.from({ length: 150 }, (_, i) => 149 - i).filter((id) => !used.has(id));
   const color = (r: number, g: number, b: number) => matchColor(palette, r, g, b);
-  const dark = color(7, 13, 19), gold = color(61, 44, 15), white = color(63, 61, 55), green = color(12, 33, 14), leaf = color(21, 43, 18), pink = color(56, 28, 41);
+  const dark = color(7, 13, 19),
+    gold = color(61, 44, 15),
+    white = color(63, 61, 55),
+    green = color(12, 33, 14),
+    leaf = color(21, 43, 18),
+    pink = color(56, 28, 41);
   const make = (p: Pixels, solid = 15, grav = 4) => {
-    const id = free.shift(); if (id === undefined) throw new Error('No course obstacle slot');
+    const id = free.shift();
+    if (id === undefined) throw new Error('No course obstacle slot');
     blocks[id] = { ...blocks[0], pixels: p.px.slice(), solid, grav, nextBl: id, touchBl: id };
     return id;
   };
@@ -22,7 +31,10 @@ export function courseObstacles(theme: string, map: GameMap, blocks: Block[], pa
   };
   if (theme === 'stripe') barrier([28, 29, 52, 53]);
   if (theme === 'street') barrier([24, 25, 44, 45, 64, 65]);
-  if (theme === 'city') { barrier([22, 23, 24]); barrier([62, 63], 2); }
+  if (theme === 'city') {
+    barrier([22, 23, 24]);
+    barrier([62, 63], 2);
+  }
   if (theme === 'park') {
     const hedge = make(new Pixels(20, 20, green).frame(0, 0, 20, 20, leaf));
     for (let y = 34; y <= 39; y++) for (let x = 50; x <= 53; x++) map.blocks[y * 100 + x] = hedge;

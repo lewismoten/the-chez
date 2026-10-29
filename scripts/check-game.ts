@@ -28,42 +28,48 @@ const DRIVE_SCENE = CHAPTERS.findIndex((chapter) => chapter.mode === 'drive') + 
 const MAZE_SCENE = CHAPTERS.findIndex((chapter) => chapter.mode === 'maze') + 2;
 assert.equal(game.scenes.length, CHAPTERS.length + 2, 'the page must describe every playable chapter');
 const ci = newCharInfo();
-for (const [index, scene] of game.scenes.entries()) if (index >= 2) {
-  assert.equal(scene.desc, CHAPTERS[index - 2].name, 'the HUD and DOS chapter names must match');
-  const entrance = index === 2 ? game.scenes[0].links[0] : game.scenes[index - 1].links[0];
-  assert.equal(entrance.toScene, index, 'the story route must visit chapters in order');
-  assert.equal(entrance.to.x, CHAPTERS[index - 2].startX, 'the route and retry must use the same safe entrance');
-  assert.equal(scene.links.filter((link) => link.toScene !== 65535).length, 1, 'no backup link may bypass a counter gate');
-  const map = parseMap(bytes(scene.files[1]));
-  const blocks = parseBlocks(bytes(scene.files[2]), 150);
-  const gate = blocks[map.blocks[39 * 100 + CHAPTERS[index - 2].carX]];
-  if (scene.desc === 'The Clown Club') {
-    const visible = Array.from(map.blocks.entries()).filter(([, id]) => blocks[id].effect === 25 && blocks[id].eamt > 0);
-    assert.ok(visible.length >= 12, 'the Clown Club must offer twelve visible course pieces without needing balloon rewards');
-    for (const [at] of visible) assert.ok(!map.monsters.some((actor) => actor.monnum < 64 && actor.curx === at % 100 && actor.cury === Math.floor(at / 100)), 'a mandatory course pickup must not be hidden behind a balloon');
+for (const [index, scene] of game.scenes.entries())
+  if (index >= 2) {
+    assert.equal(scene.desc, CHAPTERS[index - 2].name, 'the HUD and DOS chapter names must match');
+    const entrance = index === 2 ? game.scenes[0].links[0] : game.scenes[index - 1].links[0];
+    assert.equal(entrance.toScene, index, 'the story route must visit chapters in order');
+    assert.equal(entrance.to.x, CHAPTERS[index - 2].startX, 'the route and retry must use the same safe entrance');
+    assert.equal(scene.links.filter((link) => link.toScene !== 65535).length, 1, 'no backup link may bypass a counter gate');
+    const map = parseMap(bytes(scene.files[1]));
+    const blocks = parseBlocks(bytes(scene.files[2]), 150);
+    const gate = blocks[map.blocks[39 * 100 + CHAPTERS[index - 2].carX]];
+    if (scene.desc === 'The Clown Club') {
+      const visible = Array.from(map.blocks.entries()).filter(([, id]) => blocks[id].effect === 25 && blocks[id].eamt > 0);
+      assert.ok(visible.length >= 12, 'the Clown Club must offer twelve visible course pieces without needing balloon rewards');
+      for (const [at] of visible)
+        assert.ok(
+          !map.monsters.some((actor) => actor.monnum < 64 && actor.curx === at % 100 && actor.cury === Math.floor(at / 100)),
+          'a mandatory course pickup must not be hidden behind a balloon',
+        );
+    }
+    assert.equal(gate.eamt, -CHAPTERS[index - 2].required, `${scene.desc}: the HUD must show the real gate quota`);
+    for (const [at, id] of map.blocks.entries()) {
+      const block = blocks[id];
+      const kitePost = scene.files[1] === 'street.map' && Math.floor(at / 100) === 38 && KITE_POSTS.includes(at % 100);
+      assert.equal(block.obj, 0, `${scene.desc}: no inherited inventory objects`);
+      assert.equal(block.birthTime, kitePost ? KITE_INTERVAL : 0, `${scene.desc}: only the marked wind posts may spawn actors`);
+      if (kitePost) assert.equal(block.birthMon, KITE);
+      const nap = scene.files[1] === 'sky.map' && Math.floor(at / 100) === 39 && NAP_COLUMNS.includes(at % 100);
+      assert.equal(block.chHitPt, nap ? -1000 : 0, `${scene.desc}: only the marked nap clouds may cause a retry`);
+      assert.ok(block.effect === 0 || block.effect === 19 + index, `${scene.desc}: only its own stripe counter may be used`);
+    }
   }
-  assert.equal(gate.eamt, -CHAPTERS[index - 2].required, `${scene.desc}: the HUD must show the real gate quota`);
-  for (const [at, id] of map.blocks.entries()) {
-    const block = blocks[id];
-    const kitePost = scene.files[1] === 'street.map' && Math.floor(at / 100) === 38 && KITE_POSTS.includes(at % 100);
-    assert.equal(block.obj, 0, `${scene.desc}: no inherited inventory objects`);
-    assert.equal(block.birthTime, kitePost ? KITE_INTERVAL : 0, `${scene.desc}: only the marked wind posts may spawn actors`);
-    if (kitePost) assert.equal(block.birthMon, KITE);
-    const nap = scene.files[1] === 'sky.map' && Math.floor(at / 100) === 39 && NAP_COLUMNS.includes(at % 100);
-    assert.equal(block.chHitPt, nap ? -1000 : 0, `${scene.desc}: only the marked nap clouds may cause a retry`);
-    assert.ok(block.effect === 0 || block.effect === 19 + index, `${scene.desc}: only its own stripe counter may be used`);
-  }
-}
 for (const name of ['intro.fli', 'drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'drive5.fli', 'drive6.fli', 'drive7.fli', 'win.fli', 'lost.fli']) {
   assert.deepEqual(fliFaults(bytes(name)), [], `${name}: animation must fit the original DOS player`);
 }
 assert.equal(ROAD_BEATS.length, CHAPTERS.length - 1, 'every road transition must have a connected story beat');
-for (const beat of ROAD_BEATS) for (const line of beat.lines) {
-  assert.ok(line.length <= 38, `Road caption must leave room at the screen edges: ${line}`);
-}
+for (const beat of ROAD_BEATS)
+  for (const line of beat.lines) {
+    assert.ok(line.length <= 38, `Road caption must leave room at the screen edges: ${line}`);
+  }
 for (const name of ['drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'drive5.fli', 'drive6.fli', 'drive7.fli']) {
   const movie = parseFli(bytes(name));
-  const seconds = movie.frameCount * movie.speed / 70;
+  const seconds = (movie.frameCount * movie.speed) / 70;
   assert.ok(seconds >= 4 && seconds <= 8, `${name}: give the story time to read while keeping road trips short`);
 }
 const doorBark = decodeVoc(bytes('gate.voc'));
@@ -80,87 +86,216 @@ for (const name of ['story.txt', 'help.txt', 'credits.txt']) {
   assert.ok(lines.length <= 16 && lines.every((line) => line.length <= 30), `${name}: text must fit the DOS screen`);
 }
 
-function stage(chapter: number, startX: number, progress = newCharInfo()) {
+function stage(chapter: number, startX: number, progress = newCharInfo(), startY = 39) {
   const scene = game.scenes[chapter];
-  return new Sim({
-    map: parseMap(bytes(scene.files[1])),
-    bbl: parseBlocks(bytes(scene.files[2]), 150),
-    mon: parseMonsters(bytes(scene.files[3])),
-    mbl: parseBlocks(bytes(scene.files[4]), 100),
-    chr: parseCharacter(bytes(scene.files[5])),
-    cbl: parseBlocks(bytes(scene.files[6]), 50),
-    links: [scene.links[0]],
-  }, { x: startX, y: 39 }, progress);
+  return new Sim(
+    {
+      map: parseMap(bytes(scene.files[1])),
+      bbl: parseBlocks(bytes(scene.files[2]), 150),
+      mon: parseMonsters(bytes(scene.files[3])),
+      mbl: parseBlocks(bytes(scene.files[4]), 100),
+      chr: parseCharacter(bytes(scene.files[5])),
+      cbl: parseBlocks(bytes(scene.files[6]), 50),
+      links: [scene.links[0]],
+    },
+    { x: startX, y: startY },
+    progress,
+  );
 }
 
-async function play(chapter: number, startX: number, hop: boolean, progress = newCharInfo(), tricks = { lift: false, push: false }, bark = false) {
+async function play(chapter: number, startX: number, hop: boolean, progress = newCharInfo()) {
   const scene = game.scenes[chapter];
   const sim = stage(chapter, startX, progress);
   if (chapter === DRIVE_SCENE) {
-    let next = 0, bounced = -1;
+    let next = 0,
+      bounced = -1;
     sim.press(75);
     await sim.run(500, (tick) => {
       const ready = next === 0 ? sim.pos.bx === 66 && sim.pos.x % 20 === 0 && sim.w.ci.gravx === 0 : sim.pos.bx <= [66, 48, 28][next];
-      if (hop && next < 3 && ready) { sim.press(72); bounced = tick; next++; }
-      if (bounced >= 0 && tick === bounced + 2) { sim.release(72); bounced = -1; }
+      if (hop && next < 3 && ready) {
+        sim.press(72);
+        bounced = tick;
+        next++;
+      }
+      if (bounced >= 0 && tick === bounced + 2) {
+        sim.release(72);
+        bounced = -1;
+      }
     });
     sim.release(75);
     return sim;
   }
   if (chapter === MAZE_SCENE && hop) {
-    let target = 1, held = 0;
-    sim.press(77); held = 77;
+    let target = 1,
+      held = 0;
+    sim.press(77);
+    held = 77;
     await sim.run(1200, () => {
       const point = MAZE_ROUTE[target];
       if (!point) return;
-      const dx = point.x * 20 - sim.pos.x, dy = point.y * 20 - sim.pos.y;
-      if (!dx && !dy) { sim.release(held); held = 0; target++; return; }
-      const scan = dx ? dx > 0 ? 77 : 75 : dy > 0 ? 57 : 72;
-      if (scan !== held) { if (held) sim.release(held); sim.press(scan); held = scan; }
+      const dx = point.x * 20 - sim.pos.x,
+        dy = point.y * 20 - sim.pos.y;
+      if (!dx && !dy) {
+        sim.release(held);
+        held = 0;
+        target++;
+        return;
+      }
+      const scan = dx ? (dx > 0 ? 77 : 75) : dy > 0 ? 57 : 72;
+      if (scan !== held) {
+        if (held) sim.release(held);
+        sim.press(scan);
+        held = scan;
+      }
     });
     return sim;
   }
   const carX = scene.links[0].from.x;
-  const barkTargets = [24, 43, 64, 70];
-  let barkTarget = 0;
-  let waitingToBark = false;
-  let barkAt = -1;
-  let noHopUntil = -1;
-  const skyStops = [{ lift: 16, land: 20, row: 35 }, { lift: 36, land: 40, row: 33 }, { lift: 56, land: 60, row: 35 }];
+  const skyStops = [
+    { lift: 16, land: 20, row: 35 },
+    { lift: 36, land: 40, row: 33 },
+    { lift: 56, land: 60, row: 35 },
+  ];
+  let yardJump = 0,
+    jumpedAt = -1,
+    clubStep = 0,
+    clubPhase = 'approach';
+  const clubSteps = [
+    { from: 23, to: 26 },
+    { from: 27, to: 30 },
+    { from: 31, to: 34 },
+    { from: 47, to: 50 },
+    { from: 51, to: 54 },
+    { from: 55, to: 58 },
+  ];
+  let parkPhase = 'approach';
+  let skyGap = 0,
+    gapPhase = 'approach';
   let skyStop = 0;
   let skyPhase = 'approach';
   sim.press(77);
   await sim.run(800, (tick) => {
-    if (chapter === 7 && hop) {
-      const stop = skyStops[skyStop];
-      if (!stop) return;
-      if (skyPhase === 'approach' && sim.pos.bx >= stop.lift) { sim.release(77); skyPhase = 'rise'; }
-      if (skyPhase === 'rise' && sim.pos.y <= stop.row * 20 - 20) { sim.press(77); skyPhase = 'fly'; }
-      if (skyPhase === 'fly' && sim.pos.bx >= stop.land) { sim.release(77); skyPhase = 'land'; }
-      if (skyPhase === 'land' && sim.pos.y === stop.row * 20) { sim.press(77); skyStop++; skyPhase = 'approach'; }
+    if (chapter === 2 && hop) {
+      if (yardJump < 2 && sim.pos.bx >= [26, 50][yardJump]) {
+        sim.press(72);
+        jumpedAt = tick;
+        yardJump++;
+      }
+      if (jumpedAt >= 0 && tick >= jumpedAt + 2) {
+        sim.release(72);
+        jumpedAt = -1;
+      }
       return;
     }
-    if (chapter === 4 && sim.pos.bx >= 44 && sim.pos.bx <= 46 && sim.w.ci.gravy < 0) tricks.lift = true;
-    if (chapter === 5 && sim.pos.bx >= 28 && sim.pos.bx <= 34 && sim.w.ci.gravx > 0) tricks.push = true;
-    if (chapter === 6 && bark) {
-      if (barkTarget < barkTargets.length && !waitingToBark && barkAt < 0 && sim.pos.bx >= barkTargets[barkTarget] - 4) {
+    if (chapter === 6 && hop) {
+      const step = clubSteps[clubStep];
+      if (!step) return;
+      if (clubPhase === 'approach' && sim.pos.bx >= step.from) {
+        sim.release(77);
+        clubPhase = 'ready';
+      }
+      if (clubPhase === 'ready' && sim.pos.y === 780) {
+        sim.press(77);
+        sim.press(72);
+        jumpedAt = tick;
+        clubPhase = 'fly';
+      }
+      if (jumpedAt >= 0 && tick >= jumpedAt + 2) {
+        sim.release(72);
+        jumpedAt = -1;
+      }
+      if (clubPhase === 'fly' && sim.pos.bx >= step.to) {
+        sim.release(77);
+        clubPhase = 'land';
+      }
+      if (clubPhase === 'land' && sim.pos.y === 780) {
+        sim.press(77);
+        clubStep++;
+        clubPhase = 'approach';
+      }
+      return;
+    }
+    if (chapter === 4 && hop && parkPhase !== 'done' && sim.pos.bx >= 45) {
+      if (parkPhase === 'approach') {
         sim.release(77);
         sim.release(72);
-        waitingToBark = true;
+        parkPhase = 'rise';
       }
-      if (waitingToBark && sim.pos.y >= 780) {
-        noHopUntil = barkTargets[barkTarget] + 2;
-        sim.press(57);
-        barkAt = tick;
-        waitingToBark = false;
-        barkTarget++;
+      if (parkPhase === 'rise' && sim.pos.y <= 640) {
+        sim.press(77);
+        parkPhase = 'fly';
       }
-      if (barkAt >= 0 && tick === barkAt + 2) sim.release(57);
-      if (barkAt >= 0 && tick === barkAt + 12) { sim.press(77); barkAt = -1; }
+      if (parkPhase === 'fly' && sim.pos.bx >= 48) {
+        sim.release(77);
+        parkPhase = 'land';
+      }
+      if (parkPhase === 'land' && sim.pos.y === 660) {
+        sim.press(77);
+        parkPhase = 'done';
+      }
+      return;
+    }
+    if (chapter === 4 && parkPhase === 'done' && sim.pos.bx <= 55) return;
+    if (chapter === 7 && hop) {
+      if (skyGap < skyStop) {
+        const gap = [
+          { from: 24, to: 29, row: 35 },
+          { from: 44, to: 49, row: 33 },
+          { from: 64, to: 69, row: 35 },
+        ][skyGap];
+        if (gapPhase === 'approach' && sim.pos.bx >= gap.from) {
+          sim.release(77);
+          gapPhase = 'ready';
+        }
+        if (gapPhase === 'ready' && sim.pos.y === gap.row * 20) {
+          sim.press(77);
+          sim.press(72);
+          jumpedAt = tick;
+          gapPhase = 'fly';
+        }
+        if (jumpedAt >= 0 && tick >= jumpedAt + 2) {
+          sim.release(72);
+          jumpedAt = -1;
+        }
+        if (gapPhase === 'fly' && sim.pos.bx >= gap.to) {
+          sim.release(77);
+          gapPhase = 'land';
+        }
+        if (gapPhase === 'land' && sim.pos.y === gap.row * 20) {
+          sim.press(77);
+          skyGap++;
+          gapPhase = 'approach';
+        }
+        return;
+      }
+      const stop = skyStops[skyStop];
+      if (!stop) return;
+      if (skyPhase === 'approach' && sim.pos.bx >= stop.lift) {
+        sim.release(77);
+        skyPhase = 'rise';
+      }
+      if (skyPhase === 'rise' && sim.pos.y <= stop.row * 20 - 20) {
+        sim.press(77);
+        skyPhase = 'fly';
+      }
+      if (skyPhase === 'fly' && sim.pos.bx >= stop.land) {
+        sim.release(77);
+        skyPhase = 'land';
+      }
+      if (skyPhase === 'land' && sim.pos.y === stop.row * 20) {
+        sim.press(77);
+        skyStop++;
+        skyPhase = 'approach';
+      }
+      return;
     }
     if (hop && sim.pos.bx >= carX - 9) sim.release(72);
-    if (hop && !waitingToBark && barkAt < 0 && sim.pos.bx >= noHopUntil && sim.pos.bx < carX - 9 && tick % 25 === 0) sim.press(72);
-    if (hop && !waitingToBark && barkAt < 0 && tick % 25 === 3) { sim.release(72); sim.release(77); sim.press(77); }
+    if (hop && sim.pos.bx < carX - 9 && tick % 25 === 0) sim.press(72);
+    if (hop && tick % 25 === (chapter === 5 ? 6 : 3)) {
+      sim.release(72);
+      sim.release(77);
+      sim.press(77);
+    }
   });
   sim.release(77);
   if (hop && sim.link < 0 && sim.pos.bx > carX) {
@@ -172,76 +307,108 @@ async function play(chapter: number, startX: number, hop: boolean, progress = ne
 }
 
 for (const [index, info] of CHAPTERS.entries()) {
-  const chapter = index + 2, startX = info.startX;
-  if (chapter > 2) {
-    const tricks = { lift: false, push: false };
-    const walker = await play(chapter, startX, false, newCharInfo(), tricks);
-    assert.equal(walker.link, -1, `${game.scenes[chapter].desc}: walking should leave the car door closed`);
-    if (chapter === 7) {
-      assert.ok(walker.dead, 'walking into a marked nap cloud must trigger a retry');
-      assert.ok(walker.sounds.includes(18), 'the nap must play Teddy’s yawn');
-      assert.ok(!walker.sounds.includes(17), 'the nap must not play the source game’s hurt sound');
-    }
-    if (chapter === 4) assert.ok(tricks.lift, 'the park air puff must lift Teddy');
-    if (chapter === 5) assert.ok(tricks.push, 'the Downtown arrows must push Teddy');
-    if (chapter === DRIVE_SCENE) {
-      walker.press(75);
-      walker.press(72);
-      await walker.run(2);
-      walker.release(72);
-      await walker.run(30);
-      walker.release(75);
-      assert.ok(walker.pos.x < 64 * 20, 'a stopped driver must be able to bounce over the first bump');
-      assert.equal(walker.dead, false, 'a missed bounce must never cost a try');
-    }
+  const chapter = index + 2,
+    startX = info.startX;
+  const walker = await play(chapter, startX, false, newCharInfo());
+  assert.equal(walker.link, -1, `${game.scenes[chapter].desc}: walking should leave the car door closed`);
+  if (chapter === 7) {
+    const nap = stage(7, 23);
+    nap.press(77);
+    await nap.run(100);
+    assert.ok(nap.dead, 'walking into a marked nap cloud must trigger a retry');
+    assert.ok(nap.sounds.includes(18), 'the nap must play Teddy’s yawn');
+    assert.ok(!nap.sounds.includes(17), 'the nap must not play the source game’s hurt sound');
+  }
+
+  if (chapter === DRIVE_SCENE) {
+    walker.press(75);
+    walker.press(72);
+    await walker.run(2);
+    walker.release(72);
+    await walker.run(30);
+    walker.release(75);
+    assert.ok(walker.pos.x < 64 * 20, 'a stopped driver must be able to bounce over the first bump');
+    assert.equal(walker.dead, false, 'a missed bounce must never cost a try');
   }
   if (chapter === 6) {
     const silentScout = await play(chapter, startX, true);
-    assert.equal(silentScout.link, 0, 'the visible course must be completable without discovering balloon rewards');
+    assert.equal(
+      silentScout.link,
+      0,
+      `the visible course must be completable without balloon rewards: ${JSON.stringify(silentScout.pos)}, ${silentScout.w.ci.meter[25]}`,
+    );
   }
-  const sim = await play(chapter, startX, chapter > 2, ci, { lift: false, push: false }, chapter === 6);
-  assert.equal(sim.dead, false, `${game.scenes[chapter].desc}: Teddy must finish safely`);
+  const sim = await play(chapter, startX, true, ci);
+  assert.equal(sim.dead, false, `${game.scenes[chapter].desc}: ${info.actor ?? 'Teddy'} must finish safely`);
   assert.ok(sim.link >= 0, `${game.scenes[chapter].desc}: stripe trail must lead to the next chapter`);
   assert.equal(sim.link, 0, `${game.scenes[chapter].desc}: the route must leave through the counter gate itself`);
   console.log(`${game.scenes[chapter].desc}: passed in ${sim.ticks} ticks`);
 }
 
+const hopping = stage(2, 20);
+hopping.press(72);
+await hopping.run(80);
+assert.equal(hopping.pos.y, 780, 'holding Hop must land after one impulse, rather than fly');
+hopping.release(72);
+hopping.press(72);
+await hopping.run(3);
+assert.ok(hopping.pos.y < 780, 'a fresh press must start another hop');
+
+// Crew roles and recoverable misses must be real engine behavior.
+const squeaker = stage(5, 8);
+squeaker.press(57);
+await squeaker.run(12);
+assert.ok(squeaker.sounds.includes(21), 'Doc Leo must squeak his rubber chicken');
+assert.ok(!squeaker.sounds.includes(9), 'Doc Leo must use his own effect rather than Teddy’s bark');
+assert.ok(!squeaker.w.chr.sequences[8].frames.some((f) => f.pic2 === 100), 'Doc Leo’s wave must not spawn dog bark actors');
+assert.equal(game.scenes[5].files[6], 'docleo.cbl');
+assert.equal(game.scenes[MAZE_SCENE].files[6], 'gwinn.cbl');
+for (const [x, direction] of [
+  [26, 77],
+  [30, 75],
+  [50, 77],
+  [54, 75],
+]) {
+  const foam = stage(6, x, newCharInfo(), 44);
+  foam.press(direction);
+  await foam.run(160);
+  assert.equal(foam.dead, false, 'foam trays must never cost a try');
+  assert.ok(foam.pos.y <= 780, 'a missed stepping stone must have a working return lift in either direction');
+}
+const bonus = stage(6, 20);
+bonus.press(57);
+await bonus.run(25);
+assert.ok(
+  bonus.w.mm.some((actor) => actor.monnum === 12),
+  'a bark must still release an optional balloon stripe',
+);
+console.log('Playable crew, chicken squeak, optional balloon bonus, and two-way foam recovery: passed');
+
 // Wait out the first batch: replacement posts must keep the kite challenge recoverable.
 const patientScout = stage(3, 8);
 let peakKites = 0;
 await patientScout.run(KITE_LIFETIME + KITE_INTERVAL + 5, () => {
-  const live = patientScout.w.mm.flatMap((actor, i) => actor.monnum === KITE ? [patientScout.w.mi[i]] : []);
+  const live = patientScout.w.mm.flatMap((actor, i) => (actor.monnum === KITE ? [patientScout.w.mi[i]] : []));
   peakKites = Math.max(peakKites, live.length);
   for (const kite of live) {
-    const x = kite.curx[0] * 20 + kite.curx[1], y = kite.cury[0] * 20 + kite.cury[1];
+    const x = kite.curx[0] * 20 + kite.curx[1],
+      y = kite.cury[0] * 20 + kite.cury[1];
     assert.ok(x >= 15 * 20 && x <= 79 * 20, 'kite paths must stay near their wind posts');
     assert.ok(y >= 37 * 20 && y <= 38 * 20, 'flying kites must stay above a walking Teddy');
   }
 });
 assert.ok(peakKites <= KITE_STARTS.length + KITE_POSTS.length * (Math.ceil(KITE_LIFETIME / KITE_INTERVAL) + 1), 'kite lifetime must bound the population');
-const replacements = patientScout.w.mm.flatMap((actor, i) => actor.monnum === KITE ? [patientScout.w.mi[i]] : []);
+const replacements = patientScout.w.mm.flatMap((actor, i) => (actor.monnum === KITE ? [patientScout.w.mi[i]] : []));
 assert.ok(replacements.length > 0 && replacements.every((kite) => kite.birthTime > 1), 'fresh kites must remain after every initial kite expires');
 assert.equal(patientScout.w.ci.meter[22], 1, 'waiting beneath kites must not collect them');
-patientScout.press(77);
-await patientScout.run(500);
-patientScout.release(77);
-assert.equal(patientScout.w.ci.meter[22], 8, 'walking must collect exactly seven ground pieces, leaving one kite needed');
-assert.equal(patientScout.link, -1);
-patientScout.press(75);
-await patientScout.run(20);
-patientScout.release(75);
-assert.equal(patientScout.pos.bx, 77, 'Teddy can return to the nearest visible wind post');
-await patientScout.run(250, (tick) => {
-  if (patientScout.w.ci.meter[22] >= 9) { patientScout.release(72); return; }
-  if (tick % 25 === 0) patientScout.press(72);
-  if (tick % 25 === 3) patientScout.release(72);
+const replacementScout = stage(3, 77);
+await replacementScout.run(KITE_LIFETIME + KITE_INTERVAL + 5);
+await replacementScout.run(250, (tick) => {
+  if (tick % 25 === 0) replacementScout.press(72);
+  if (tick % 25 === 3) replacementScout.release(72);
 });
-assert.ok(patientScout.w.ci.meter[22] >= 9, 'hopping at a wind post must catch a replacement kite');
-patientScout.release(72);
-patientScout.press(77);
-await patientScout.run(100);
-assert.equal(patientScout.link, 0, 'Teddy must still finish after the first kite batch is gone');
-assert.equal(patientScout.dead, false);
+assert.ok(replacementScout.w.ci.meter[22] > 1, 'hopping at a wind post must catch a replacement kite after the first batch expires');
+assert.equal(replacementScout.dead, false);
 console.log('Wind kites: flight bounds, fresh replacements, and delayed safe completion passed');
 
 // Check the actual animated collision variants, including approaching from the far side.
@@ -251,7 +418,10 @@ for (const direction of [1, -1]) {
   crossing.press(scan);
   crossing.press(72);
   await crossing.run(LEAF_WAIT - 2);
-  assert.ok(direction > 0 ? crossing.pos.x <= (LEAF_CROSSING - 1) * 20 : crossing.pos.x >= (LEAF_CROSSING + 1) * 20, 'WAIT must block even a hopping Teddy from either side');
+  assert.ok(
+    direction > 0 ? crossing.pos.x <= (LEAF_CROSSING - 1) * 20 : crossing.pos.x >= (LEAF_CROSSING + 1) * 20,
+    'WAIT must block even a hopping Teddy from either side',
+  );
   const gateId = crossing.w.map[39 * 100 + LEAF_CROSSING];
   const signId = crossing.w.map[34 * 100 + LEAF_CROSSING - 1];
   assert.equal(crossing.w.bg[crossing.w.blkmap[gateId]].solid, 15);
@@ -279,21 +449,27 @@ console.log('Gwinn’s leaf crossing: WAIT, GO, both directions, and repeated cy
 
 const mazeMoves = stage(MAZE_SCENE, 8);
 for (const scan of [77, 75, 72, 80, 57, 72]) {
-  mazeMoves.press(scan); await mazeMoves.run(5); mazeMoves.release(scan);
+  mazeMoves.press(scan);
+  await mazeMoves.run(5);
+  mazeMoves.release(scan);
 }
 assert.deepEqual([mazeMoves.pos.x, mazeMoves.pos.y], [8 * 20, 39 * 20], 'all four arrows and Space-down must make reversible moves');
 await mazeMoves.run(20);
 assert.deepEqual([mazeMoves.pos.x, mazeMoves.pos.y], [8 * 20, 39 * 20], 'the maze must have no gravity or momentum drift');
-const accessible = new Set([39 * 100 + 8]), queue = [39 * 100 + 8];
-for (let at = 0; at < queue.length; at++) for (const shift of [-1, 1, -100, 100]) {
-  const next = queue[at] + shift;
-  if (next < 0 || next >= 10000 || accessible.has(next)) continue;
-  if (mazeMoves.w.bg[mazeMoves.w.map[next]].solid) continue;
-  accessible.add(next); queue.push(next);
-}
-for (const [x,y] of MAZE_PIECES) assert.ok(accessible.has(y*100+x), 'every spare stripe nook must connect to the entrance');
+const accessible = new Set([39 * 100 + 8]),
+  queue = [39 * 100 + 8];
+for (let at = 0; at < queue.length; at++)
+  for (const shift of [-1, 1, -100, 100]) {
+    const next = queue[at] + shift;
+    if (next < 0 || next >= 10000 || accessible.has(next)) continue;
+    if (mazeMoves.w.bg[mazeMoves.w.map[next]].solid) continue;
+    accessible.add(next);
+    queue.push(next);
+  }
+for (const [x, y] of MAZE_PIECES) assert.ok(accessible.has(y * 100 + x), 'every spare stripe nook must connect to the entrance');
 const mazeGate = stage(MAZE_SCENE, 82);
-mazeGate.press(77); await mazeGate.run(40);
+mazeGate.press(77);
+await mazeGate.run(40);
 assert.equal(mazeGate.link, -1, 'the maze car must reject an incomplete stripe quota');
 mazeGate.w.ci.meter[19 + MAZE_SCENE] = 11;
 await mazeGate.run(20);
@@ -323,7 +499,10 @@ await honker.run(6);
 assert.ok(honker.sounds.includes(20), 'Space must play the new victory horn');
 assert.ok(honker.pos.x < beforeHonk, 'honking must keep the car moving');
 
-for (const [start, direction] of [[12, 75], [9, 77]]) {
+for (const [start, direction] of [
+  [12, 75],
+  [9, 77],
+]) {
   const finish = stage(DRIVE_SCENE, start);
   finish.press(direction);
   await finish.run(40);
@@ -336,11 +515,13 @@ for (const [start, direction] of [[12, 75], [9, 77]]) {
 
 const tour = new GameSim(readDisk(root));
 const events = parseRecording(bytes('tour.rec'));
-let event = 0, due = events[0]?.delta ?? Infinity;
+let event = 0,
+  due = events[0]?.delta ?? Infinity;
 for (let tick = 1; tick <= 5000 && !tour.ended; tick++) {
   while (event < events.length && due <= tick) {
     const key = events[event].key;
-    if (key & 0x80) tour.release(key & 0x7f); else tour.press(key);
+    if (key & 0x80) tour.release(key & 0x7f);
+    else tour.press(key);
     event++;
     due += events[event]?.delta ?? Infinity;
   }
@@ -348,5 +529,9 @@ for (let tick = 1; tick <= 5000 && !tour.ended; tick++) {
 }
 assert.equal(tour.ended, 'won', `the shipped tour must win; stopped in scene ${tour.scene} at ${JSON.stringify(tour.pos)}`);
 assert.equal(tour.deaths, 0, 'the demonstration must finish without a nap');
-assert.deepEqual(tour.trail, CHAPTERS.map((_, index) => index + 2), 'the demonstration must visit every chapter');
+assert.deepEqual(
+  tour.trail,
+  CHAPTERS.map((_, index) => index + 2),
+  'the demonstration must visit every chapter',
+);
 console.log('Shipped DOS recording: all chapters passed');

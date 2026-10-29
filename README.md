@@ -31,7 +31,7 @@ The game’s guidance strip gives each road a short mission. Near a locked exit,
 
 ## Teddy’s glovebox notebook
 
-The page’s optional notebook explains the counter gates, timed leaf crossing, bark exchanges, upward gravity and one-way cloud ledges, vehicle character, input recording, and music and cartoons. Each expandable entry names its source builder and links to actual downloadable DOS files. These are inspection examples; playing outside this page needs the complete `public/game/` folder. The notebook uses native HTML details controls and does not run a separate game simulation.
+The page’s optional notebook explains the counter gates, timed leaf crossing, bark exchanges, upward gravity and one-way cloud ledges, playable crew, recoverable foam trays, vehicle character, input recording, and music and cartoons. Each expandable entry names its source builder and links to actual downloadable DOS files. These are inspection examples; playing outside this page needs the complete `public/game/` folder. The notebook uses native HTML details controls and does not run a separate game simulation.
 
 ## Rebuild the DOS game
 
@@ -57,7 +57,7 @@ The builder lives in `scripts/build-game.ts`. `scripts/chapters.ts` constructs t
 
 `scripts/stripe-car.ts` draws the measured CitiCar with only a few racing stripe fragments, then restores the full pattern during the final fitting cartoon. It compares two versions of the project’s own car drawing, changing only the stripe pixels while keeping the roof, door window, wheels, and lights. The car stays worn during the search, including the title, chapter cards, and landing-page art. The final fitting cartoon restores all the stripes, then puts Teddy in the passenger window before the victory lap.
 
-`scripts/road-stories.ts` supplies seven connected, captioned jokes and their animated props: Doc Leo’s wildly optimistic speed claim, Gwinn’s suspicious leaf, the puddles’ praise, the leaf’s thank-you, friendly balloon dogs, Gwinn’s extraordinarily long shortcut, and fitting the last stripe. `scripts/cartoons.ts` stages the crew, restores the stripes, and drives into the next road. Each short FLI can be skipped with the engine’s normal keys.
+`scripts/road-stories.ts` supplies seven connected, captioned jokes and their animated props: Doc Leo’s wildly optimistic speed claim, Gwinn’s suspicious leaf, Doc Leo’s turn at the controls, the leaf’s thank-you, friendly balloon dogs, Gwinn’s extraordinarily long shortcut, and fitting the last stripe. `scripts/cartoons.ts` stages the crew, restores the stripes, and drives into the next road. Each short FLI can be skipped with the engine’s normal keys.
 
 ## Inside Sky Laundry
 

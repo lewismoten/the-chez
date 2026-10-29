@@ -20,7 +20,7 @@ export function stripeCar(ink: ChezInk, restored: number, facing: 'left' | 'righ
   const edge = first + (last - first + 1) * Math.max(0, restored);
   for (let i = 0; i < full.px.length; i++) {
     const x = i % full.w;
-    // A few tatters remain before the quest. Each road restores a continuous section.
+    // A few tatters remain during the search; the fitting cartoon reveals the repair.
     if (x < edge || (x - first) % (13 * scale) < Math.max(1, scale)) worn.px[i] = full.px[i];
   }
   return worn;

@@ -1,16 +1,16 @@
 TEDDY'S STRIPE CHASE
-
-LEFT/RIGHT or A/D: walk
-UP/W: hop. Maze: move UP.
-SPACE: bark. Maze: DOWN.
-Maze: all four arrows move.
-Find stripes. Reach THE CHEZ.
-Maple Street: hop for kites.
-Club: bark for bonus stripes.
-Downtown: WAIT, then GO.
-Sky Laundry: pause in wind,
-then walk onto cloud ledges.
-Z clouds make Teddy nap.
-Three tries. F5 saves a game.
-Victory Lap: LEFT drives home.
-UP bounces. SPACE honks.
+LEFT/RIGHT or A/D: walk.
+UP/W: one hop per press.
+SPACE: bark / chicken squeak.
+Yard/Street: hop the crates.
+Park: pause in tall updraft.
+Downtown: Doc Leo's turn.
+WAIT for leaf. GO for you.
+Club: hop stones; foam saves.
+Balloon stripes are bonuses.
+Sky: wind lifts; hop the gaps.
+Z clouds nap. Three tries.
+Maze: Gwinn's turn. 4 arrows.
+SPACE goes DOWN in the maze.
+Lap: LEFT drives; UP bounces.
+SPACE honks. F5/F6 save/load.
