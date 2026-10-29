@@ -23,12 +23,12 @@ const BASS = [
 const PAD = ['C4 h, G4 h', 'F4 h, C5 h', 'A4 h, E5 h', 'G4 h, D5 h'];
 
 export function chapterSong(chapter: number): Uint8Array {
-  const orders = [[0, 1, 2, 3], [0, 2, 1, 3], [2, 1, 0, 3], [1, 3, 0, 2], [3, 2, 1, 0], [2, 0, 3, 1]];
+  const orders = [[0, 1, 2, 3], [0, 2, 1, 3], [2, 1, 0, 3], [1, 3, 0, 2], [3, 2, 1, 0], [2, 0, 3, 1], [0, 3, 2, 1]];
   const order = orders[chapter];
   if (!order) throw new Error(`Unknown chapter song ${chapter}`);
   const melody = order.map((i) => HOOK[i]);
   const twice = <T>(bars: T[]) => [...bars, ...bars];
-  return tune([124, 142, 154, 164, 136, 116][chapter], [
+  return tune([124, 142, 154, 164, 136, 116, 176][chapter], [
     v(0, chapter === 5 ? bell : chapter === 1 || chapter === 4 ? pluck : lead, join(twice(melody)), 110),
     v(1, bass, join(twice(order.map((i) => BASS[i]))), 91),
     v(2, pad, join(twice(order.map((i) => PAD[i]))), 56),
