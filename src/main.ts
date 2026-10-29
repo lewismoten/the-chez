@@ -63,18 +63,19 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
   const playback = demo ? files.get('tour.rec') : undefined;
   if (demo && !playback) throw new Error('Teddy’s demonstration could not be loaded.');
   const current = new Machine(canvas, files);
-  let chapterIndex = 0;
+  const entrance = resume ?? 2;
+  let chapterIndex = skipMenu ? entrance - 2 : 0;
   let finished = false;
-  let lastScene = resume ?? 2;
+  let lastScene = entrance;
   let outcome: 'won' | 'lost' | 'quit' | undefined;
   machine = current;
   overlay.hidden = true;
   status.textContent = demo ? 'Teddy’s demo' : 'Playing';
-  chapterControls(0);
+  chapterControls(chapterIndex);
   if (skipMenu) {
-    chapterName.textContent = 'The Stripe Road';
-    stripeProgress.textContent = '0 / 10';
-    sayRoad(roadMessage(CHAPTERS[0], 0));
+    chapterName.textContent = chapterLabels[chapterIndex];
+    stripeProgress.textContent = `0 / ${chapterGoals[chapterIndex]}`;
+    sayRoad(roadMessage(CHAPTERS[chapterIndex], 0));
   } else {
     sayRoad('Playing a selected Game-Maker game. F1 opens its own instructions.');
     chapterName.textContent = 'Selected game';

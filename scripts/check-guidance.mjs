@@ -27,9 +27,15 @@ try {
   await page.keyboard.press('Enter');
   assert.equal(await page.locator('#road-atlas-list li').count(), CHAPTERS.length);
   assert.ok(await page.locator('#road-atlas-list').isVisible());
+  await page.evaluate(() => {
+    window.__roadNames = [];
+    new MutationObserver(() => window.__roadNames.push(document.querySelector('#chapter-name').textContent))
+      .observe(document.querySelector('#chapter-name'), { childList: true, characterData: true, subtree: true });
+  });
   await page.locator('#start').click();
   await page.waitForFunction(() => document.querySelector('#chapter-name').textContent === 'Maple Street' && document.querySelector('#status').textContent === 'Playing · 3 tries');
   assert.ok((await page.locator('#road-tip').textContent()).includes('flying stripe kites'));
+  assert.ok(!(await page.evaluate(() => window.__roadNames)).includes('The Stripe Road'), 'Continue must keep the saved road visible while it loads');
   await page.keyboard.down('ArrowRight');
   await page.waitForFunction(() => document.querySelector('#road-tip').textContent.includes('1 more stripe.'), null, { timeout: 35_000 });
   await page.waitForTimeout(1000);
