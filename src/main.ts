@@ -19,8 +19,9 @@ const stripeProgress = document.querySelector<HTMLElement>('#stripe-progress')!;
 let machine: Machine | undefined;
 let selected: File[] = [];
 let launch = 0;
-const chapterLabels = ['The Stripe Road', 'Maple Street', 'Puddlewick Park', 'Downtown', 'The Clown Club'];
-const chapterGoals = [10, 8, 8, 9, 10];
+let retryScene: number | undefined;
+const chapterLabels = ['The Stripe Road', 'Maple Street', 'Puddlewick Park', 'Downtown', 'The Clown Club', 'Sky Laundry'];
+const chapterGoals = [10, 8, 8, 9, 10, 9];
 
 async function bundledFiles(): Promise<GameFiles> {
   const names = await fetch('/game/manifest.json').then((response) => {
@@ -35,7 +36,7 @@ async function bundledFiles(): Promise<GameFiles> {
   return new GameFiles(entries);
 }
 
-async function run(files: GameFiles, skipMenu: boolean, demo = false) {
+async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: number) {
   machine?.destroy();
   const game = files.mainGame();
   if (!game) throw new Error('Choose a folder containing a .GAM file.');
@@ -44,6 +45,8 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false) {
   const current = new Machine(canvas, files);
   let chapterIndex = 0;
   let finished = false;
+  let lastScene = resume ?? 2;
+  let outcome: 'won' | 'lost' | 'quit' | undefined;
   machine = current;
   overlay.hidden = true;
   status.textContent = demo ? 'Teddy’s demo' : 'Playing';
@@ -62,9 +65,15 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false) {
       record: skipMenu && !demo,
       playback,
       onSession: (session) => {
+        if (skipMenu && resume !== undefined) {
+          const title = session.game.scenes[0];
+          title.links[0] = { ...title.links[0], toScene: resume, to: { x: resume === 2 ? 10 : 8, y: 39 } };
+          title.files[0] = title.files[1] = '';
+        }
         session.onScene = (scene) => {
           if (skipMenu && scene >= 2 && scene < chapterLabels.length + 2 && machine === current) {
             chapterIndex = scene - 2;
+            lastScene = scene;
             chapterName.textContent = chapterLabels[chapterIndex];
             stripeProgress.textContent = `0 / ${chapterGoals[chapterIndex]}`;
           }
@@ -82,20 +91,31 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false) {
         const found = Math.min(required, Math.max(0, world.ci.meter[21 + chapterIndex] - 1));
         const label = `${found} / ${required}`;
         if (stripeProgress.textContent !== label) stripeProgress.textContent = label;
+        if (!demo) {
+          const tries = world.ci.lives + 1;
+          const playing = `Playing · ${tries} ${tries === 1 ? 'try' : 'tries'}`;
+          if (status.textContent !== playing) status.textContent = playing;
+        }
       },
       onPlayEnd: (_score, how) => {
-        if (machine === current) status.textContent = skipMenu && how === 'won' ? 'Stripes restored!' : how === 'lost' ? 'Try again' : 'Game finished';
+        if (machine !== current) return;
+        outcome = how;
+        if (skipMenu && !demo) retryScene = how === 'lost' ? lastScene : undefined;
+        status.textContent = skipMenu && how === 'won' ? 'Stripes restored!' : how === 'lost' ? 'Try again' : 'Game finished';
       },
     });
     if (machine === current && demo) status.textContent = 'Demo finished';
-    if (machine === current && status.textContent === 'Playing') status.textContent = 'Game finished';
+    if (machine === current && !demo && !finished && outcome === undefined) status.textContent = 'Game finished';
     if (machine === current && skipMenu) {
-      overlayTitle.textContent = demo ? 'Your turn, stripe scout!' : finished ? 'Teddy did it!' : 'Ready for another chase?';
+      overlayTitle.textContent = demo ? 'Your turn, Teddy!' : finished ? 'Teddy did it!' : outcome === 'lost' ? 'Teddy tries again!' : 'Ready for another chase?';
       overlayText.textContent = demo
-        ? 'Teddy showed the way. Now your nose is in charge: move, hop, and bark the stripes home.'
+        ? 'Teddy showed the way. Move, hop, and bark the stripes home.'
         : finished
-          ? 'THE CHEZ is 900% more dashing. The crew agrees: helping each other was the real turbo button.'
-          : 'The wind can wait. Teddy and the crew are ready whenever you are.';
+          ? 'THE CHEZ is 900% more dashing. Teamwork was the real turbo button.'
+          : outcome === 'lost'
+            ? `${chapterLabels[lastScene - 2]} is ready for another go. Three fresh tries!`
+            : 'The wind can wait. Teddy and the crew are ready whenever you are.';
+      startButton.textContent = outcome === 'lost' ? 'Try this road again' : 'Play as Teddy';
       overlay.hidden = false;
     }
   } finally {
@@ -110,7 +130,7 @@ async function startBundled(demo = false) {
   watchButton.disabled = true;
   status.textContent = 'Loading game…';
   try {
-    await run(await bundledFiles(), true, demo);
+    await run(await bundledFiles(), true, demo, demo ? undefined : retryScene);
   } catch (error) {
     if (error instanceof Error && error.message === 'Game aborted') return;
     status.textContent = 'Could not start';
@@ -125,8 +145,8 @@ async function startBundled(demo = false) {
 }
 
 startButton.addEventListener('click', () => { void startBundled(); });
-watchButton.addEventListener('click', () => { void startBundled(true); });
-restartButton.addEventListener('click', () => { void startBundled(); });
+watchButton.addEventListener('click', () => { retryScene = undefined; void startBundled(true); });
+restartButton.addEventListener('click', () => { retryScene = undefined; void startBundled(); });
 input.addEventListener('change', () => {
   selected = Array.from(input.files ?? []);
   const hasGame = selected.some((file) => file.name.toLowerCase().endsWith('.gam'));
