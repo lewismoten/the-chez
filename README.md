@@ -55,6 +55,10 @@ The builder lives in `scripts/build-game.ts`. `scripts/chapters.ts` constructs t
 - Marked Z clouds start Teddy's sleep animation. Game-Maker stores extra lives, so the builder gives him two extras and the page shows three total tries. After those tries, the page starts a fresh engine session at the same chapter's safe entrance.
 - Each height gets stripe artwork over its own sky band. Touching a piece replaces it with that same background, so collecting it leaves a clean sky rather than a floating rectangle.
 
+## Inside the wind kites
+
+`scripts/wind-kites.ts` turns stripe pieces into native moving actors on a closed four-corner path above Maple Street. Touching a kite collects it. Wind posts send replacements every 64 ticks, so barking away or missing the first batch cannot strand Teddy. Kites expire after 320 ticks to keep the population bounded. Seven ground pieces leave only one kite needed for the eight-piece quota.
+
 ## Inside the leaf crossing
 
 `scripts/leaf-crossing.ts` builds Gwinn’s timed Downtown crossing from eighteen background block slots. Five barrier rows, a two-tile sign, and a leaf that swaps sides share a 54-tick WAIT / 54-tick GO cycle. The closed variants are solid; the open variants are passable. Labels, striped barriers, and directional chevrons explain the state without depending on color. Neither state hurts Teddy or costs a try. This uses PLAYGAME’s global block animation, including collision with the displayed variant, rather than a page timer.
