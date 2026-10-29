@@ -108,7 +108,7 @@ try {
           assert.ok(action.y + action.height <= canvas.y + canvas.height, `${selector} must fit inside the game`);
         }
         const notebook = page.locator('.notebook-grid details');
-        assert.equal(await notebook.count(), 7);
+        assert.equal(await notebook.count(), 8);
         await notebook.first().locator('summary').focus();
         await page.keyboard.press('Enter');
         assert.equal(await notebook.first().getAttribute('open'), '', 'notebook opens with the keyboard');
@@ -148,7 +148,7 @@ try {
           title.files[0] = title.files[1] = '';
         }`],
       ['session.onScene = (scene) => {', 'session.onScene = (scene) => { window.__chezEnter(scene);'],
-      ['onFrame: (world) => {', 'onFrame: (world) => { if (!window.__chezDemo) window.__chezDrive(world, current);'],
+      ['onFrame: (world) => {', 'onFrame: (world) => { window.__chezWorld = world; if (!window.__chezDemo) window.__chezDrive(world, current);'],
       ['onPlayEnd: (_score, how) => {', 'onPlayEnd: (_score, how) => { window.__chezEnd = how;'],
     ]) {
       assert.ok(body.includes(before), `browser hook missing: ${before}`);
@@ -183,6 +183,10 @@ try {
       await page.waitForFunction(() => window.__chezWorld?.ci.lives === 2);
       assert.equal(await page.locator('#status').textContent(), 'Playing · 3 tries');
       console.log('Nap loss, saved chapter after reload, and three fresh tries: passed');
+    }
+    if (!lap && !retry) {
+      await page.waitForFunction(() => window.__chezScene === 3 && window.__chezWorld?.chr.x[0] >= 16 && window.__chezWorld?.chr.x[0] <= 22, null, { timeout: 90_000 });
+      await page.screenshot({ path: join(screenshots, 'wind-kites.png') });
     }
     if (!lap && !retry && !demo) {
       await page.waitForFunction(() => window.__chezScene === 5 && window.__chezWorld?.chr.x[0] === 44 && window.__chezWorld?.chr.x[1] === 0, null, { timeout: 120_000 });
