@@ -5,7 +5,23 @@
 
 #engine-canvas{background:#1d2d35;image-rendering:pixelated}.engine-illustration{aspect-ratio:8/5;background:linear-gradient(#346273,#1c343c);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:15px;color:#f4ddae;font-family:Space Grotesk,sans-serif;font-size:15px;text-align:center}.engine-illustration img{width:65%;image-rendering:pixelated}.engine-illustration p{margin:0}.game-controls .touch-controls button{min-height:44px}.game-toolbar .stat{min-width:120px}
 @media(max-width:650px){.touch-controls{grid-template-columns:repeat(5,1fr)}}
+@media(max-width:650px){
+  .game-overlay{padding:8px}
+  .overlay-card{padding:12px 14px}
+  .overlay-card .eyebrow{font-size:10px}
+  .overlay-card h3{font-size:28px;margin:6px 0}
+  .overlay-card p:not(.eyebrow){line-height:1.35;margin-bottom:12px}
+  .overlay-card .button{min-height:42px;padding:10px 16px}
+}
 
 /* Keep the complete 8:5 game screen and its controls within a typical browser window. */
 .canvas-wrap{display:flex;justify-content:center}
 .canvas-wrap canvas{width:min(100%,900px,calc((100vh - 365px)*1.6));height:auto}
+@media(max-height:550px){
+  .canvas-wrap canvas{width:min(100%,900px,calc(max(120px,100dvh - 200px)*1.6))}
+  .overlay-card{padding:6px 14px}
+  .overlay-card .eyebrow{font-size:9px}
+  .overlay-card h3{font-size:26px;margin:2px 0 6px}
+  .overlay-card p:not(.eyebrow){display:none}
+  .overlay-card .button{min-height:36px;padding:8px 16px}
+}

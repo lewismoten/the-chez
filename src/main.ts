@@ -37,6 +37,7 @@ async function run(files: GameFiles, skipMenu: boolean) {
   if (!game) throw new Error('Choose a folder containing a .GAM file.');
   const current = new Machine(canvas, files);
   let chapterIndex = 0;
+  let finished = false;
   machine = current;
   overlay.hidden = true;
   status.textContent = 'Playing';
@@ -47,7 +48,8 @@ async function run(files: GameFiles, skipMenu: boolean) {
     chapterName.textContent = 'Selected game';
     stripeProgress.textContent = '—';
   }
-  canvas.focus();
+  canvas.focus({ preventScroll: true });
+  canvas.closest('.game-shell')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   await current.audio.resume();
   try {
     await runGame(current, game, {
@@ -59,13 +61,18 @@ async function run(files: GameFiles, skipMenu: boolean) {
             chapterName.textContent = chapterLabels[chapterIndex];
             stripeProgress.textContent = `0 / ${chapterGoals[chapterIndex]}`;
           }
-          if (skipMenu && scene === 1 && machine === current) status.textContent = 'Stripes restored!';
+          if (skipMenu && scene === 1 && machine === current) {
+            finished = true;
+            chapterName.textContent = 'Curtain call';
+            stripeProgress.textContent = `${chapterGoals[chapterIndex]} / ${chapterGoals[chapterIndex]}`;
+            status.textContent = 'Stripes restored!';
+          }
         };
       },
       onFrame: (world) => {
-        if (!skipMenu || machine !== current) return;
+        if (!skipMenu || finished || machine !== current) return;
         const required = chapterGoals[chapterIndex];
-        const found = Math.max(0, world.ci.meter[21 + chapterIndex] - 1);
+        const found = Math.min(required, Math.max(0, world.ci.meter[21 + chapterIndex] - 1));
         const label = `${found} / ${required}`;
         if (stripeProgress.textContent !== label) stripeProgress.textContent = label;
       },
