@@ -13,7 +13,7 @@ Open the Vite URL and choose **Play as Teddy**. Move Teddy with the Left and Rig
 
 **Watch Teddy** plays a complete demonstration using a DOS `.REC` input recording through the same engine. Choose **Restart** to start your own game at any time. The recording stores keys and timing, not a video or a second implementation of the game.
 
-Each new road changes the challenge: raised pieces call for hops, the park has a lifting air puff, Downtown adds a conveyor strip, and the Clown Club has friendly balloon dogs who share stripe pieces when Teddy barks. Sky Laundry takes the route upward: pause in an air stream, drift onto a cloud ledge, and gather the stripes above the marked Z clouds.
+Each new road changes the challenge: raised pieces call for hops, the park has a lifting air puff, Downtown adds a conveyor strip and a timed WAIT / GO crossing for Gwinn’s very important leaf, and the Clown Club has friendly balloon dogs who share stripe pieces when Teddy barks. Sky Laundry takes the route upward: pause in an air stream, drift onto a cloud ledge, and gather the stripes above the marked Z clouds.
 
 The fitted stripes pay off in **Teddy's Victory Lap**. Doc Leo drives while Teddy calls the corners from the passenger window. Hold Left to drive home, release it to coast to a stop, and use Right to reverse. Up bounces the car over the marked bumps; Space honks without stopping. Checkered flags count as cheers. This final road has no nap clouds.
 
@@ -36,7 +36,7 @@ npm run build
 npm run check:release
 ```
 
-`build:game` reads the GameMaker sibling checkout (`../GameMaker`) for the format helpers, Teddy art, and the measured CitiCar drawing. It writes the playable DOS files to `public/game/`. The built files are committed, so running the web app does not need the sibling checkout. `check:game` uses the headless Game-Maker engine to verify the counter gates, marked nap clouds, walking routes, cloud crossings, vehicle momentum, horn, and bounces. It also replays the shipped `.REC` through the complete built scene graph and requires a win without a nap.
+`build:game` reads the GameMaker sibling checkout (`../GameMaker`) for the format helpers, Teddy art, and the measured CitiCar drawing. It writes the playable DOS files to `public/game/`. The built files are committed, so running the web app does not need the sibling checkout. `check:game` uses the headless Game-Maker engine to verify the timed leaf crossing, counter gates, marked nap clouds, walking routes, cloud crossings, vehicle momentum, horn, and bounces. It also replays the shipped `.REC` through the complete built scene graph and requires a win without a nap.
 
 The builder lives in `scripts/build-game.ts`. `scripts/chapters.ts` constructs the later stripe trails, `scripts/sky-laundry.ts` draws the cloud crossing and its nap clouds, `scripts/victory-lap.ts` builds the vehicle character and the leftward road, `scripts/scenery.ts` removes the source maps' unrelated interactions, `scripts/cartoons.ts` renders the intro, drive, win, and try-again animations, and `scripts/music.ts` composes the chapter and ending themes. See [NOTICE.md](NOTICE.md) for credits.
 
@@ -51,7 +51,7 @@ The builder lives in `scripts/build-game.ts`. `scripts/chapters.ts` constructs t
 
 ## Inside the leaf crossing
 
-`scripts/leaf-crossing.ts` builds Gwinn’s timed Downtown crossing from fourteen background block slots. Five barrier rows and a two-tile sign share a 36-tick WAIT / 54-tick GO cycle. The closed variants are solid; the open variants are passable. Labels, striped barriers, and directional chevrons explain the state without depending on color. Neither state hurts Teddy or costs a try. This uses PLAYGAME’s global block animation, including collision with the displayed variant, rather than a page timer.
+`scripts/leaf-crossing.ts` builds Gwinn’s timed Downtown crossing from eighteen background block slots. Five barrier rows, a two-tile sign, and a leaf that swaps sides share a 54-tick WAIT / 54-tick GO cycle. The closed variants are solid; the open variants are passable. Labels, striped barriers, and directional chevrons explain the state without depending on color. Neither state hurts Teddy or costs a try. This uses PLAYGAME’s global block animation, including collision with the displayed variant, rather than a page timer.
 
 ## Inside the victory ride
 

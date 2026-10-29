@@ -7,6 +7,7 @@ import { chezPicture, type ChezInk } from '../../GameMaker/games/kit/chez.ts';
 import { clearInheritedInteractions } from './scenery.ts';
 import { skyLaundry } from './sky-laundry.ts';
 import { victoryLap } from './victory-lap.ts';
+import { leafCrossing } from './leaf-crossing.ts';
 
 export interface Chapter {
   source: 'street' | 'park' | 'city' | 'klub';
@@ -32,7 +33,7 @@ export const CHAPTERS: Chapter[] = [
     pieces: [12, 17, 22, 27, 32, 37, 42, 47, 52, 57, 62, 67, 72, 77].map((x, i) => ({ x, y: i % 3 ? 38 : 39 })),
   },
   {
-    source: 'city', stem: 'city', name: 'Downtown', carX: 80, startX: 8, required: 9, counter: 24, sampleX: 10, quip: 'ARROWS GIVE TEDDY A PUSH!', beat: 'TRAFFIC: THREE SLOW CLOUDS.',
+    source: 'city', stem: 'city', name: 'Downtown', carX: 80, startX: 8, required: 9, counter: 24, sampleX: 10, quip: 'WAIT FOR GO. ARROWS PUSH!', beat: 'GWINN HELPS A LEAF CROSS.',
     pieces: [11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59, 63, 67, 71, 75].map((x, i) => ({ x, y: i % 3 === 0 ? 39 : 38 })),
   },
   {
@@ -129,6 +130,7 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
     }
     for (let x = chapter.source === 'park' ? 44 : 28; x <= (chapter.source === 'park' ? 46 : 34); x++) map.blocks[39 * 100 + x] = mechanicIndex;
   }
+  if (chapter.stem === 'city') leafCrossing(map, bbl, free.slice(6), pal);
   for (const { x, y } of chapter.pieces) {
     const slot = pieceSlots.find(([row]) => row === y)?.[1];
     if (slot === undefined) throw new Error(`No stripe artwork for row ${y} in ${chapter.name}`);

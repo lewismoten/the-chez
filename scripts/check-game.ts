@@ -11,6 +11,7 @@ import { parseMap } from '../../GameMaker/web/src/formats/map.ts';
 import { parseMonsters } from '../../GameMaker/web/src/formats/monster.ts';
 import { newCharInfo } from '../../GameMaker/web/src/engine/world.ts';
 import { Sim } from '../../GameMaker/games/kit/sceneSim.ts';
+import { LEAF_CROSSING, LEAF_WAIT, LEAF_GO } from './leaf-crossing.ts';
 import { NAP_COLUMNS } from './sky-laundry.ts';
 import { CHAPTERS } from '../src/chapters.ts';
 import { GameSim, readDisk } from '../../GameMaker/games/kit/gameSim.ts';
@@ -168,6 +169,41 @@ for (const [index, info] of CHAPTERS.entries()) {
   assert.equal(sim.link, 0, `${game.scenes[chapter].desc}: the route must leave through the counter gate itself`);
   console.log(`${game.scenes[chapter].desc}: passed in ${sim.ticks} ticks`);
 }
+
+// Check the actual animated collision variants, including approaching from the far side.
+for (const direction of [1, -1]) {
+  const crossing = stage(5, LEAF_CROSSING + (direction > 0 ? -1 : 1));
+  const scan = direction > 0 ? 77 : 75;
+  crossing.press(scan);
+  crossing.press(72);
+  await crossing.run(LEAF_WAIT - 2);
+  assert.ok(direction > 0 ? crossing.pos.x <= (LEAF_CROSSING - 1) * 20 : crossing.pos.x >= (LEAF_CROSSING + 1) * 20, 'WAIT must block even a hopping Teddy from either side');
+  const gateId = crossing.w.map[39 * 100 + LEAF_CROSSING];
+  const signId = crossing.w.map[34 * 100 + LEAF_CROSSING - 1];
+  assert.equal(crossing.w.bg[crossing.w.blkmap[gateId]].solid, 15);
+  crossing.release(72);
+  crossing.release(scan);
+  crossing.press(scan);
+  await crossing.run(24);
+  assert.ok(direction > 0 ? crossing.pos.bx > LEAF_CROSSING : crossing.pos.bx < LEAF_CROSSING, 'GO must let Teddy cross in either direction');
+  assert.equal(crossing.w.bg[crossing.w.blkmap[gateId]].solid, 0);
+  assert.equal(crossing.w.bg[crossing.w.blkmap[signId]].ntime, LEAF_GO, 'GO sign and passable barrier must stay in phase');
+  crossing.release(scan);
+  await crossing.run(LEAF_GO);
+  assert.equal(crossing.w.bg[crossing.w.blkmap[gateId]].solid, 15, 'the crossing must keep cycling after a touch');
+  assert.equal(crossing.dead, false, 'waiting and crossing must not cost a try');
+}
+const closingCrossing = stage(5, LEAF_CROSSING - 1);
+await closingCrossing.run(LEAF_WAIT + LEAF_GO - 2);
+closingCrossing.press(77);
+await closingCrossing.run(4);
+closingCrossing.release(77);
+assert.equal(closingCrossing.dead, false, 'a light changing during entry must not hurt Teddy');
+await closingCrossing.run(LEAF_WAIT);
+closingCrossing.press(77);
+await closingCrossing.run(20);
+assert.ok(closingCrossing.pos.bx > LEAF_CROSSING, 'Teddy must recover when the light changes during entry');
+console.log('Gwinn’s leaf crossing: WAIT, GO, both directions, and repeated cycles passed');
 
 const vehicle = stage(8, 84);
 vehicle.press(75);

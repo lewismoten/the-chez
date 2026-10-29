@@ -184,6 +184,12 @@ try {
       assert.equal(await page.locator('#status').textContent(), 'Playing · 3 tries');
       console.log('Nap loss, saved chapter after reload, and three fresh tries: passed');
     }
+    if (!lap && !retry && !demo) {
+      await page.waitForFunction(() => window.__chezScene === 5 && window.__chezWorld?.chr.x[0] === 44 && window.__chezWorld?.chr.x[1] === 0, null, { timeout: 120_000 });
+      await page.screenshot({ path: join(screenshots, 'leaf-crossing-wait.png') });
+      await page.waitForFunction(() => window.__chezScene === 5 && window.__chezWorld?.chr.x[0] >= 46);
+      await page.screenshot({ path: join(screenshots, 'leaf-crossing-go.png') });
+    }
     if (!lap) {
       await page.waitForFunction(() => window.__chezScene === 7 && window.__chezWorld?.chr.x[0] >= 20 && window.__chezWorld?.chr.x[0] < 32 && window.__chezWorld?.chr.y[0] === 35, null, { timeout: 210_000 });
       await page.screenshot({ path: join(screenshots, 'sky-laundry.png') });

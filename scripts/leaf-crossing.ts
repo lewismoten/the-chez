@@ -6,11 +6,11 @@ import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
 import { centered } from '../../GameMaker/games/kit/pcText.ts';
 
 export const LEAF_CROSSING = 45;
-export const LEAF_WAIT = 36;
+export const LEAF_WAIT = 54;
 export const LEAF_GO = 54;
 
 export function leafCrossing(map: GameMap, blocks: Block[], slots: number[], palette: Uint8Array): void {
-  if (slots.length < 14) throw new Error('The leaf crossing needs fourteen scenery slots');
+  if (slots.length < 18) throw new Error('The leaf crossing needs eighteen scenery slots');
   const color = (r: number, g: number, b: number) => matchColor(palette, r, g, b);
   const dark = color(6, 10, 14), cream = color(63, 61, 53), red = color(58, 12, 9), green = color(10, 43, 23), gold = color(63, 45, 10);
   const variant = (id: number, next: number, base: number, open: boolean): Block => ({
@@ -33,6 +33,23 @@ export function leafCrossing(map: GameMap, blocks: Block[], slots: number[], pal
       if (x === 13 - Math.abs(y - 10)) blocks[open].pixels[y * 20 + x] = green;
     }
     map.blocks[row * 100 + LEAF_CROSSING] = closed;
+  }
+  // The absurdly important leaf swaps sides with the light. It uses the same
+  // native animation cycle as the barrier, with no monster AI or page timer.
+  for (const [side, x] of [[0, LEAF_CROSSING - 1], [1, LEAF_CROSSING + 1]]) {
+    const closed = slots[14 + side * 2], go = slots[15 + side * 2];
+    const at = 37 * 100 + x;
+    for (const open of [false, true]) {
+      const id = open ? go : closed;
+      blocks[id] = variant(id, open ? closed : go, map.blocks[at], open);
+      if (open === Boolean(side)) {
+        for (let y = 3; y <= 16; y++) for (let px = 3; px <= 16; px++) {
+          if (Math.abs(px - 10) + Math.abs(y - 9) < 9) blocks[id].pixels[y * 20 + px] = gold;
+          if (px === y && y >= 6) blocks[id].pixels[y * 20 + px] = dark;
+        }
+      }
+    }
+    map.blocks[at] = closed;
   }
   for (const open of [false, true]) {
     const sign = new Pixels(40, 20, dark);
