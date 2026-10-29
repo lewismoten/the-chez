@@ -5,10 +5,8 @@ export function roadMessage(chapter: ChapterInfo, found: number, nearGate = fals
   const driving = chapter.mode === 'drive';
   const remaining = Math.max(0, chapter.required - found);
   const noun = driving ? 'cheer' : 'stripe';
-  if (remaining === 0) return driving
-    ? 'The crowd approves! Finish at HOME on the left.'
-    : 'Your stripes are ready. Meet Doc Leo and THE\u00a0CHEZ on the right.';
-  if (nearGate) return `Teddy needs ${remaining} more ${noun}${remaining === 1 ? '' : 's'}. ${chapter.help}`;
+  if (remaining === 0) return driving ? 'The crowd approves! Finish at HOME on the left.' : 'Your stripes are ready. Reach THE\u00a0CHEZ on the right.';
+  if (nearGate) return `${chapter.actor ?? 'Teddy'} needs ${remaining} more ${noun}${remaining === 1 ? '' : 's'}. ${chapter.help}`;
   return `Gather ${chapter.required} ${noun}s. ${chapter.mission}`;
 }
 

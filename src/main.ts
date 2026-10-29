@@ -38,13 +38,20 @@ const chapterGoals = CHAPTERS.map((chapter) => chapter.required);
 function chapterControls(index: number) {
   const driving = CHAPTERS[index]?.mode === 'drive';
   const maze = CHAPTERS[index]?.mode === 'maze';
+  for (const [id, direction] of [
+    ['left', 'left'],
+    ['right', 'right'],
+  ])
+    document
+      .querySelector(`#${id}`)!
+      .setAttribute('aria-label', `${driving ? 'Drive' : 'Move'} ${driving ? 'THE\u00a0CHEZ' : (CHAPTERS[index]?.actor ?? 'Teddy')} ${direction}`);
   document.querySelector('#bark-key')!.textContent = maze ? '↓ / Space' : 'Space';
   progressLabel.textContent = driving ? 'CHEERS' : 'STRIPES';
-  document.querySelector('#move-label')!.textContent = driving ? 'Drive THE\u00a0CHEZ' : 'Move Teddy';
+  document.querySelector('#move-label')!.textContent = driving ? 'Drive THE\u00a0CHEZ' : `Move ${CHAPTERS[index]?.actor ?? 'Teddy'}`;
   document.querySelector('#hop-label')!.textContent = maze ? 'Up' : driving ? 'Bounce' : 'Hop';
-  document.querySelector('#bark-label')!.textContent = maze ? 'Down' : driving ? 'Honk' : 'Bark';
+  document.querySelector('#bark-label')!.textContent = maze ? 'Down' : driving ? 'Honk' : CHAPTERS[index]?.actor === 'Doc Leo' ? 'Squeak' : 'Bark';
   document.querySelector('#hop')!.textContent = maze ? 'Up ↑' : driving ? 'Bounce ↑' : 'Hop ↑';
-  document.querySelector('#bark')!.textContent = maze ? 'Down ↓' : driving ? 'Honk!' : 'Bark!';
+  document.querySelector('#bark')!.textContent = maze ? 'Down ↓' : driving ? 'Honk!' : CHAPTERS[index]?.actor === 'Doc Leo' ? 'Squeak!' : 'Bark!';
 }
 
 async function bundledFiles(): Promise<GameFiles> {
@@ -52,11 +59,13 @@ async function bundledFiles(): Promise<GameFiles> {
     if (!response.ok) throw new Error('Could not load Stripe Chase.');
     return response.json() as Promise<string[]>;
   });
-  const entries = await Promise.all(names.map(async (name): Promise<[string, Uint8Array]> => {
-    const response = await fetch(`/game/${encodeURIComponent(name)}`);
-    if (!response.ok) throw new Error(`Could not load ${name}.`);
-    return [name, new Uint8Array(await response.arrayBuffer())];
-  }));
+  const entries = await Promise.all(
+    names.map(async (name): Promise<[string, Uint8Array]> => {
+      const response = await fetch(`/game/${encodeURIComponent(name)}`);
+      if (!response.ok) throw new Error(`Could not load ${name}.`);
+      return [name, new Uint8Array(await response.arrayBuffer())];
+    }),
+  );
   return new GameFiles(entries);
 }
 
@@ -152,15 +161,29 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
           if (retryScene === undefined) forgetCheckpoint();
           else rememberCheckpoint(retryScene);
         }
-        if (skipMenu && how !== 'won') sayRoad(how === 'lost' ? 'A tiny nap calls for another go. Try this road again with three fresh tries.' : 'Teddy kept your road. Continue whenever you are ready.');
+        if (skipMenu && how !== 'won')
+          sayRoad(
+            how === 'lost'
+              ? 'A tiny nap calls for another go. Try this road again with three fresh tries.'
+              : 'Teddy kept your road. Continue whenever you are ready.',
+          );
         status.textContent = skipMenu && how === 'won' ? 'Stripes restored!' : how === 'lost' ? 'Try again' : 'Game finished';
       },
     });
-    if (machine === current && demo) { status.textContent = 'Demo finished'; sayRoad('Teddy showed the route. Your turn to move, hop, bark, and zoom.'); }
+    if (machine === current && demo) {
+      status.textContent = 'Demo finished';
+      sayRoad('Teddy showed the route. Your turn to move, hop, bark, and zoom.');
+    }
     if (machine === current && !skipMenu) sayRoad('Selected game finished. Restart returns to Teddy’s adventure.');
     if (machine === current && !demo && !finished && outcome === undefined) status.textContent = 'Game finished';
     if (machine === current && skipMenu) {
-      overlayTitle.textContent = demo ? 'Your turn, Teddy!' : finished ? 'Teddy did it!' : outcome === 'lost' ? 'Teddy tries again!' : 'Ready for another chase?';
+      overlayTitle.textContent = demo
+        ? 'Your turn, Teddy!'
+        : finished
+          ? 'Teddy did it!'
+          : outcome === 'lost'
+            ? 'Teddy tries again!'
+            : 'Ready for another chase?';
       overlayText.textContent = demo
         ? 'Teddy showed the way. Move, hop, and bark the stripes home.'
         : finished
@@ -169,7 +192,8 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
             ? `${chapterLabels[lastScene - 2]} is ready for another go. Three fresh tries!`
             : 'The wind can wait. Teddy and the crew are ready whenever you are.';
       const canContinue = retryScene !== undefined;
-      if (demo && retryScene !== undefined) overlayText.textContent = `${chapterLabels[retryScene - 2]} is saved for you. Continue there with three fresh tries.`;
+      if (demo && retryScene !== undefined)
+        overlayText.textContent = `${chapterLabels[retryScene - 2]} is saved for you. Continue there with three fresh tries.`;
       startButton.textContent = outcome === 'lost' ? 'Try this road again' : canContinue ? 'Continue with Teddy' : 'Play as Teddy';
       overlay.hidden = false;
     }
@@ -212,14 +236,26 @@ if (retryScene !== undefined) {
   sayRoad(roadMessage(chapter, 0));
 }
 
-startButton.addEventListener('click', () => { void startBundled(); });
-watchButton.addEventListener('click', () => { void startBundled(true); });
-restartButton.addEventListener('click', () => { retryScene = undefined; forgetCheckpoint(); void startBundled(); });
+startButton.addEventListener('click', () => {
+  void startBundled();
+});
+watchButton.addEventListener('click', () => {
+  void startBundled(true);
+});
+restartButton.addEventListener('click', () => {
+  retryScene = undefined;
+  forgetCheckpoint();
+  void startBundled();
+});
 input.addEventListener('change', () => {
   selected = Array.from(input.files ?? []);
   const hasGame = selected.some((file) => file.name.toLowerCase().endsWith('.gam'));
   playSelected.disabled = !hasGame;
-  filesStatus.textContent = hasGame ? `${selected.length} files ready to play.` : selected.length ? 'Choose a folder containing a .GAM file.' : 'No other game selected.';
+  filesStatus.textContent = hasGame
+    ? `${selected.length} files ready to play.`
+    : selected.length
+      ? 'Choose a folder containing a .GAM file.'
+      : 'No other game selected.';
 });
 playSelected.addEventListener('click', async () => {
   playSelected.disabled = true;
@@ -237,9 +273,18 @@ playSelected.addEventListener('click', async () => {
 });
 
 // The engine's Keyboard.inject is the same input path used for touch controls in GameMaker.
-for (const [id, scan] of [['left', 75], ['right', 77], ['hop', 72], ['bark', 57]] as const) {
+for (const [id, scan] of [
+  ['left', 75],
+  ['right', 77],
+  ['hop', 72],
+  ['bark', 57],
+] as const) {
   const button = document.querySelector<HTMLButtonElement>(`#${id}`)!;
-  button.addEventListener('pointerdown', (event) => { event.preventDefault(); button.setPointerCapture(event.pointerId); machine?.keyboard.inject(scan, true); });
+  button.addEventListener('pointerdown', (event) => {
+    event.preventDefault();
+    button.setPointerCapture(event.pointerId);
+    machine?.keyboard.inject(scan, true);
+  });
   for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(type, () => machine?.keyboard.inject(scan, false));
 }
 window.addEventListener('pagehide', () => machine?.destroy());
