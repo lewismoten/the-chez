@@ -97,7 +97,7 @@ for (const [chapter, startX] of [[2, 10], [3, 8], [4, 8], [5, 8], [6, 8]]) {
   }
   if (chapter === 6) {
     const silentScout = await play(chapter, startX, true);
-    assert.equal(silentScout.link, -1, 'Teddy must bark to earn enough stripes in the finale');
+    assert.equal(silentScout.link, -1, 'hopping alone must not earn every stripe in the finale');
   }
   const sim = await play(chapter, startX, chapter > 2, ci, { lift: false, push: false }, chapter === 6);
   assert.equal(sim.dead, false, `${game.scenes[chapter].desc}: Teddy must finish safely`);

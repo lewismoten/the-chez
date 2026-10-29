@@ -4,6 +4,8 @@ import { GameFiles, Machine, runGame } from '@lewismoten/gamemaker-sandbox-engin
 
 const canvas = document.querySelector<HTMLCanvasElement>('#engine-canvas')!;
 const overlay = document.querySelector<HTMLElement>('#game-overlay')!;
+const overlayTitle = document.querySelector<HTMLElement>('#overlay-title')!;
+const overlayText = document.querySelector<HTMLElement>('#overlay-text')!;
 const startButton = document.querySelector<HTMLButtonElement>('#start')!;
 const watchButton = document.querySelector<HTMLButtonElement>('#watch-demo')!;
 const restartButton = document.querySelector<HTMLButtonElement>('#restart')!;
@@ -87,6 +89,15 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false) {
     });
     if (machine === current && demo) status.textContent = 'Demo finished';
     if (machine === current && status.textContent === 'Playing') status.textContent = 'Game finished';
+    if (machine === current && skipMenu) {
+      overlayTitle.textContent = demo ? 'Your turn, stripe scout!' : finished ? 'Teddy did it!' : 'Ready for another chase?';
+      overlayText.textContent = demo
+        ? 'Teddy showed the way. Now your nose is in charge: move, hop, and bark the stripes home.'
+        : finished
+          ? 'THE CHEZ is 900% more dashing. The crew agrees: helping each other was the real turbo button.'
+          : 'The wind can wait. Teddy and the crew are ready whenever you are.';
+      overlay.hidden = false;
+    }
   } finally {
     current.destroy();
     if (machine === current) machine = undefined;

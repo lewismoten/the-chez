@@ -127,6 +127,9 @@ try {
         await page.keyboard.press('Enter');
       }
       assert.equal(await page.locator('#status').textContent(), 'Demo finished');
+      assert.equal(await page.locator('#overlay-title').textContent(), 'Your turn, stripe scout!');
+      assert.ok(await page.locator('#game-overlay').isVisible(), 'the demo must hand play back to the player');
+      assert.ok(await page.locator('#start').isEnabled(), 'the player can start after watching');
     } else await page.waitForFunction(() => window.__chezEnd === 'won', null, { timeout: 15_000 });
     assert.deepEqual(errors, [], 'browser playthrough must have no page errors');
     console.log(`All five chapters and the win ending${demo ? ' in demo playback' : ''}: passed. Screenshot: ${join(screenshots, 'win.png')}`);
