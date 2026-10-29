@@ -23,14 +23,14 @@ const BASS = [
 const PAD = ['C4 h, G4 h', 'F4 h, C5 h', 'A4 h, E5 h', 'G4 h, D5 h'];
 
 export function chapterSong(chapter: number): Uint8Array {
-  const orders = [[0, 1, 2, 3], [0, 2, 1, 3], [2, 1, 0, 3], [1, 3, 0, 2], [3, 2, 1, 0], [2, 0, 3, 1], [0, 3, 2, 1]];
+  const orders = [[0, 1, 2, 3], [0, 2, 1, 3], [2, 1, 0, 3], [1, 3, 0, 2], [3, 2, 1, 0], [2, 0, 3, 1], [1, 0, 3, 2], [0, 3, 2, 1]];
   const order = orders[chapter];
   if (!order) throw new Error(`Unknown chapter song ${chapter}`);
-  const melody = order.map((i) => HOOK[i]);
+  const melody = chapter === 6 ? ['E5 e, D5 e, C5 q, G4 q, C5 q', 'A4 q, C5 e, E5 e, D5 q, C5 q', 'F5 e, E5 e, D5 q, A4 q, D5 q', 'G4 e, B4 e, D5 q, E5 q, C5 q'] : order.map((i) => HOOK[i]);
   const kiteChimes = ['r h, C6 e, G5 e, E5 e, C5 e', 'r h, F6 e, C6 e, A5 e, F5 e', 'r h, E6 e, C6 e, A5 e, E5 e', 'r h, D6 e, B5 e, G5 e, D5 e'];
   const twice = <T>(bars: T[]) => [...bars, ...bars];
-  return tune([124, 142, 154, 164, 136, 116, 176][chapter], [
-    v(0, chapter === 5 ? bell : chapter === 1 || chapter === 4 ? pluck : lead, join(twice(melody)), 110),
+  return tune([124, 142, 154, 164, 136, 116, 128, 176][chapter], [
+    v(0, chapter === 5 ? bell : chapter === 1 || chapter === 4 || chapter === 6 ? pluck : lead, join(twice(melody)), 110),
     v(1, bass, join(twice(order.map((i) => BASS[i]))), 91),
     v(2, pad, join(twice(order.map((i) => PAD[i]))), 56),
     v(3, bell, join(twice(chapter === 1 ? kiteChimes : ['r q, C5 e, r e, G5 q, r q', 'r q, F5 e, r e, C6 q, r q', 'r q, A5 e, r e, E6 q, r q', 'r q, G5 e, r e, D6 q, r q'])), 51),
