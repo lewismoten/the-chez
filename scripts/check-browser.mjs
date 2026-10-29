@@ -107,7 +107,13 @@ try {
           const action = await page.locator(selector).boundingBox();
           assert.ok(action.y + action.height <= canvas.y + canvas.height, `${selector} must fit inside the game`);
         }
-        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width, 'no horizontal scroll');
+        const notebook = page.locator('.notebook-grid details');
+        assert.equal(await notebook.count(), 6);
+        await notebook.first().locator('summary').focus();
+        await page.keyboard.press('Enter');
+        assert.equal(await notebook.first().getAttribute('open'), '', 'notebook opens with the keyboard');
+        await notebook.evaluateAll((pages) => pages.forEach((entry) => { entry.open = true; }));
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width, 'no horizontal scroll, including the open notebook');
         await page.addScriptTag({ path: join(root, 'node_modules/axe-core/axe.min.js') });
         const violations = await page.evaluate(async () => (await window.axe.run(document, {
           runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] },
@@ -166,13 +172,17 @@ try {
       assert.equal(await page.evaluate(() => window.__chezEntries.filter((scene) => scene === 7).length), 3, 'three naps must use exactly three tries');
       assert.ok((await page.locator('#overlay-text').textContent()).includes('Sky Laundry'));
       assert.equal(await page.locator('#start').textContent(), 'Try this road again');
+      assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('the-chez:road')).scene), 7, 'loss keeps the saved road');
+      await page.reload();
+      assert.equal(await page.locator('#start').textContent(), 'Continue with Teddy', 'reload offers the saved road');
+      assert.equal(await page.locator('#chapter-name').textContent(), 'Sky Laundry');
       await page.evaluate(() => { window.__chezTakeNaps = false; window.__chezRetryTest = false; window.__chezScene = 0; window.__chezEnd = undefined; });
       await page.locator('#start').click();
       await page.waitForFunction(() => window.__chezScene !== 0);
       assert.equal(await page.evaluate(() => window.__chezScene), 7, 'retry must resume Sky Laundry');
       await page.waitForFunction(() => window.__chezWorld?.ci.lives === 2);
       assert.equal(await page.locator('#status').textContent(), 'Playing · 3 tries');
-      console.log('Nap loss and chapter checkpoint: passed');
+      console.log('Nap loss, saved chapter after reload, and three fresh tries: passed');
     }
     if (!lap) {
       await page.waitForFunction(() => window.__chezScene === 7 && window.__chezWorld?.chr.x[0] >= 20 && window.__chezWorld?.chr.x[0] < 32 && window.__chezWorld?.chr.y[0] === 35, null, { timeout: 210_000 });
@@ -186,6 +196,7 @@ try {
     await page.waitForFunction(() => window.__chezScene === 1, null, { timeout: 60_000 });
     assert.equal(await page.locator('#stripe-progress').textContent(), `${CHAPTERS.at(-1).required} / ${CHAPTERS.at(-1).required}`);
     assert.equal(await page.locator('#chapter-name').textContent(), 'Curtain call');
+    if (!demo) assert.equal(await page.evaluate(() => localStorage.getItem('the-chez:road')), null, 'winning clears the saved road');
     await page.waitForTimeout(2000);
     await page.screenshot({ path: join(screenshots, 'win.png') });
     if (process.argv.includes('--record')) {
