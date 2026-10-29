@@ -108,7 +108,7 @@ try {
           assert.ok(action.y + action.height <= canvas.y + canvas.height, `${selector} must fit inside the game`);
         }
         const notebook = page.locator('.notebook-grid details');
-        assert.equal(await notebook.count(), 6);
+        assert.equal(await notebook.count(), 7);
         await notebook.first().locator('summary').focus();
         await page.keyboard.press('Enter');
         assert.equal(await notebook.first().getAttribute('open'), '', 'notebook opens with the keyboard');

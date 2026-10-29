@@ -23,7 +23,7 @@ The **More Game-Maker games** section accepts another DOS game folder with a `.G
 
 ## Teddy’s glovebox notebook
 
-The page’s optional notebook explains the counter gates, bark exchanges, upward gravity and one-way cloud ledges, vehicle character, input recording, and music and cartoons. Each expandable entry names its source builder and links to actual downloadable DOS files. These are inspection examples; playing outside this page needs the complete `public/game/` folder. The notebook uses native HTML details controls and does not run a separate game simulation.
+The page’s optional notebook explains the counter gates, timed leaf crossing, bark exchanges, upward gravity and one-way cloud ledges, vehicle character, input recording, and music and cartoons. Each expandable entry names its source builder and links to actual downloadable DOS files. These are inspection examples; playing outside this page needs the complete `public/game/` folder. The notebook uses native HTML details controls and does not run a separate game simulation.
 
 ## Rebuild the DOS game
 
