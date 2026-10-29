@@ -7,5 +7,6 @@ Engine, source art, car:
 Game-Maker Sandbox Edition
 by Lewis Moten (MIT)
 
+Gwinn bark: Lewis Moten
 Game, text, music, sounds:
 OpenAI Codex (GPT-6)

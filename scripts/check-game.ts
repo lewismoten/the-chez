@@ -6,6 +6,7 @@ import { parseBlocks } from '../../GameMaker/web/src/formats/blocks.ts';
 import { parseCharacter } from '../../GameMaker/web/src/formats/character.ts';
 import { parseGame } from '../../GameMaker/web/src/formats/game.ts';
 import { fliFaults } from '../../GameMaker/web/src/formats/fliLimits.ts';
+import { decodeVoc } from '../../GameMaker/web/src/formats/voc.ts';
 import { parseMap } from '../../GameMaker/web/src/formats/map.ts';
 import { parseMonsters } from '../../GameMaker/web/src/formats/monster.ts';
 import { newCharInfo } from '../../GameMaker/web/src/engine/world.ts';
@@ -18,6 +19,8 @@ const ci = newCharInfo();
 for (const name of ['intro.fli', 'drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'win.fli']) {
   assert.deepEqual(fliFaults(bytes(name)), [], `${name}: animation must fit the original DOS player`);
 }
+const doorBark = decodeVoc(bytes('gate.voc'));
+assert.ok(doorBark.samples.length / doorBark.sampleRate < 0.8, 'Gwinn bark must finish before the next scene starts');
 
 async function play(chapter: number, startX: number, hop: boolean, progress = newCharInfo(), tricks = { lift: false, push: false }) {
   const scene = game.scenes[chapter];

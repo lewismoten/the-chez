@@ -27,3 +27,5 @@ npm run build
 `build:game` reads the GameMaker sibling checkout (`../GameMaker`) for the format helpers, Teddy art, and the measured CitiCar drawing. It writes the playable DOS files to `public/game/`. The built files are committed, so running the web app does not need the sibling checkout. `check:game` uses the headless Game-Maker engine to confirm that walking cannot bypass the later car doors and that timed hops can complete all chapters.
 
 The builder lives in `scripts/build-game.ts`. `scripts/chapters.ts` constructs the later stripe trails, `scripts/cartoons.ts` renders the intro, drive, and win animations, and `scripts/music.ts` composes the chapter themes. See [NOTICE.md](NOTICE.md) for credits.
+
+`assets/gwinn-door.voc` is a short edit of Lewis Moten's Gwinn bark recording. It plays when Teddy opens a car door.
