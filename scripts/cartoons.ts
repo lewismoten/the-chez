@@ -1,4 +1,4 @@
-// Short, skippable DOS FLI cartoons: a stripe blows away, the crew drives on, and the car races home.
+// Skippable DOS FLI cartoons: lost stripes, six little road stories, and a team triumph.
 import { Reel } from '../../GameMaker/games/kit/reel.ts';
 import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
 import { centered } from '../../GameMaker/games/kit/pcText.ts';
@@ -7,11 +7,14 @@ import { matchColor } from '../../GameMaker/web/src/formats/palette.ts';
 import { POSES } from '../../GameMaker/games/teddy/src/sprites/teddy.ts';
 import { GWINN } from '../../GameMaker/games/teddy/src/sprites/gwinn.ts';
 import { docLeo } from '../../GameMaker/games/teddy/src/sprites/people.ts';
+import { clubArt, centered as clubCentered } from '../../GameMaker/games/teddy/src/art/draw.ts';
+import { stripeCar } from './stripe-car.ts';
+import { ROAD_BEATS, paintRoadGag } from './road-stories.ts';
 
-type Colors = { sky: number; road: number; edge: number; white: number; gold: number; red: number; dark: number };
+type Colors = { sky: number; road: number; edge: number; white: number; gold: number; red: number; blue: number; dark: number };
 function colors(pal: Uint8Array): Colors {
   const c = (r: number, g: number, b: number) => matchColor(pal, r, g, b);
-  return { sky: c(7, 21, 28), road: c(13, 16, 18), edge: c(55, 43, 25), white: c(62, 59, 52), gold: c(63, 45, 16), red: c(57, 12, 7), dark: c(3, 8, 12) };
+  return { sky: c(7, 21, 28), road: c(13, 16, 18), edge: c(55, 43, 25), white: c(62, 59, 52), gold: c(63, 45, 16), red: c(57, 12, 7), blue: c(12, 31, 48), dark: c(3, 8, 12) };
 }
 
 function roadside(c: Colors, label: string): Pixels {
@@ -20,7 +23,7 @@ function roadside(c: Colors, label: string): Pixels {
   p.rect(0, 142, 320, 58, c.road);
   p.rect(0, 141, 320, 3, c.edge);
   for (let x = 0; x < 320; x += 64) p.rect(x + 9, 177, 34, 3, c.gold);
-  centered(p, 14, label, c.white, 1, c.dark);
+  clubCentered(p, 14, clubArt(label), c.white, 1, c.dark);
   return p;
 }
 
@@ -34,14 +37,15 @@ function sprite(p: Pixels, source: Pixels, x: number, y: number, scale = 2): voi
 export function openingCartoon(pal: Uint8Array, ink: ChezInk): Uint8Array {
   const c = colors(pal);
   const bg = roadside(c, 'TEDDY PRESENTS: A TINY QUEST');
-  const car = chezPicture(ink, 'right', 3);
+  const car = stripeCar(ink, 1, 'right', 3);
+  const worn = stripeCar(ink, 0, 'right', 3);
   const reel = new Reel(pal);
   for (let i = 0; i < 12; i++) reel.frame(bg, (p) => {
     p.blit(car, -100 + i * 17, 81, 255);
     sprite(p, POSES[i % 2 ? 'walk1' : 'walk2'], 12 + i * 7, 105);
   }, 2);
   for (let i = 0; i < 12; i++) reel.frame(bg, (p) => {
-    p.blit(car, 87 + i * 3, 81, 255);
+    p.blit(stripeCar(ink, 1 - i / 11, 'right', 3), 87 + i * 3, 81, 255);
     sprite(p, POSES[i % 2 ? 'walk1' : 'walk2'], 48 + i * 5, 105);
     sprite(p, GWINN[i % 2 ? 'gwinn1' : 'gwinn2'], 264, 105);
     sprite(p, docLeo(undefined, i % 2 === 0), 214, 63);
@@ -53,7 +57,7 @@ export function openingCartoon(pal: Uint8Array, ink: ChezInk): Uint8Array {
     centered(p, 42, 'THE WIND STOLE THE STRIPES!', c.gold, 1, c.dark);
   }, 2);
   for (let i = 0; i < 8; i++) reel.frame(bg, (p) => {
-    p.blit(car, 120, 81, 255);
+    p.blit(worn, 120, 81, 255);
     sprite(p, POSES[i % 2 ? 'walk1' : 'stand'], 70 + i * 4, 105);
     sprite(p, GWINN[i % 2 ? 'gwinn1' : 'gwinn2'], 264, 105);
     sprite(p, docLeo(undefined, i % 2 === 0), 214, 63);
@@ -63,17 +67,49 @@ export function openingCartoon(pal: Uint8Array, ink: ChezInk): Uint8Array {
   return reel.fli(5);
 }
 
-export function driveCartoon(pal: Uint8Array, ink: ChezInk, destination: string): Uint8Array {
+// Match the passenger window in the measured left-facing drawing; keep both ears equal.
+function passengerTeddy(car: Pixels, ink: ChezInk): void {
+  const head = POSES.stand.crop(7, 4, 13, 8).flipX();
+  for (let y = 0; y < head.h; y++) for (let x = 0; x < head.w; x++) {
+    const color = head.get(x, y);
+    if (color === 255) continue;
+    for (let dy = 0; dy < 2; dy++) for (let dx = 0; dx < 2; dx++) {
+      const px = 55 + x * 2 + dx, py = 9 + y * 2 + dy;
+      if (car.get(px, py) === ink.glass[0]) car.set(px, py, color);
+    }
+  }
+}
+
+export function driveCartoon(pal: Uint8Array, ink: ChezInk, destination: string, road: number): Uint8Array {
+  const beat = ROAD_BEATS[road - 1];
+  if (!beat) throw new Error(`No road story for ${road}`);
   const c = colors(pal);
-  const bg = roadside(c, `TEDDY LEADS TO ${destination}`);
-  const car = chezPicture(ink, 'right', 3);
+  const bg = roadside(c, `NEXT: ${destination}`);
+  const riding = road === ROAD_BEATS.length;
+  const facing = riding ? 'left' : 'right';
   const reel = new Reel(pal);
+  for (let i = 0; i < 56; i++) reel.frame(bg, (p) => {
+    const repaired = (road - 1 + Math.min(1, i / 30)) / ROAD_BEATS.length;
+    const car = stripeCar(ink, repaired, facing, 3);
+    const board = riding && i >= 30 ? Math.min(1, (i - 30) / 14) : 0;
+    if (board === 1) passengerTeddy(car, ink);
+    paintRoadGag(p, beat.gag, i, c);
+    p.blit(car, 96, 81, 255);
+    if (board < 1) sprite(p, POSES[i % 2 ? 'walk1' : 'stand'], 40 + Math.round(board * 96), 105 - Math.round(board * 26 + Math.sin(board * Math.PI) * 35));
+    sprite(p, GWINN[i % 2 ? 'gwinn1' : 'gwinn2'], 264, 105);
+    if (!riding || i < 40) sprite(p, docLeo(undefined, i % 8 < 4), 232, 63);
+    p.rect(0, 153, 320, 43, c.dark);
+    centered(p, 159, beat.lines[0], c.white);
+    centered(p, 178, beat.lines[1], c.gold);
+  });
+  const car = stripeCar(ink, road / ROAD_BEATS.length, facing, 3);
+  if (riding) passengerTeddy(car, ink);
   for (let i = 0; i < 18; i++) reel.frame(bg, (p) => {
-    const x = -110 + i * 25;
+    const x = riding ? 320 - i * 25 : -110 + i * 25;
     p.blit(car, x, 81, 255);
-    sprite(p, POSES[i % 2 ? 'walk1' : 'walk2'], x + 120, 105);
+    if (!riding) sprite(p, POSES[i % 2 ? 'walk1' : 'walk2'], x + 120, 105);
     for (let dash = 0; dash < 5; dash++) p.rect((dash * 73 - i * 17 + 500) % 320, 179, 34, 3, c.gold);
-  }, 1);
+  });
   reel.fadeOut(4);
   return reel.fli(5);
 }
@@ -81,10 +117,11 @@ export function driveCartoon(pal: Uint8Array, ink: ChezInk, destination: string)
 export function winningCartoon(pal: Uint8Array, ink: ChezInk): Uint8Array {
   const c = colors(pal);
   const bg = roadside(c, 'TEDDY SAVED THE STRIPES!');
-  const car = chezPicture(ink, 'right', 3);
+  const car = stripeCar(ink, 1, 'left', 3);
+  passengerTeddy(car, ink);
   const reel = new Reel(pal);
   for (let i = 0; i < 20; i++) reel.frame(bg, (p) => {
-    p.blit(car, -110 + i * 20, 81, 255);
+    p.blit(car, 320 - i * 23, 81, 255);
     for (let j = 0; j < 4; j++) p.line(23 + j * 27, 111 + j * 9, 10 + j * 27, 111 + j * 9, c.white);
     if (i > 9) centered(p, 50, '900% MORE DASHING!', c.gold, 1, c.dark);
   }, 1);

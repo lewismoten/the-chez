@@ -12,6 +12,8 @@ import { serializeSlideList } from '../../GameMaker/web/src/formats/graphicScrip
 import { parseSoundSet, serializeSoundSet } from '../../GameMaker/web/src/formats/sound.ts';
 import { parseCharacter, serializeCharacter } from '../../GameMaker/web/src/formats/character.ts';
 import { chezPicture } from '../../GameMaker/games/kit/chez.ts';
+import { stripeCar } from './stripe-car.ts';
+import { clubArt, centered as clubCentered } from '../../GameMaker/games/teddy/src/art/draw.ts';
 import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
 import { centered } from '../../GameMaker/games/kit/pcText.ts';
 import { SPEAKER, mix, osc, sample } from '../../GameMaker/games/kit/sound.ts';
@@ -96,7 +98,7 @@ for (let y = 6; y <= 13; y++) for (let x = 2; x <= 17; x++) {
 }
 for (const x of spots) map.blocks[39 * 100 + x] = pieceIndex;
 const ink = { body: [red, red, red] as [number, number, number], trim: black, glass: [black, white] as [number, number], roof: black, tire: black, hub: white, bumper: black, lamp: white, tail: red, pin: white, rim: white };
-const car = chezPicture(ink, 'right');
+const car = stripeCar(ink, 0);
 for (let half = 0; half < 2; half++) {
   const block = bbl[half ? backIndex : doorIndex];
   block.pixels.set(bbl[sky].pixels);
@@ -123,7 +125,7 @@ function screen(name: string, headline: string, line: string, scenePal = pal, sc
   p.rect(0, 151, 320, 49, dark);
   p.rect(0, 154, 320, 3, gold);
   p.blit(chezPicture(sceneInk, 'right', 3), 100, 84, 255);
-  centered(p, 20, headline, cream, 2);
+  clubCentered(p, 20, clubArt(headline), cream, 2);
   if (beat) centered(p, 58, beat, cream, 1);
   centered(p, 177, line, gold, 1);
   put(name, encodeGif({ width: 320, height: 200, pixels: p.px, palette: scenePal }));
@@ -133,7 +135,7 @@ screen('won.gif', 'TEDDY DID IT!', 'THE CHEZ IS 900% MORE DASHING');
 screen('epilogue.gif', 'THE WHOLE CREW WON', 'TEAMWORK MAKES EVERY ROAD FUN', pal, ink, 'TEDDY FOUND THE WAY HOME.');
 screen('lost.gif', 'ONE MORE TRY?', 'TEDDY BELIEVES IN YOU');
 put('intro.fli', openingCartoon(pal, ink));
-put('drive.fli', driveCartoon(pal, ink, 'MAPLE STREET'));
+put('drive.fli', driveCartoon(pal, ink, 'MAPLE STREET', 1));
 put('win.fli', winningCartoon(pal, ink));
 put('lost.fli', losingCartoon(pal, ink));
 put('won.lst', serializeSlideList([{ name: 'win.fli', pause: 0 }, { name: 'epilogue.gif', pause: 4 }, { name: 'won.gif', pause: 0 }]));
@@ -200,7 +202,7 @@ CHAPTERS.forEach((chapter, index) => {
   put(`${chapter.stem}.cmf`, chapterSong(index + 1));
   const next = CHAPTERS[index + 1];
   const drive = next ? `drive${index + 2}.fli` : '';
-  if (next) put(drive, driveCartoon(palette, chapterInk, next.name.toUpperCase()));
+  if (next) put(drive, driveCartoon(palette, chapterInk, next.name.toUpperCase(), index + 2));
   const scene = emptyScene(ADVTYPE);
   scene.desc = chapter.name;
   scene.pos = { x: 190 + index * 50, y: 110 };

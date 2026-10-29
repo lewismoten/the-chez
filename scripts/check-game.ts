@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { parseBlocks } from '../../GameMaker/web/src/formats/blocks.ts';
 import { parseCharacter } from '../../GameMaker/web/src/formats/character.ts';
 import { parseGame } from '../../GameMaker/web/src/formats/game.ts';
+import { parseFli } from '../../GameMaker/web/src/formats/fli.ts';
+import { ROAD_BEATS } from './road-stories.ts';
 import { fliFaults } from '../../GameMaker/web/src/formats/fliLimits.ts';
 import { decodeVoc } from '../../GameMaker/web/src/formats/voc.ts';
 import { parseMap } from '../../GameMaker/web/src/formats/map.ts';
@@ -42,6 +44,15 @@ for (const [index, scene] of game.scenes.entries()) if (index >= 2) {
 }
 for (const name of ['intro.fli', 'drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'drive5.fli', 'drive6.fli', 'win.fli', 'lost.fli']) {
   assert.deepEqual(fliFaults(bytes(name)), [], `${name}: animation must fit the original DOS player`);
+}
+assert.equal(ROAD_BEATS.length, CHAPTERS.length - 1, 'every road transition must have a connected story beat');
+for (const beat of ROAD_BEATS) for (const line of beat.lines) {
+  assert.ok(line.length <= 38, `Road caption must leave room at the screen edges: ${line}`);
+}
+for (const name of ['drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'drive5.fli', 'drive6.fli']) {
+  const movie = parseFli(bytes(name));
+  const seconds = movie.frameCount * movie.speed / 70;
+  assert.ok(seconds >= 4 && seconds <= 8, `${name}: give the story time to read while keeping road trips short`);
 }
 const doorBark = decodeVoc(bytes('gate.voc'));
 assert.ok(doorBark.samples.length / doorBark.sampleRate < 0.8, 'Gwinn bark must finish before the next scene starts');

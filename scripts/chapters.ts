@@ -3,11 +3,12 @@ import { parseBlocks, serializeBlocks } from '../../GameMaker/web/src/formats/bl
 import { parseMap, reindexMonsters, serializeMap } from '../../GameMaker/web/src/formats/map.ts';
 import { parseMonsters, serializeMonsters } from '../../GameMaker/web/src/formats/monster.ts';
 import { matchColor, parsePalette } from '../../GameMaker/web/src/formats/palette.ts';
-import { chezPicture, type ChezInk } from '../../GameMaker/games/kit/chez.ts';
+import type { ChezInk } from '../../GameMaker/games/kit/chez.ts';
 import { clearInheritedInteractions } from './scenery.ts';
 import { skyLaundry } from './sky-laundry.ts';
 import { victoryLap } from './victory-lap.ts';
 import { leafCrossing } from './leaf-crossing.ts';
+import { stripeCar } from './stripe-car.ts';
 
 export interface Chapter {
   source: 'street' | 'park' | 'city' | 'klub';
@@ -100,7 +101,7 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
   for (let i = 0; i < 400; i++) if (gwinn[i] !== 255) bbl[gwinnBlock].pixels[i] = gwinn[i];
   map.blocks[39 * 100 + chapter.carX - 4] = gwinnBlock;
 
-  const car = chezPicture(ink);
+  const car = stripeCar(ink, (chapter.counter - 21) / 6);
   const free = Array.from({ length: 149 }, (_, i) => 148 - i).filter((i) => i !== gwinnBlock && !map.blocks.includes(i));
   const [doorIndex, backIndex, openIndex, pieceIndex, highPieceIndex] = free;
   if ([doorIndex, backIndex, openIndex, pieceIndex, highPieceIndex].some((index) => index === undefined)) throw new Error(`No block slots for THE CHEZ in ${chapter.name}`);
