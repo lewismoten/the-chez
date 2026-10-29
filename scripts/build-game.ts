@@ -17,6 +17,7 @@ import { SPEAKER, mix, osc, sample } from '../../GameMaker/games/kit/sound.ts';
 import { chapterSong, openingSong, retrySong, winningSong } from './music.ts';
 import { driveCartoon, losingCartoon, openingCartoon, winningCartoon } from './cartoons.ts';
 import { buildChapter, CHAPTERS } from './chapters.ts';
+import { clearInheritedInteractions } from './scenery.ts';
 
 const here = fileURLToPath(new URL('..', import.meta.url));
 const source = join(here, '../GameMaker/games/teddy/disk');
@@ -49,29 +50,27 @@ for (const index of [ticket.pic[0][0], ticket.pic[1][0]]) {
 // A level road leads from Teddy's house to Doc Leo and THE CHEZ. A few spare pieces
 // allow a missed pickup; the car door opens only after ten have been collected.
 const map = parseMap(bytes('backyard.map'));
+const originalDoorIndex = map.blocks[39 * 100 + 77];
+const originalBackIndex = map.blocks[39 * 100 + 78];
+clearInheritedInteractions(map, bbl, 6);
 const sky = map.blocks[39 * 100 + 6];
 const upperSky = map.blocks[38 * 100 + 6];
 const hedgeSky = map.blocks[37 * 100 + 6];
 const grass = map.blocks[40 * 100 + 11];
 const dirt = map.blocks[41 * 100 + 11];
-for (let x = 10; x <= 74; x++) {
+for (let x = 10; x <= 79; x++) {
   map.blocks[37 * 100 + x] = hedgeSky;
   map.blocks[38 * 100 + x] = upperSky;
   map.blocks[39 * 100 + x] = sky;
   map.blocks[40 * 100 + x] = grass;
   map.blocks[41 * 100 + x] = dirt;
 }
-for (let x = 10; x <= 74; x++) for (let y = 25; y < 37; y++) {
-  const at = y * 100 + x;
-  const block = bbl[map.blocks[at]];
-  if (block.effect || block.obj || block.scorePts || block.chHitPt) map.blocks[at] = map.blocks[y * 100 + 6];
-}
 for (const placed of map.monsters) placed.monnum = 64;
 const spots = [11, 16, 21, 26, 31, 36, 41, 46, 51, 56, 61, 66, 71];
 reindexMonsters(map);
 
 // Gwinn waits near the car to meet Teddy at the end of the stripe trail.
-const gwinnBlock = Array.from({ length: 149 }, (_, i) => 148 - i).find((i) => !map.blocks.includes(i));
+const gwinnBlock = Array.from({ length: 149 }, (_, i) => 148 - i).find((i) => i !== originalDoorIndex && i !== originalBackIndex && !map.blocks.includes(i));
 if (gwinnBlock === undefined) throw new Error('No background block slot for Gwinn');
 bbl[gwinnBlock] = { ...bbl[sky], pixels: bbl[sky].pixels.slice(), nextBl: gwinnBlock, touchBl: gwinnBlock };
 const gwinnPixels = mbl[monsters[10].pic[0][0]].pixels;
@@ -80,8 +79,10 @@ map.blocks[39 * 100 + 73] = gwinnBlock;
 
 // The car uses the source project's measured CitiCar drawing. Preserve the existing
 // door's touch behavior, but require all ten stripe pieces before it opens.
-const doorIndex = map.blocks[39 * 100 + 77];
-const backIndex = map.blocks[39 * 100 + 78];
+const doorIndex = originalDoorIndex;
+const backIndex = originalBackIndex;
+map.blocks[39 * 100 + 77] = doorIndex;
+map.blocks[39 * 100 + 78] = backIndex;
 const openIndex = Array.from({ length: 149 }, (_, i) => 148 - i).find((i) => i !== gwinnBlock && !map.blocks.includes(i));
 if (openIndex === undefined) throw new Error('No background block slot for the open car door');
 const pieceIndex = Array.from({ length: 149 }, (_, i) => 148 - i).find((i) => i !== gwinnBlock && i !== openIndex && !map.blocks.includes(i));
@@ -105,6 +106,7 @@ for (let half = 0; half < 2; half++) {
 }
 bbl[doorIndex].effect = 21;
 bbl[doorIndex].eamt = -10;
+bbl[doorIndex].scorePts = 0;
 bbl[doorIndex].solid = 15;
 bbl[doorIndex].touchBl = openIndex;
 bbl[openIndex] = { ...bbl[doorIndex], pixels: bbl[doorIndex].pixels.slice(), solid: 0, effect: 0, eamt: 0, nextBl: openIndex, touchBl: openIndex };
@@ -160,10 +162,11 @@ for (const name of ['blip.voc', 'boing.voc', 'chomp.voc', 'crunch.voc', 'dig.voc
   try { copyFileSync(join(source, name), join(output, name)); } catch { /* Optional sound. */ }
 }
 copyFileSync(join(here, 'assets/teddy-bark.voc'), join(output, 'woof.voc'));
+copyFileSync(join(here, 'assets/teddy-tour.rec'), join(output, 'tour.rec'));
 const text = (name: string, lines: string[]) => put(name, new TextEncoder().encode(lines.join('\r\n') + '\r\n'));
 text('help.txt', ["TEDDY'S STRIPE CHASE", '', 'LEFT/RIGHT or A/D: walk', 'UP or W: hop', 'SPACE: bark', '', 'Find the stripe pieces.', 'The car door opens when', 'Teddy has enough for it.', '', 'High pieces need a hop.', 'At the Clown Club, bark at', 'balloon dogs for more.', '', 'Teddy scouts. Gwinn cheers.', 'Doc Leo drives.']);
 text('story.txt', ["TEDDY'S STRIPE CHASE", '', 'THE CHEZ lost its stripes.', 'Doc Leo says new ones will', 'make it go 900% faster.', 'The wind says: prove it.', '', 'Teddy volunteers his nose.', 'Gwinn volunteers to bark', 'at anything suspicious.', '', 'Five roads. Many stripes.', 'One corgi-sized hero.', '', 'A team goes farther than', 'one very speedy nose.']);
-text('credits.txt', ["TEDDY'S STRIPE CHASE", '', 'For Lewis Moten, Teddy,', 'Gwinn, Doc Leo and THE CHEZ.', '', 'Engine, source art, car:', 'Game-Maker Sandbox Edition', 'by Lewis Moten (MIT)', '', 'Dog barks: Lewis Moten', 'Game, text, music, sounds:', 'OpenAI Codex (GPT-6)']);
+text('credits.txt', ["TEDDY'S STRIPE CHASE", '', 'For Lewis Moten, Teddy,', 'Gwinn, Doc Leo and THE CHEZ.', '', 'Engine, source art, car:', 'Game-Maker Sandbox Edition', 'by Lewis Moten (MIT)', '', 'Dog barks: Lewis Moten', 'Game, text, music, sounds:', 'OpenAI Codex (GPT-6/6.1)']);
 
 const game = newGame('STRIPE CHASE');
 const [title, end] = game.scenes;

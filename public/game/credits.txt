@@ -9,4 +9,4 @@ by Lewis Moten (MIT)
 
 Dog barks: Lewis Moten
 Game, text, music, sounds:
-OpenAI Codex (GPT-6)
+OpenAI Codex (GPT-6/6.1)

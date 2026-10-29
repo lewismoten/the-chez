@@ -4,6 +4,7 @@ import { parseMap, reindexMonsters, serializeMap } from '../../GameMaker/web/src
 import { parseMonsters, serializeMonsters } from '../../GameMaker/web/src/formats/monster.ts';
 import { matchColor, parsePalette } from '../../GameMaker/web/src/formats/palette.ts';
 import { chezPicture, type ChezInk } from '../../GameMaker/games/kit/chez.ts';
+import { clearInheritedInteractions } from './scenery.ts';
 
 export interface Chapter {
   source: 'street' | 'park' | 'city' | 'klub';
@@ -45,6 +46,7 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
   const mbl = parseBlocks(read(`${chapter.source}.mbl`), 100);
   const monsters = parseMonsters(read(`${chapter.source}.mon`));
   const map = parseMap(read(`${chapter.source}.map`));
+  clearInheritedInteractions(map, bbl, chapter.sampleX);
   const color = (r: number, g: number, b: number) => matchColor(pal, r, g, b);
   const black = color(9, 12, 15), red = color(52, 12, 9), white = color(62, 61, 57);
   const ink: ChezInk = { body: [red, red, red], trim: black, glass: [black, white], roof: black, tire: black, hub: white, bumper: black, lamp: white, tail: red, pin: white, rim: white };
@@ -66,18 +68,14 @@ export function buildChapter(chapter: Chapter, read: (name: string) => Uint8Arra
     for (const y of [37, 38, 39]) map.blocks[y * 100 + x] = map.blocks[y * 100 + sample];
     map.blocks[40 * 100 + x] = map.blocks[40 * 100 + sample];
   }
-  // Remove old Teddy-game prizes above the route. Their pictures would otherwise look
-  // like extra stripe pieces and alter counters this quest never uses.
-  for (let x = chapter.startX; x <= chapter.carX + 1; x++) for (let y = 25; y < 37; y++) {
-    const at = y * 100 + x;
-    const block = bbl[map.blocks[at]];
-    if (block.effect || block.obj || block.scorePts || block.chHitPt) map.blocks[at] = map.blocks[y * 100 + sample];
-  }
   for (const placed of map.monsters) placed.monnum = 64;
   if (chapter.source === 'klub') {
     // Friendly balloon dogs hand over their stripe pieces when Teddy says woof.
     // Their power keeps a simple touch from popping them; Teddy's bark is stronger.
     monsters[16] = { ...monsters[15], power: 102, newmon: 12, end: 0, towards: 0 };
+    for (const [index] of monsters[15].pic) if (index < 100) {
+      mbl[index].chHitPt = mbl[index].scorePts = mbl[index].effect = mbl[index].eamt = 0;
+    }
     for (const [i, x] of [24, 43, 64, 70].entries()) map.monsters[i] = { monnum: 16, status: 0, xtra: 0, curx: x, cury: 39, extra: 0 };
   }
   reindexMonsters(map);

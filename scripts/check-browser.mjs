@@ -9,6 +9,8 @@ import { chromium } from 'playwright-core';
 import { createServer } from 'vite';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
+const demo = process.argv.includes('--demo');
+assert.ok(!(demo && process.argv.includes('--record')), 'record the played route, not its replay');
 const screenshots = await mkdtemp(join(tmpdir(), 'chez-browser-'));
 const server = await createServer({ root, logLevel: 'error', server: { host: '127.0.0.1', port: 4175, strictPort: true } });
 await server.listen();
@@ -66,9 +68,11 @@ try {
         await page.goto('http://127.0.0.1:4175/');
         const canvas = await page.locator('#engine-canvas').boundingBox();
         const shell = await page.locator('.game-shell').boundingBox();
-        const start = await page.locator('#start').boundingBox();
         assert.ok(canvas.width >= 190 && shell.height <= height, `${width}×${height}: the game must remain usable`);
-        assert.ok(start.y + start.height <= canvas.y + canvas.height, 'Start must fit inside the game');
+        for (const selector of ['#start', '#watch-demo']) {
+          const action = await page.locator(selector).boundingBox();
+          assert.ok(action.y + action.height <= canvas.y + canvas.height, `${selector} must fit inside the game`);
+        }
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width, 'no horizontal scroll');
         await page.addScriptTag({ path: join(root, 'node_modules/axe-core/axe.min.js') });
         const violations = await page.evaluate(async () => (await window.axe.run(document, {
@@ -85,6 +89,7 @@ try {
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => { if (message.text().startsWith('CHEZ entered')) console.log(message.text()); });
   await page.addInitScript(installDriver);
+  await page.addInitScript((watching) => { window.__chezDemo = watching; }, demo);
   // Add observation hooks to Vite's response; no diagnostics or autoplayer ship in the app.
   await page.route('**/src/main.ts', async (route) => {
     const response = await route.fetch();
@@ -92,7 +97,7 @@ try {
     for (const [before, after] of [
       ['onSession: (session) => {', 'onSession: (session) => { window.__chezSession = session;'],
       ['session.onScene = (scene) => {', 'session.onScene = (scene) => { window.__chezEnter(scene);'],
-      ['onFrame: (world) => {', 'onFrame: (world) => { window.__chezDrive(world, current);'],
+      ['onFrame: (world) => {', 'onFrame: (world) => { if (!window.__chezDemo) window.__chezDrive(world, current);'],
       ['onPlayEnd: (_score, how) => {', 'onPlayEnd: (_score, how) => { window.__chezEnd = how;'],
     ]) {
       assert.ok(body.includes(before), `browser hook missing: ${before}`);
@@ -101,7 +106,7 @@ try {
     await route.fulfill({ response, body });
   });
   await page.goto('http://127.0.0.1:4175/');
-  await page.locator('#start').click();
+  await page.locator(demo ? '#watch-demo' : '#start').click();
   try {
     await page.waitForFunction(() => window.__chezScene === 1, null, { timeout: 140_000 });
     assert.equal(await page.locator('#stripe-progress').textContent(), '10 / 10');
@@ -116,9 +121,15 @@ try {
     }
     await page.waitForTimeout(8000);
     await page.keyboard.press('Enter');
-    await page.waitForFunction(() => window.__chezEnd === 'won', null, { timeout: 15_000 });
+    if (demo) {
+      for (let attempt = 0; attempt < 10 && await page.locator('#status').textContent() !== 'Demo finished'; attempt++) {
+        await page.waitForTimeout(1000);
+        await page.keyboard.press('Enter');
+      }
+      assert.equal(await page.locator('#status').textContent(), 'Demo finished');
+    } else await page.waitForFunction(() => window.__chezEnd === 'won', null, { timeout: 15_000 });
     assert.deepEqual(errors, [], 'browser playthrough must have no page errors');
-    console.log(`All five chapters and the win ending: passed. Screenshot: ${join(screenshots, 'win.png')}`);
+    console.log(`All five chapters and the win ending${demo ? ' in demo playback' : ''}: passed. Screenshot: ${join(screenshots, 'win.png')}`);
   } catch (error) {
     await page.screenshot({ path: join(screenshots, 'failure.png') });
     console.error(await page.evaluate(() => ({ scene: window.__chezScene, x: window.__chezWorld?.chr.x, y: window.__chezWorld?.chr.y })));

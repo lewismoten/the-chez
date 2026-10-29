@@ -5,6 +5,7 @@ import { GameFiles, Machine, runGame } from '@lewismoten/gamemaker-sandbox-engin
 const canvas = document.querySelector<HTMLCanvasElement>('#engine-canvas')!;
 const overlay = document.querySelector<HTMLElement>('#game-overlay')!;
 const startButton = document.querySelector<HTMLButtonElement>('#start')!;
+const watchButton = document.querySelector<HTMLButtonElement>('#watch-demo')!;
 const restartButton = document.querySelector<HTMLButtonElement>('#restart')!;
 const status = document.querySelector<HTMLElement>('#status')!;
 const engineStatus = document.querySelector<HTMLElement>('#engine-status')!;
@@ -15,6 +16,7 @@ const chapterName = document.querySelector<HTMLElement>('#chapter-name')!;
 const stripeProgress = document.querySelector<HTMLElement>('#stripe-progress')!;
 let machine: Machine | undefined;
 let selected: File[] = [];
+let launch = 0;
 const chapterLabels = ['The Stripe Road', 'Maple Street', 'Puddlewick Park', 'Downtown', 'The Clown Club'];
 const chapterGoals = [10, 8, 8, 9, 10];
 
@@ -31,16 +33,18 @@ async function bundledFiles(): Promise<GameFiles> {
   return new GameFiles(entries);
 }
 
-async function run(files: GameFiles, skipMenu: boolean) {
+async function run(files: GameFiles, skipMenu: boolean, demo = false) {
   machine?.destroy();
   const game = files.mainGame();
   if (!game) throw new Error('Choose a folder containing a .GAM file.');
+  const playback = demo ? files.get('tour.rec') : undefined;
+  if (demo && !playback) throw new Error('Teddy’s demonstration could not be loaded.');
   const current = new Machine(canvas, files);
   let chapterIndex = 0;
   let finished = false;
   machine = current;
   overlay.hidden = true;
-  status.textContent = 'Playing';
+  status.textContent = demo ? 'Teddy’s demo' : 'Playing';
   if (skipMenu) {
     chapterName.textContent = 'The Stripe Road';
     stripeProgress.textContent = '0 / 10';
@@ -53,7 +57,8 @@ async function run(files: GameFiles, skipMenu: boolean) {
   await current.audio.resume();
   try {
     await runGame(current, game, {
-      record: skipMenu,
+      record: skipMenu && !demo,
+      playback,
       onSession: (session) => {
         session.onScene = (scene) => {
           if (skipMenu && scene >= 2 && scene < chapterLabels.length + 2 && machine === current) {
@@ -65,7 +70,7 @@ async function run(files: GameFiles, skipMenu: boolean) {
             finished = true;
             chapterName.textContent = 'Curtain call';
             stripeProgress.textContent = `${chapterGoals[chapterIndex]} / ${chapterGoals[chapterIndex]}`;
-            status.textContent = 'Stripes restored!';
+            status.textContent = demo ? 'Teddy’s grand finale' : 'Stripes restored!';
           }
         };
       },
@@ -80,6 +85,7 @@ async function run(files: GameFiles, skipMenu: boolean) {
         if (machine === current) status.textContent = skipMenu && how === 'won' ? 'Stripes restored!' : how === 'lost' ? 'Try again' : 'Game finished';
       },
     });
+    if (machine === current && demo) status.textContent = 'Demo finished';
     if (machine === current && status.textContent === 'Playing') status.textContent = 'Game finished';
   } finally {
     current.destroy();
@@ -87,22 +93,28 @@ async function run(files: GameFiles, skipMenu: boolean) {
   }
 }
 
-async function startBundled() {
+async function startBundled(demo = false) {
+  const request = ++launch;
   startButton.disabled = true;
+  watchButton.disabled = true;
   status.textContent = 'Loading game…';
   try {
-    await run(await bundledFiles(), true);
+    await run(await bundledFiles(), true, demo);
   } catch (error) {
     if (error instanceof Error && error.message === 'Game aborted') return;
     status.textContent = 'Could not start';
     engineStatus.textContent = error instanceof Error ? error.message : 'Could not start the game.';
     overlay.hidden = false;
   } finally {
-    startButton.disabled = false;
+    if (request === launch) {
+      startButton.disabled = false;
+      watchButton.disabled = false;
+    }
   }
 }
 
 startButton.addEventListener('click', () => { void startBundled(); });
+watchButton.addEventListener('click', () => { void startBundled(true); });
 restartButton.addEventListener('click', () => { void startBundled(); });
 input.addEventListener('change', () => {
   selected = Array.from(input.files ?? []);

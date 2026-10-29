@@ -17,6 +17,8 @@
 /* Keep the complete 8:5 game screen and its controls within a typical browser window. */
 .canvas-wrap{display:flex;justify-content:center}
 .canvas-wrap canvas{width:min(100%,900px,calc((100vh - 365px)*1.6));height:auto}
+.overlay-actions{display:flex;justify-content:center;gap:8px}
+.overlay-actions .button{padding-inline:12px;gap:10px;font-size:12px}
 @media(max-height:550px){
   .canvas-wrap canvas{width:min(100%,900px,calc(max(120px,100dvh - 200px)*1.6))}
   .overlay-card{padding:6px 14px}

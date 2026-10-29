@@ -16,6 +16,15 @@ const root = join(import.meta.dirname, '../public/game');
 const bytes = (name: string) => new Uint8Array(readFileSync(join(root, name)));
 const game = parseGame(bytes('stripe.gam'));
 const ci = newCharInfo();
+for (const [index, scene] of game.scenes.entries()) if (index >= 2) {
+  const map = parseMap(bytes(scene.files[1]));
+  const blocks = parseBlocks(bytes(scene.files[2]), 150);
+  for (const id of map.blocks) {
+    const block = blocks[id];
+    assert.equal(block.obj || block.chHitPt || block.birthTime, 0, `${scene.desc}: no inherited pickups, hazards, or spawners`);
+    assert.ok(block.effect === 0 || block.effect === 19 + index, `${scene.desc}: only its own stripe counter may be used`);
+  }
+}
 for (const name of ['intro.fli', 'drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'win.fli', 'lost.fli']) {
   assert.deepEqual(fliFaults(bytes(name)), [], `${name}: animation must fit the original DOS player`);
 }
