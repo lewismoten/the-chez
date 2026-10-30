@@ -1,6 +1,7 @@
 // Play the bundled DOS game or a locally selected game through the same Game-Maker engine.
 import './style.css';
-import { GameFiles, Machine, runGame } from '@lewismoten/gamemaker-sandbox-engine';
+import { type GameFiles, Machine, runGame } from '@lewismoten/gamemaker-sandbox-engine';
+import { bundledFiles, selectedFiles } from './game-files';
 import { UMBRELLA_SLOT } from './umbrella-route';
 import { PARK_GATE, PARK_LEAF } from './park-route';
 import { CHAPTERS } from './chapters';
@@ -19,6 +20,7 @@ const attachMusic = createMusicControl(document.querySelector<HTMLButtonElement>
 const status = document.querySelector<HTMLElement>('#status')!;
 const engineStatus = document.querySelector<HTMLElement>('#engine-status')!;
 const input = document.querySelector<HTMLInputElement>('#game-files')!;
+const archiveInput = document.querySelector<HTMLInputElement>('#game-archive')!;
 const playSelected = document.querySelector<HTMLButtonElement>('#play-engine')!;
 const filesStatus = document.querySelector<HTMLElement>('#files-status')!;
 const chapterName = document.querySelector<HTMLElement>('#chapter-name')!;
@@ -73,25 +75,10 @@ function chapterControls(index: number) {
           : 'Bark!';
 }
 
-async function bundledFiles(): Promise<GameFiles> {
-  const names = await fetch('/game/manifest.json').then((response) => {
-    if (!response.ok) throw new Error('Could not load Stripe Chase.');
-    return response.json() as Promise<string[]>;
-  });
-  const entries = await Promise.all(
-    names.map(async (name): Promise<[string, Uint8Array]> => {
-      const response = await fetch(`/game/${encodeURIComponent(name)}`);
-      if (!response.ok) throw new Error(`Could not load ${name}.`);
-      return [name, new Uint8Array(await response.arrayBuffer())];
-    }),
-  );
-  return new GameFiles(entries);
-}
-
 async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: number) {
   machine?.destroy();
   const game = files.mainGame();
-  if (!game) throw new Error('Choose a folder containing a .GAM file.');
+  if (!game) throw new Error('Choose a game folder, ZIP, or self-extracting ZIP.');
   const playback = demo ? files.get('tour.rec') : undefined;
   if (demo && !playback) throw new Error('Teddy’s demonstration could not be loaded.');
   const current = new Machine(canvas, files);
@@ -271,23 +258,25 @@ restartButton.addEventListener('click', () => {
   forgetCheckpoint();
   void startBundled();
 });
-input.addEventListener('change', () => {
-  selected = Array.from(input.files ?? []);
-  const hasGame = selected.some((file) => file.name.toLowerCase().endsWith('.gam'));
+function chooseFiles(files: FileList | null) {
+  selected = Array.from(files ?? []);
+  const hasGame = selected.some((file) => /\.(gam|zip|exe|gmpak|gz)$/i.test(file.name));
   playSelected.disabled = !hasGame;
   filesStatus.textContent = hasGame
     ? `${selected.length} files ready to play.`
     : selected.length
-      ? 'Choose a folder containing a .GAM file.'
+      ? 'Choose a game folder, ZIP, or self-extracting ZIP.'
       : 'No other game selected.';
-});
+}
+input.addEventListener('change', () => chooseFiles(input.files));
+archiveInput.addEventListener('change', () => chooseFiles(archiveInput.files));
 playSelected.addEventListener('click', async () => {
   playSelected.disabled = true;
   engineStatus.textContent = 'Loading selected game…';
   try {
-    const entries = await Promise.all(selected.map(async (file): Promise<[string, Uint8Array]> => [file.name, new Uint8Array(await file.arrayBuffer())]));
+    const files = await selectedFiles(selected);
     document.querySelector('#play')!.scrollIntoView({ behavior: 'smooth' });
-    await run(new GameFiles(entries), false);
+    await run(files, false);
     engineStatus.textContent = 'Game ended.';
   } catch (error) {
     engineStatus.textContent = error instanceof Error ? error.message : 'Could not start this game.';
