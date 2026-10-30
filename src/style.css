@@ -78,3 +78,8 @@
 /* Music is an ordinary, keyboard-reachable game control; keep all six targets visible. */
 @media(max-width:650px){.touch-controls{grid-template-columns:repeat(6,minmax(0,1fr))}}
 #music-toggle[aria-pressed="false"]{background:#e2dac8}
+
+/* File pickers keep native keyboard access and visible focus on their large labels. */
+#game-archive{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.file-button:has(+input:focus-visible){outline:3px solid #fff;outline-offset:3px}
+.engine-copy #download-game{background:#b83725}
