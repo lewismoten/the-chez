@@ -1,9 +1,9 @@
 // Original stripe courses using shared cast art and native Game-Maker files.
-import { parseBlocks, serializeBlocks } from '../../GameMaker/web/src/formats/blocks.ts';
-import { reindexMonsters, serializeMap } from '../../GameMaker/web/src/formats/map.ts';
-import { parseMonsters, serializeMonsters } from '../../GameMaker/web/src/formats/monster.ts';
-import { matchColor, parsePalette } from '../../GameMaker/web/src/formats/palette.ts';
-import type { ChezInk } from '../../GameMaker/games/kit/chez.ts';
+import { parseBlocks, serializeBlocks } from '@lewismoten/gamemaker-sandbox-tools/formats/blocks';
+import { reindexMonsters, serializeMap } from '@lewismoten/gamemaker-sandbox-tools/formats/map';
+import { parseMonsters, serializeMonsters } from '@lewismoten/gamemaker-sandbox-tools/formats/monster';
+import { matchColor, parsePalette } from '@lewismoten/gamemaker-sandbox-tools/formats/palette';
+import type { ChezInk } from '../assets/source/chez.ts';
 import { courseObstacles } from './course-obstacles.ts';
 import { courseScenery, placeStripes } from './course-scenery.ts';
 import { skyLaundry } from './sky-laundry.ts';
