@@ -1,0 +1,35 @@
+// Doc Leo's copied costume palette keys, from Lewis Moten's MIT Teddy art.
+import { P } from '../art/pal';
+const c = (n: string, k: number) => P.c(n, k);
+
+export const CK: Record<string, number> = {
+  o: c('ink', 0),
+  O: c('ink', 1),
+  w: c('fur', 2),
+  W: c('fur', 1),
+  r: c('red', 2),
+  R: c('red', 3),
+  q: c('red', 1),
+  y: c('yellow', 2),
+  Y: c('yellow', 3),
+  j: c('yellow', 1),
+  b: c('blue', 2),
+  B: c('blue', 3),
+  n: c('blue', 1),
+  g: c('green', 1),
+  G: c('green', 2),
+  v: c('purple', 2),
+  V: c('purple', 3),
+  p: c('pink', 2),
+  P: c('pink', 3),
+  s: c('skin', 2),
+  S: c('skin', 3),
+  m: c('metal', 1),
+  M: c('metal', 3),
+  h: c('wood', 1),
+  H: c('wood', 2),
+  k: c('stone', 1),
+  K: c('stone', 3),
+  t: c('corgi', 3),
+  e: c('gold', 2),
+};
