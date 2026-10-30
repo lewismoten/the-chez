@@ -1,11 +1,11 @@
 // Inventory unlocks Teddy's umbrella flight in real DOS game data.
 // Format and drawing helpers: Lewis Moten (MIT), credited in NOTICE.md.
-import { emptyBlock, parseBlocks, serializeBlocks } from '../../GameMaker/web/src/formats/blocks.ts';
-import { emptyFrame, newCharacter, serializeCharacter } from '../../GameMaker/web/src/formats/character.ts';
-import { newMap, serializeMap } from '../../GameMaker/web/src/formats/map.ts';
-import { newMonsterSet, serializeMonsters } from '../../GameMaker/web/src/formats/monster.ts';
-import { matchColor, parsePalette } from '../../GameMaker/web/src/formats/palette.ts';
-import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
+import { emptyBlock, parseBlocks, serializeBlocks } from '@lewismoten/gamemaker-sandbox-tools/formats/blocks';
+import { emptyFrame, newCharacter, serializeCharacter } from '@lewismoten/gamemaker-sandbox-tools/formats/character';
+import { newMap, serializeMap } from '@lewismoten/gamemaker-sandbox-tools/formats/map';
+import { newMonsterSet, serializeMonsters } from '@lewismoten/gamemaker-sandbox-tools/formats/monster';
+import { matchColor, parsePalette } from '@lewismoten/gamemaker-sandbox-tools/formats/palette';
+import { Pixels } from '@lewismoten/gamemaker-sandbox-tools/drawing';
 import { stripeCar } from './stripe-car.ts';
 import { placeStripes } from './course-scenery.ts';
 import { UMBRELLA_HOME, UMBRELLA_SLOT, WEATHER_WINDOWS } from '../src/umbrella-route.ts';

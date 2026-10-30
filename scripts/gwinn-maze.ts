@@ -1,11 +1,11 @@
 // Gwinn's impossibly long shortcut: a safe four-way garden maze in native DOS game files.
-import { emptyBlock, serializeBlocks } from '../../GameMaker/web/src/formats/blocks.ts';
-import { emptyFrame, newCharacter, serializeCharacter } from '../../GameMaker/web/src/formats/character.ts';
-import { newMap, serializeMap } from '../../GameMaker/web/src/formats/map.ts';
-import { newMonsterSet, serializeMonsters } from '../../GameMaker/web/src/formats/monster.ts';
-import { matchColor, parsePalette } from '../../GameMaker/web/src/formats/palette.ts';
-import type { ChezInk } from '../../GameMaker/games/kit/chez.ts';
-import { POSES } from '../../GameMaker/games/teddy/src/sprites/teddy.ts';
+import { emptyBlock, serializeBlocks } from '@lewismoten/gamemaker-sandbox-tools/formats/blocks';
+import { emptyFrame, newCharacter, serializeCharacter } from '@lewismoten/gamemaker-sandbox-tools/formats/character';
+import { newMap, serializeMap } from '@lewismoten/gamemaker-sandbox-tools/formats/map';
+import { newMonsterSet, serializeMonsters } from '@lewismoten/gamemaker-sandbox-tools/formats/monster';
+import { matchColor, parsePalette } from '@lewismoten/gamemaker-sandbox-tools/formats/palette';
+import type { ChezInk } from '../assets/source/chez.ts';
+import { POSES } from '../assets/source/teddy/sprites/teddy.ts';
 import { stripeCar } from './stripe-car.ts';
 
 export const MAZE_ROUTE = [

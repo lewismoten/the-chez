@@ -1,15 +1,15 @@
 // A native Game-Maker vehicle character and a leftward victory road, drawn from the measured CitiCar.
-import { emptyBlock, serializeBlocks } from '../../GameMaker/web/src/formats/blocks.ts';
-import { emptyFrame, newCharacter, serializeCharacter, type Frame, type Sequence } from '../../GameMaker/web/src/formats/character.ts';
-import { newMap, serializeMap } from '../../GameMaker/web/src/formats/map.ts';
-import { newMonsterSet, serializeMonsters } from '../../GameMaker/web/src/formats/monster.ts';
-import { matchColor, parsePalette } from '../../GameMaker/web/src/formats/palette.ts';
-import { chezPicture, type ChezInk } from '../../GameMaker/games/kit/chez.ts';
+import { emptyBlock, serializeBlocks } from '@lewismoten/gamemaker-sandbox-tools/formats/blocks';
+import { emptyFrame, newCharacter, serializeCharacter, type Frame, type Sequence } from '@lewismoten/gamemaker-sandbox-tools/formats/character';
+import { newMap, serializeMap } from '@lewismoten/gamemaker-sandbox-tools/formats/map';
+import { newMonsterSet, serializeMonsters } from '@lewismoten/gamemaker-sandbox-tools/formats/monster';
+import { matchColor, parsePalette } from '@lewismoten/gamemaker-sandbox-tools/formats/palette';
+import { chezPicture, type ChezInk } from '../assets/source/chez.ts';
 import { umbrellaPicture } from './umbrella-weather.ts';
 import { UMBRELLA_SLOT } from '../src/umbrella-route.ts';
-import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
-import { centered } from '../../GameMaker/games/kit/pcText.ts';
-import { GWINN } from '../../GameMaker/games/teddy/src/sprites/gwinn.ts';
+import { Pixels } from '@lewismoten/gamemaker-sandbox-tools/drawing';
+import { centered } from '@lewismoten/gamemaker-sandbox-tools/drawing';
+import { GWINN } from '../assets/source/teddy/sprites/gwinn.ts';
 
 export const BUMPS = [64, 44, 24];
 export const CHEERS = [79, 75, 71, 67, 59, 55, 51, 47, 39, 35, 31, 27, 19, 15];
