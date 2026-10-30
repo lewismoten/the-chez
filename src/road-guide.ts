@@ -1,12 +1,19 @@
 // Gentle road guidance from the engine's counters and position; the native game keeps every rule.
 import { CHAPTERS, type ChapterInfo } from './chapters';
 
-export function roadMessage(chapter: ChapterInfo, found: number, nearGate = false, leafReady = false): string {
+export function roadMessage(chapter: ChapterInfo, found: number, nearGate = false, taskReady = false): string {
   const driving = chapter.mode === 'drive';
   const remaining = Math.max(0, chapter.required - found);
   const noun = driving ? 'cheer' : 'stripe';
+  if (chapter.mode === 'float') {
+    if (!taskReady) return 'Take the umbrella near the start with Space. Hold Up to open and rise; release to fold and sink.';
+    if (remaining > 0) return `Umbrella ready! Find ${remaining} more stripe${remaining === 1 ? '' : 's'} through the HIGH / LOW / HIGH rain windows.`;
+    return nearGate
+      ? 'Stripes ready! Let go of Up and sink beside THE\u00a0CHEZ on the right.'
+      : 'Stripes ready! Keep floating through the rain windows, then fold and sink at THE\u00a0CHEZ on the right.';
+  }
   if (chapter.errand === 'leaf') {
-    if (!leafReady) {
+    if (!taskReady) {
       if (nearGate) return 'The wooden gate needs Gwinn’s leaf. Ride the return stream on the LEFT; the leaf is above the hedge.';
       if (remaining === 0) return 'Stripes ready. Ride up, then LEFT for Gwinn’s leaf. Bring it RIGHT to the wooden gate.';
       return `Find ${chapter.required} stripes and Gwinn’s leaf. Ride up, then LEFT along the upper branch. Bring the leaf RIGHT to the wooden gate.`;

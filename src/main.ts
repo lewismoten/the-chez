@@ -1,6 +1,7 @@
 // Play the bundled DOS game or a locally selected game through the same Game-Maker engine.
 import './style.css';
 import { GameFiles, Machine, runGame } from '@lewismoten/gamemaker-sandbox-engine';
+import { UMBRELLA_SLOT } from './umbrella-route';
 import { PARK_GATE, PARK_LEAF } from './park-route';
 import { CHAPTERS } from './chapters';
 import { fillRoadAtlas, roadMessage } from './road-guide';
@@ -39,6 +40,7 @@ const chapterGoals = CHAPTERS.map((chapter) => chapter.required);
 function chapterControls(index: number) {
   const driving = CHAPTERS[index]?.mode === 'drive';
   const maze = CHAPTERS[index]?.mode === 'maze';
+  const floating = CHAPTERS[index]?.mode === 'float';
   for (const [id, direction] of [
     ['left', 'left'],
     ['right', 'right'],
@@ -49,10 +51,26 @@ function chapterControls(index: number) {
   document.querySelector('#bark-key')!.textContent = maze ? '↓ / Space' : 'Space';
   progressLabel.textContent = driving ? 'CHEERS' : 'STRIPES';
   document.querySelector('#move-label')!.textContent = driving ? 'Drive THE\u00a0CHEZ' : `Move ${CHAPTERS[index]?.actor ?? 'Teddy'}`;
-  document.querySelector('#hop-label')!.textContent = maze ? 'Up' : driving ? 'Bounce' : 'Hop';
-  document.querySelector('#bark-label')!.textContent = maze ? 'Down' : driving ? 'Honk' : CHAPTERS[index]?.actor === 'Doc Leo' ? 'Squeak' : 'Bark';
-  document.querySelector('#hop')!.textContent = maze ? 'Up ↑' : driving ? 'Bounce ↑' : 'Hop ↑';
-  document.querySelector('#bark')!.textContent = maze ? 'Down ↓' : driving ? 'Honk!' : CHAPTERS[index]?.actor === 'Doc Leo' ? 'Squeak!' : 'Bark!';
+  document.querySelector('#hop-label')!.textContent = maze ? 'Up' : floating ? 'Float' : driving ? 'Bounce' : 'Hop';
+  document.querySelector('#bark-label')!.textContent = maze
+    ? 'Down'
+    : floating
+      ? 'Take'
+      : driving
+        ? 'Honk'
+        : CHAPTERS[index]?.actor === 'Doc Leo'
+          ? 'Squeak'
+          : 'Bark';
+  document.querySelector('#hop')!.textContent = maze ? 'Up ↑' : floating ? 'Float ↑' : driving ? 'Bounce ↑' : 'Hop ↑';
+  document.querySelector('#bark')!.textContent = maze
+    ? 'Down ↓'
+    : floating
+      ? 'Take'
+      : driving
+        ? 'Honk!'
+        : CHAPTERS[index]?.actor === 'Doc Leo'
+          ? 'Squeak!'
+          : 'Bark!';
 }
 
 async function bundledFiles(): Promise<GameFiles> {
@@ -144,12 +162,13 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
         const gate = world.bg[world.blkmap[world.map[39 * 100 + chapter.carX]]];
         // An opened native gate has already spent its quota; keep the completed goal visible.
         const found = gate.solid === 0 ? required : Math.min(required, Math.max(0, world.ci.meter[21 + chapterIndex] - 1));
-        const nearGate = Math.abs(world.chr.x[0] - chapter.carX) <= 3 && Math.abs(world.chr.y[0] - 39) <= 2;
+        const nearGate =
+          Math.abs(world.chr.x[0] - chapter.carX) <= (chapter.mode === 'float' ? 5 : 3) && (chapter.mode === 'float' || Math.abs(world.chr.y[0] - 39) <= 2);
         const leafReady =
           chapter.errand === 'leaf' &&
           (world.ci.meter[PARK_LEAF.counter] > 1 || world.bg[world.blkmap[world.map[PARK_GATE.y * 100 + PARK_GATE.x]]].solid === 0);
         const nearLeafGate = chapter.errand === 'leaf' && Math.abs(world.chr.x[0] - PARK_GATE.x) <= 3;
-        sayRoad(roadMessage(chapter, found, nearGate || nearLeafGate, leafReady));
+        sayRoad(roadMessage(chapter, found, nearGate || nearLeafGate, chapter.mode === 'float' ? world.ci.inv.includes(UMBRELLA_SLOT) : leafReady));
         const label = `${found} / ${required}`;
         if (stripeProgress.textContent !== label) stripeProgress.textContent = label;
         if (!demo) {
