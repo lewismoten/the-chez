@@ -1,6 +1,6 @@
 // Reveal Teddy's stripe repairs on the measured CitiCar without repainting its roof or wheels.
-import { chezPicture, type ChezInk } from '../../GameMaker/games/kit/chez.ts';
-import type { Pixels } from '../../GameMaker/games/kit/pixels.ts';
+import { chezPicture, type ChezInk } from '../assets/source/chez.ts';
+import type { Pixels } from '@lewismoten/gamemaker-sandbox-tools/drawing';
 
 export function stripeCar(ink: ChezInk, restored: number, facing: 'left' | 'right' = 'right', scale = 1): Pixels {
   if (!Number.isFinite(restored)) throw new Error('Stripe progress must be finite');

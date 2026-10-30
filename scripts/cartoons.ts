@@ -1,13 +1,13 @@
 // Skippable DOS FLI cartoons: lost stripes, seven little road stories, and a team triumph.
-import { Reel } from '../../GameMaker/games/kit/reel.ts';
-import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
-import { centered } from '../../GameMaker/games/kit/pcText.ts';
-import type { ChezInk } from '../../GameMaker/games/kit/chez.ts';
-import { matchColor } from '../../GameMaker/web/src/formats/palette.ts';
-import { POSES } from '../../GameMaker/games/teddy/src/sprites/teddy.ts';
-import { GWINN } from '../../GameMaker/games/teddy/src/sprites/gwinn.ts';
-import { docLeo } from '../../GameMaker/games/teddy/src/sprites/people.ts';
-import { clubArt, centered as clubCentered } from '../../GameMaker/games/teddy/src/art/draw.ts';
+import { Reel } from '@lewismoten/gamemaker-sandbox-tools/drawing';
+import { Pixels } from '@lewismoten/gamemaker-sandbox-tools/drawing';
+import { centered } from '@lewismoten/gamemaker-sandbox-tools/drawing';
+import type { ChezInk } from '../assets/source/chez.ts';
+import { matchColor } from '@lewismoten/gamemaker-sandbox-tools/formats/palette';
+import { POSES } from '../assets/source/teddy/sprites/teddy.ts';
+import { GWINN } from '../assets/source/teddy/sprites/gwinn.ts';
+import { docLeo } from '../assets/source/teddy/sprites/people.ts';
+import { clubArt, centered as clubCentered } from '../assets/source/teddy/art/draw.ts';
 import { stripeCar } from './stripe-car.ts';
 import { ROAD_BEATS, paintRoadGag } from './road-stories.ts';
 

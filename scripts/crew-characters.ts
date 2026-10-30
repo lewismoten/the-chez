@@ -1,8 +1,8 @@
 // Playable crew adaptations of Lewis Moten's MIT cast art and native character data.
-import { emptyBlock, serializeBlocks } from '../../GameMaker/web/src/formats/blocks.ts';
-import { parseCharacter, serializeCharacter } from '../../GameMaker/web/src/formats/character.ts';
-import { docLeo } from '../../GameMaker/games/teddy/src/sprites/people.ts';
-import { GWINN } from '../../GameMaker/games/teddy/src/sprites/gwinn.ts';
+import { emptyBlock, serializeBlocks } from '@lewismoten/gamemaker-sandbox-tools/formats/blocks';
+import { parseCharacter, serializeCharacter } from '@lewismoten/gamemaker-sandbox-tools/formats/character';
+import { docLeo } from '../assets/source/teddy/sprites/people.ts';
+import { GWINN } from '../assets/source/teddy/sprites/gwinn.ts';
 
 export function walkingCharacter(read: (name: string) => Uint8Array) {
   const character = parseCharacter(read('teddy.chr'));
