@@ -64,9 +64,25 @@ export function umbrellaWeather(
   // Full-height curtains force three different flight heights. Their openings are generous.
   blocks[2].solid = 15;
   blocks[2].pixels.fill(blue);
-  for (let y = 0; y < 20; y++)
-    for (let x = 0; x < 20; x++) if (x === 0 || x === 19 || (x === 5 && y % 7 < 3) || (x === 14 && (y + 3) % 7 < 3)) blocks[2].pixels[y * 20 + x] = white;
-  for (const window of WEATHER_WINDOWS) for (let y = 23; y <= 39; y++) if (y < window.top || y > window.bottom) map.blocks[y * 100 + window.x] = 2;
+  for (let y = 0; y < 20; y++) for (const x of [0, 19]) blocks[2].pixels[y * 20 + x] = white;
+  for (const [x, y] of [
+    [6, 6],
+    [13, 15],
+  ]) {
+    for (let dy = -2; dy <= 2; dy++) for (let dx = -1; dx <= 1; dx++) if (dy >= -1 || dx === 0) blocks[2].pixels[(y + dy) * 20 + x + dx] = white;
+  }
+  for (const [id, top] of [
+    [7, false],
+    [8, true],
+  ] as const) {
+    blocks[id] = { ...blocks[2], pixels: blocks[2].pixels.slice(), nextBl: id, touchBl: id };
+    for (let y = 0; y < 3; y++) for (let x = 0; x < 20; x++) blocks[id].pixels[(top ? y : 19 - y) * 20 + x] = white;
+  }
+  for (const window of WEATHER_WINDOWS) {
+    for (let y = 23; y <= 39; y++) if (y < window.top || y > window.bottom) map.blocks[y * 100 + window.x] = 2;
+    map.blocks[(window.top - 1) * 100 + window.x] = 7;
+    map.blocks[(window.bottom + 1) * 100 + window.x] = 8;
+  }
   const arrow = new Pixels(20, 20, sky).line(4, 10, 15, 10, gold).line(15, 10, 10, 5, gold).line(15, 10, 10, 15, gold);
   blocks[3].pixels.set(arrow.px);
   for (const window of WEATHER_WINDOWS) map.blocks[(window.top + 2) * 100 + window.x] = 3;

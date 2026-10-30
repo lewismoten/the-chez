@@ -1,8 +1,8 @@
-// Seven short, connected road jokes: Teddy earns trust, helps a leaf, and brings the crew home.
+// Eight short, connected road jokes: Teddy earns trust, helps a leaf, and brings the crew home.
 import type { Pixels } from '../../GameMaker/games/kit/pixels.ts';
 import { centered } from '../../GameMaker/games/kit/pcText.ts';
 
-type Gag = 'meter' | 'leaf' | 'puddle' | 'note' | 'balloons' | 'shortcut' | 'fitting';
+type Gag = 'meter' | 'leaf' | 'puddle' | 'note' | 'balloons' | 'shortcut' | 'fitting' | 'umbrella';
 export const ROAD_BEATS: readonly { gag: Gag; lines: readonly [string, string] }[] = [
   { gag: 'meter', lines: ["DOC LEO: THAT'S 900% FASTER!", "TEDDY: LET'S TRY FORWARD FIRST."] },
   { gag: 'leaf', lines: ['GWINN: A HIGHLY SUSPICIOUS LEAF!', 'TEDDY: SMALL FRIENDS GET A TURN.'] },
@@ -10,6 +10,7 @@ export const ROAD_BEATS: readonly { gag: Gag; lines: readonly [string, string] }
   { gag: 'note', lines: ['GWINN: THE LEAF SENT A THANK-YOU.', 'TEDDY: KINDNESS HAS GOOD MILEAGE.'] },
   { gag: 'balloons', lines: ['BALLOONS: THANKS FOR ASKING NICELY!', 'TEDDY: ONE WOOF. FOUR NEW FRIENDS.'] },
   { gag: 'shortcut', lines: ['GWINN: JUST ONE MORE LITTLE TURN!', 'TEDDY: YOUR TURN TO LEAD, GWINN.'] },
+  { gag: 'umbrella', lines: ['GWINN: THE RAIN HAS A FLIGHT PLAN!', 'TEDDY: I SHALL PACK AN UMBRELLA.'] },
   { gag: 'fitting', lines: ['DOC LEO: READY FOR NINE HUNDRED?', 'TEDDY: TEAMWORK. THEN A LITTLE ZOOM.'] },
 ];
 
@@ -66,6 +67,15 @@ export function paintRoadGag(p: Pixels, gag: Gag, frame: number, c: StoryColors)
         const x = 125 + row * 4 + (frame % 4);
         p.line(x, 54 + row * 7, 202 - row * 4, 54 + row * 7, c.dark);
         p.line(row % 2 ? x : 202 - row * 4, 54 + row * 7, row % 2 ? x : 202 - row * 4, 61 + row * 7, c.dark);
+      }
+      break;
+    case 'umbrella':
+      for (let y = 0; y < 18; y++)
+        for (let x = -29; x <= 29; x++) if (x * x + (y - 18) ** 2 < 850) p.set(160 + x, 53 + y, Math.floor((x + 30) / 10) % 2 ? c.red : c.white);
+      p.line(160, 71, 160, 103, c.gold).line(160, 103, 153, 109, c.gold);
+      for (let i = 0; i < 8; i++) {
+        const y = 45 + ((frame * 3 + i * 11) % 70);
+        p.line(111 + i * 14, y, 109 + i * 14, y + 4, c.blue);
       }
       break;
     case 'fitting':

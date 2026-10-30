@@ -7,6 +7,7 @@ import type { ChezInk } from '../../GameMaker/games/kit/chez.ts';
 import { courseObstacles } from './course-obstacles.ts';
 import { courseScenery, placeStripes } from './course-scenery.ts';
 import { skyLaundry } from './sky-laundry.ts';
+import { umbrellaWeather } from './umbrella-weather.ts';
 import { victoryLap } from './victory-lap.ts';
 import { leafCrossing } from './leaf-crossing.ts';
 import { stripeCar } from './stripe-car.ts';
@@ -109,13 +110,26 @@ export const CHAPTERS: Chapter[] = [
     pieces: [],
   },
   {
+    source: 'park',
+    stem: 'umbrella',
+    name: 'Umbrella Weather',
+    carX: 84,
+    startX: 8,
+    required: 8,
+    counter: 28,
+    sampleX: 8,
+    quip: 'SPACE: TAKE THE UMBRELLA.',
+    beat: 'UP: OPEN AND RISE. LET GO: FOLD.',
+    pieces: [],
+  },
+  {
     source: 'city',
     stem: 'lap',
     name: "Teddy's Victory Lap",
     carX: 10,
     startX: 84,
     required: 10,
-    counter: 28,
+    counter: 29,
     sampleX: 10,
     quip: 'LEFT: DRIVE. UP: BOUNCE.',
     beat: 'TEDDY FITTED EVERY STRIPE.',
@@ -129,7 +143,8 @@ export function buildChapter(
   read: (name: string) => Uint8Array,
   put: (name: string, data: Uint8Array) => void,
 ): { palette: Uint8Array; ink: ChezInk } {
-  if (chapter.stem === 'lap') return victoryLap(read, put);
+  if (chapter.stem === 'lap') return victoryLap(read, put, chapter.counter);
+  if (chapter.stem === 'umbrella') return umbrellaWeather(read, put, chapter.counter);
   if (chapter.stem === 'maze') return gwinnMaze(read, put, 0);
   const pal = parsePalette(read('backyard.pal'));
   const { map, blocks: bbl } = courseScenery(chapter.stem, pal);

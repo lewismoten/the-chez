@@ -9,7 +9,7 @@ export interface ChapterInfo {
   carX: number;
   errand?: 'leaf';
   actor?: 'Teddy' | 'Doc Leo' | 'Gwinn';
-  mode?: 'drive' | 'maze';
+  mode?: 'drive' | 'maze' | 'float';
 }
 
 export const CHAPTERS: readonly ChapterInfo[] = [
@@ -79,6 +79,16 @@ export const CHAPTERS: readonly ChapterInfo[] = [
     carX: 84,
     mode: 'maze',
     actor: 'Gwinn',
+  },
+  {
+    name: 'Umbrella Weather',
+    required: 8,
+    startX: 8,
+    carX: 84,
+    mode: 'float',
+    mission: 'Take the umbrella with Space. Hold Up to open it and rise; release to fold it and sink through the rain windows.',
+    help: 'The umbrella waits near the start. Float through high, low, and high openings; sink beside the car.',
+    blurb: 'The weather has filed a flight plan. Teddy appoints himself Chief Portable Roof.',
   },
   {
     name: "Teddy's Victory Lap",

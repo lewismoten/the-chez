@@ -1,16 +1,16 @@
 TEDDY'S STRIPE CHASE
-LEFT/RIGHT or A/D: walk.
-UP/W: one hop per press.
-SPACE: bark / chicken squeak.
-Yard/Street: hop the crates.
-Park: UP, then LEFT for leaf.
+LEFT/RIGHT/A/D: walk.
+UP/W: hop; umbrella FLOAT.
+SPACE: bark/squeak or TAKE.
+Park: UP then LEFT for leaf.
 Bring leaf RIGHT to wood gate.
-WAIT for leaf. GO for you.
+Downtown: WAIT, then GO.
 Club: hop stones; foam saves.
-Balloon stripes are bonuses.
+Balloons give bonus stripes.
 Sky: wind lifts; hop the gaps.
 Z clouds nap. Three tries.
-Maze: Gwinn's turn. 4 arrows.
-SPACE goes DOWN in the maze.
+Maze: 4 arrows. SPACE: DOWN.
+Umbrella: SPACE takes it.
+Hold UP: open. Let go: fold.
 Lap: LEFT drives; UP bounces.
-SPACE honks. F5/F6 save/load.
+SPACE: horn. F5/F6: save/load.

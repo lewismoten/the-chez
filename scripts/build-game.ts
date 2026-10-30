@@ -1,4 +1,4 @@
-// Build Teddy's eight-chapter DOS Game-Maker stripe chase from source art and format helpers.
+// Build Teddy's nine-chapter DOS Game-Maker stripe chase from source art and format helpers.
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,7 +14,7 @@ import { clubArt, centered as clubCentered } from '../../GameMaker/games/teddy/s
 import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
 import { centered } from '../../GameMaker/games/kit/pcText.ts';
 import { SPEAKER, mix, osc, sample } from '../../GameMaker/games/kit/sound.ts';
-import { chapterSong, openingSong, retrySong, winningSong } from './music.ts';
+import { chapterSong, umbrellaSong, openingSong, retrySong, winningSong } from './music.ts';
 import { driveCartoon, losingCartoon, openingCartoon, winningCartoon } from './cartoons.ts';
 import { buildChapter, CHAPTERS } from './chapters.ts';
 
@@ -103,7 +103,10 @@ snd.freqs[20] = SPEAKER.arpeggio([440, 660, 880]);
 snd.digital[20] = 'meep';
 snd.freqs[21] = SPEAKER.arpeggio([988, 1480, 740]);
 snd.digital[21] = 'chicken';
+snd.freqs[22] = SPEAKER.arpeggio([330, 660, 990]);
+snd.digital[22] = 'fwoomp';
 put('stripe.snd', serializeSoundSet(snd));
+put('fwoomp.voc', sample(0.28, mix([osc.sine((t) => 170 + t * 3000), 0.42], [osc.square((t) => 350 + t * 2000), 0.06])));
 put('stripe.voc', sample(0.22, mix([osc.sine(784), 0.42], [osc.sine((t) => 1175 + t * 1500), 0.35])));
 put('chicken.voc', sample(0.24, mix([osc.sine((t) => 700 + Math.sin(t * 35) * 450), 0.6], [osc.square((t) => 1400 - t * 1800), 0.12])));
 put('meep.voc', sample(0.3, mix([osc.sine((t) => (t < 0.14 ? 440 : 660)), 0.5], [osc.square((t) => (t < 0.14 ? 880 : 1320)), 0.16])));
@@ -146,21 +149,21 @@ copyFileSync(join(here, 'assets/teddy-tour.rec'), join(output, 'tour.rec'));
 const text = (name: string, lines: string[]) => put(name, new TextEncoder().encode(lines.join('\r\n') + '\r\n'));
 text('help.txt', [
   "TEDDY'S STRIPE CHASE",
-  'LEFT/RIGHT or A/D: walk.',
-  'UP/W: one hop per press.',
-  'SPACE: bark / chicken squeak.',
-  'Yard/Street: hop the crates.',
-  'Park: UP, then LEFT for leaf.',
+  'LEFT/RIGHT/A/D: walk.',
+  'UP/W: hop; umbrella FLOAT.',
+  'SPACE: bark/squeak or TAKE.',
+  'Park: UP then LEFT for leaf.',
   'Bring leaf RIGHT to wood gate.',
-  'WAIT for leaf. GO for you.',
+  'Downtown: WAIT, then GO.',
   'Club: hop stones; foam saves.',
-  'Balloon stripes are bonuses.',
+  'Balloons give bonus stripes.',
   'Sky: wind lifts; hop the gaps.',
   'Z clouds nap. Three tries.',
-  "Maze: Gwinn's turn. 4 arrows.",
-  'SPACE goes DOWN in the maze.',
+  'Maze: 4 arrows. SPACE: DOWN.',
+  'Umbrella: SPACE takes it.',
+  'Hold UP: open. Let go: fold.',
   'Lap: LEFT drives; UP bounces.',
-  'SPACE honks. F5/F6 save/load.',
+  'SPACE: horn. F5/F6: save/load.',
 ]);
 text('story.txt', [
   "TEDDY'S STRIPE CHASE",
@@ -174,7 +177,7 @@ text('story.txt', [
   'Gwinn volunteers to bark',
   'at anything suspicious.',
   '',
-  'Eight roads. Many stripes.',
+  'Nine roads. Many stripes.',
   'One corgi-sized hero.',
   '',
   'A team goes farther than',
@@ -243,22 +246,29 @@ CHAPTERS.forEach((chapter, index) => {
     chapter.stem === 'lap' ? 1 : 0,
     `FIND ${chapter.required} ${chapter.stem === 'lap' ? 'CHEER FLAGS' : 'STRIPE PIECES'}`,
   );
-  put(list, serializeSlideList([{ name: card, pause: ['park', 'sky', 'maze', 'lap'].includes(chapter.stem) ? 4 : 2 }]));
-  put(`${chapter.stem}.cmf`, chapterSong(index + 1));
+  put(list, serializeSlideList([{ name: card, pause: ['park', 'sky', 'maze', 'umbrella', 'lap'].includes(chapter.stem) ? 4 : 2 }]));
+  put(`${chapter.stem}.cmf`, chapter.stem === 'umbrella' ? umbrellaSong() : chapterSong(chapter.stem === 'lap' ? 7 : index + 1));
   const next = CHAPTERS[index + 1];
   const drive = next ? `drive${index + 2}.fli` : '';
   if (next) put(drive, driveCartoon(palette, chapterInk, next.name.toUpperCase(), index + 2));
   const scene = emptyScene(ADVTYPE);
   scene.desc = chapter.name;
   scene.pos = { x: 190 + index * 50, y: 110 };
+  const actorFiles: Record<string, [string, string]> = {
+    lap: ['lap.chr', 'lap.cbl'],
+    maze: ['maze.chr', 'gwinn.cbl'],
+    city: ['docleo.chr', 'docleo.cbl'],
+    umbrella: ['umbrella.chr', 'umbrella.cbl'],
+  };
+  const [actor, pictures] = actorFiles[chapter.stem] ?? ['teddy.chr', 'teddy.cbl'];
   scene.files = [
     `${chapter.stem}.pal`,
     `${chapter.stem}.map`,
     `${chapter.stem}.bbl`,
     `${chapter.stem}.mon`,
     `${chapter.stem}.mbl`,
-    chapter.stem === 'lap' ? 'lap.chr' : chapter.stem === 'maze' ? 'maze.chr' : chapter.stem === 'city' ? 'docleo.chr' : 'teddy.chr',
-    chapter.stem === 'lap' ? 'lap.cbl' : chapter.stem === 'maze' ? 'gwinn.cbl' : chapter.stem === 'city' ? 'docleo.cbl' : 'teddy.cbl',
+    actor,
+    pictures,
     'stripe.snd',
     `${chapter.stem}.cmf`,
     list,

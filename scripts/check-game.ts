@@ -17,6 +17,7 @@ import { newCharInfo } from '../../GameMaker/web/src/engine/world.ts';
 import { Sim } from '../../GameMaker/games/kit/sceneSim.ts';
 import { LEAF_CROSSING, LEAF_WAIT, LEAF_GO } from './leaf-crossing.ts';
 import { NAP_COLUMNS } from './sky-laundry.ts';
+import { UMBRELLA_HOME, UMBRELLA_SLOT } from '../src/umbrella-route.ts';
 import { PARK_GATE, PARK_LEAF } from '../src/park-route.ts';
 import { CHAPTERS } from '../src/chapters.ts';
 import { GameSim, readDisk } from '../../GameMaker/games/kit/gameSim.ts';
@@ -26,6 +27,7 @@ const root = join(import.meta.dirname, '../public/game');
 const bytes = (name: string) => new Uint8Array(readFileSync(join(root, name)));
 const game = parseGame(bytes('stripe.gam'));
 const DRIVE_SCENE = CHAPTERS.findIndex((chapter) => chapter.mode === 'drive') + 2;
+const FLOAT_SCENE = CHAPTERS.findIndex((chapter) => chapter.mode === 'float') + 2;
 const MAZE_SCENE = CHAPTERS.findIndex((chapter) => chapter.mode === 'maze') + 2;
 assert.equal(game.scenes.length, CHAPTERS.length + 2, 'the page must describe every playable chapter');
 const ci = newCharInfo();
@@ -52,7 +54,8 @@ for (const [index, scene] of game.scenes.entries())
     for (const [at, id] of map.blocks.entries()) {
       const block = blocks[id];
       const kitePost = scene.files[1] === 'street.map' && Math.floor(at / 100) === 38 && KITE_POSTS.includes(at % 100);
-      assert.equal(block.obj, 0, `${scene.desc}: no inherited inventory objects`);
+      const umbrella = scene.files[1] === 'umbrella.map' && at === UMBRELLA_HOME.y * 100 + UMBRELLA_HOME.x;
+      assert.equal(block.obj, umbrella ? 1 : 0, `${scene.desc}: only the marked umbrella may be an inventory object`);
       assert.equal(block.birthTime, kitePost ? KITE_INTERVAL : 0, `${scene.desc}: only the marked wind posts may spawn actors`);
       if (kitePost) assert.equal(block.birthMon, KITE);
       const nap = scene.files[1] === 'sky.map' && Math.floor(at / 100) === 39 && NAP_COLUMNS.includes(at % 100);
@@ -63,7 +66,11 @@ for (const [index, scene] of game.scenes.entries())
       );
     }
   }
-for (const name of ['intro.fli', 'drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'drive5.fli', 'drive6.fli', 'drive7.fli', 'win.fli', 'lost.fli']) {
+const roadFilms = game.scenes
+  .slice(2)
+  .map((scene) => scene.files[10])
+  .filter(Boolean);
+for (const name of ['intro.fli', ...roadFilms, 'win.fli', 'lost.fli']) {
   assert.deepEqual(fliFaults(bytes(name)), [], `${name}: animation must fit the original DOS player`);
 }
 assert.equal(ROAD_BEATS.length, CHAPTERS.length - 1, 'every road transition must have a connected story beat');
@@ -71,7 +78,7 @@ for (const beat of ROAD_BEATS)
   for (const line of beat.lines) {
     assert.ok(line.length <= 38, `Road caption must leave room at the screen edges: ${line}`);
   }
-for (const name of ['drive.fli', 'drive2.fli', 'drive3.fli', 'drive4.fli', 'drive5.fli', 'drive6.fli', 'drive7.fli']) {
+for (const name of roadFilms) {
   const movie = parseFli(bytes(name));
   const seconds = (movie.frameCount * movie.speed) / 70;
   assert.ok(seconds >= 4 && seconds <= 8, `${name}: give the story time to read while keeping road trips short`);
@@ -110,6 +117,56 @@ function stage(chapter: number, startX: number, progress = newCharInfo(), startY
 async function play(chapter: number, startX: number, hop: boolean, progress = newCharInfo()) {
   const scene = game.scenes[chapter];
   const sim = stage(chapter, startX, progress);
+  if (chapter === FLOAT_SCENE && hop) {
+    let phase = 0,
+      window = 0,
+      tookAt = 0;
+    const stops = [
+      { x: 26, y: 640, pass: 30 },
+      { x: 66, y: 550, pass: 70 },
+    ];
+    sim.press(77);
+    await sim.run(1400, (tick) => {
+      if (phase === 0 && sim.pos.bx >= UMBRELLA_HOME.x) {
+        sim.release(77);
+        sim.press(57);
+        tookAt = tick;
+        phase = 1;
+      }
+      if (phase === 1 && tick > tookAt + 4) {
+        sim.release(57);
+        sim.press(77);
+        phase = 2;
+      }
+      const stop = stops[window];
+      if (stop) {
+        if (phase === 2 && sim.pos.bx >= stop.x) {
+          sim.release(77);
+          sim.press(72);
+          phase = 3;
+        }
+        if (phase === 3 && sim.pos.y <= stop.y) {
+          sim.release(72);
+          sim.press(77);
+          phase = 4;
+        }
+        if (phase === 4 && sim.pos.bx >= stop.pass) {
+          window++;
+          phase = 2;
+        }
+      }
+      if (window === 2 && phase === 2 && sim.pos.bx >= 74) {
+        sim.release(77);
+        phase = 5;
+      }
+      if (phase === 5 && sim.pos.y === 780) {
+        sim.press(77);
+        phase = 6;
+      }
+    });
+    sim.release(77);
+    return sim;
+  }
   if (chapter === DRIVE_SCENE) {
     let next = 0,
       bounced = -1;
@@ -364,6 +421,41 @@ for (const [index, info] of CHAPTERS.entries()) {
   assert.equal(sim.link, 0, `${game.scenes[chapter].desc}: the route must leave through the counter gate itself`);
   console.log(`${game.scenes[chapter].desc}: passed in ${sim.ticks} ticks`);
 }
+
+const floating = stage(FLOAT_SCENE, UMBRELLA_HOME.x);
+floating.press(72);
+await floating.run(25);
+floating.release(72);
+assert.equal(floating.pos.y, 780, 'floating must be locked before the umbrella is carried');
+assert.equal(floating.w.ci.seqon[9], false);
+floating.press(57);
+await floating.run(5);
+floating.release(57);
+assert.ok(floating.w.ci.inv.includes(UMBRELLA_SLOT), 'Space must take the native umbrella object');
+assert.equal(floating.w.map[UMBRELLA_HOME.y * 100 + UMBRELLA_HOME.x], 0, 'taking the umbrella must remove it from its hook');
+assert.ok(floating.w.ci.seqon[9] && floating.w.ci.seqon[17], 'inventory must unlock both Up and W');
+assert.ok(floating.sounds.includes(22), 'taking the umbrella must play its opening sound');
+floating.press(72);
+await floating.run(20);
+floating.release(72);
+const high = floating.pos.y;
+assert.ok(high < 700, 'the umbrella must lift Teddy');
+await floating.run(40);
+assert.ok(floating.pos.y > high, 'releasing Up must let Teddy sink');
+const missedUmbrella = stage(FLOAT_SCENE, 8);
+missedUmbrella.press(77);
+await missedUmbrella.run(200);
+assert.equal(missedUmbrella.pos.bx, 27, 'walking past the umbrella must stop at the first high curtain');
+assert.ok(!missedUmbrella.w.ci.inv.includes(UMBRELLA_SLOT), 'walking over the umbrella must not count as taking it');
+missedUmbrella.release(77);
+missedUmbrella.press(75);
+await missedUmbrella.run(150, () => missedUmbrella.pos.bx <= UMBRELLA_HOME.x);
+missedUmbrella.release(75);
+missedUmbrella.press(57);
+await missedUmbrella.run(5);
+assert.ok(missedUmbrella.w.ci.inv.includes(UMBRELLA_SLOT), 'a player who missed the umbrella must be able to return for it');
+assert.equal(floating.w.chr.sequences[4].key, 0, 'the umbrella cannot be dropped into an unreachable place');
+console.log('Umbrella inventory, tied flight, release-to-sink, and missed-object recovery passed');
 
 const leafDoor = stage(4, PARK_GATE.x - 2);
 leafDoor.w.ci.meter[23] = 9;

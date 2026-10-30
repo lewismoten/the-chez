@@ -1,6 +1,6 @@
 # THE CHEZ: Stripe Chase
 
-A Vite app with an original, eight-chapter RSD Game-Maker game. Teddy gathers fresh racing stripe pieces for Doc Leo's tomato-red CitiCar, then hands the controls to Doc Leo and Gwinn for their own errands. The game runs through `@lewismoten/gamemaker-sandbox-engine` in the browser.
+A Vite app with an original, nine-chapter RSD Game-Maker game. Teddy gathers fresh racing stripe pieces for Doc Leo's tomato-red CitiCar, then hands the controls to Doc Leo and Gwinn for their own errands. The game runs through `@lewismoten/gamemaker-sandbox-engine` in the browser.
 
 ## Run locally
 
@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-Open the Vite URL and choose **Play as Teddy**. Move Teddy with the Left and Right arrows (or A and D); hop with Up or W; bark with Space. Gather the required stripe pieces across the yard, Maple Street, Puddlewick Park, Downtown, the Clown Club, Sky Laundry, and Gwinn’s Shortcut. These walking chapters end at THE CHEZ on the right; Teddy's Victory Lap then heads left toward home. F1 shows instructions. Touch buttons are below the game.
+Open the Vite URL and choose **Play as Teddy**. Move Teddy with the Left and Right arrows (or A and D); hop with Up or W; bark with Space. Gather the required stripe pieces across the yard, Maple Street, Puddlewick Park, Downtown, the Clown Club, Sky Laundry, Gwinn’s Shortcut, and Umbrella Weather. These walking chapters end at THE CHEZ on the right; Teddy's Victory Lap then heads left toward home. F1 shows instructions. Touch buttons are below the game.
 
 **Watch Teddy** plays a complete demonstration using a DOS `.REC` input recording through the same engine. Choose **Restart** to start your own game at any time. The recording stores keys and timing, not a video or a second implementation of the game.
 
@@ -27,7 +27,7 @@ The **More Game-Maker games** section accepts another DOS game folder with a `.G
 
 ## Teddy’s road atlas and guidance
 
-The game’s guidance strip gives each road a short mission. Near a locked exit, it names the pieces still needed and offers a relevant hint. Reaching the quota switches the hint to the destination. The strip reads the engine’s counters, position, and opened gate; it does not change the rules or open a gate. The optional road atlas previews the eight errands with short character blurbs. `src/road-guide.ts` renders the atlas and formats the guidance from `src/chapters.ts`.
+The game’s guidance strip gives each road a short mission. Near a locked exit, it names the pieces still needed and offers a relevant hint. Reaching the quota switches the hint to the destination. The strip reads the engine’s counters, position, and opened gate; it does not change the rules or open a gate. The optional road atlas previews the nine errands with short character blurbs. `src/road-guide.ts` renders the atlas and formats the guidance from `src/chapters.ts`.
 
 ## Teddy’s glovebox notebook
 
@@ -57,7 +57,7 @@ The builder lives in `scripts/build-game.ts`. `scripts/chapters.ts` constructs t
 
 `scripts/stripe-car.ts` draws the measured CitiCar with only a few racing stripe fragments, then restores the full pattern during the final fitting cartoon. It compares two versions of the project’s own car drawing, changing only the stripe pixels while keeping the roof, door window, wheels, and lights. The car stays worn during the search, including the title, chapter cards, and landing-page art. The final fitting cartoon restores all the stripes, then puts Teddy in the passenger window before the victory lap.
 
-`scripts/road-stories.ts` supplies seven connected, captioned jokes and their animated props: Doc Leo’s wildly optimistic speed claim, Gwinn’s suspicious leaf, Doc Leo’s turn at the controls, the leaf’s thank-you, friendly balloon dogs, Gwinn’s extraordinarily long shortcut, and fitting the last stripe. `scripts/cartoons.ts` stages the crew, restores the stripes, and drives into the next road. Each short FLI can be skipped with the engine’s normal keys.
+`scripts/road-stories.ts` supplies eight connected, captioned jokes and their animated props: Doc Leo’s wildly optimistic speed claim, Gwinn’s suspicious leaf, Doc Leo’s turn at the controls, the leaf’s thank-you, friendly balloon dogs, Gwinn’s extraordinarily long shortcut, an umbrella with a flight plan, and fitting the last stripe. `scripts/cartoons.ts` stages the crew, restores the stripes, and drives into the next road. Each short FLI can be skipped with the engine’s normal keys.
 
 ## Inside Sky Laundry
 
@@ -78,6 +78,8 @@ The builder lives in `scripts/build-game.ts`. `scripts/chapters.ts` constructs t
 
 `scripts/gwinn-maze.ts` builds a garden maze and a native four-way Gwinn character. All scenery has zero gravity; character frames move in fixed steps, so Up and Down walk instead of hopping. Three-cell corridors give room to turn, pawprints indicate the exit route, and side nooks hold spare stripes. The maze has no hazards or disappearing paths. `MAZE_ROUTE` describes a safe route for verification.
 
+Umbrella Weather asks Teddy to take the marked umbrella with Space, hold Up/W to open it and float upward, then release it to fold it away and sink. Left/Right steer; the rain curtains have high, low, and high openings. The safe floor allows another approach after a missed opening.
+
 ## Inside the victory ride
 
 The vehicle is a new `.CHR` and `.CBL`, played by the same engine. Its steering frames add momentum instead of moving a fixed distance; the idle sequence lets that momentum decay. A bounce adds an upward impulse while keeping the horizontal momentum, and the horn sequence leaves the car rolling. The car sprite comes from the measured `chezPicture` drawing, reduced to the engine's 20-pixel actor width, with Teddy in the passenger window. The larger cartoons show the full car drawing.
@@ -92,7 +94,7 @@ Neutral spacer sequences also make steer-and-bounce inputs safe when both keys a
 
 Every exit has one scene link, on its locked tile. The finish ribbon is checked from both sides so bouncing over it cannot bypass the cheer quota.
 
-`check:browser` needs locally installed Google Chrome. It starts its own temporary Vite server on port 4175, checks layout and accessibility in portrait and landscape, plays all eight chapters through the installed engine package, and checks the win ending. It stops its server afterwards. Add `-- --record` to save the successful run's DOS input recording to `assets/teddy-tour.rec`, `-- --demo` to verify the shipped recording, `-- --lap` to check the vehicle chapter directly, or `-- --retry` to deliberately lose three tries and verify the saved chapter after a page reload, three fresh tries, recovery, and clearing the checkpoint on a win. Rebuild the DOS game after recording a new demonstration.
+`check:browser` needs locally installed Google Chrome. It starts its own temporary Vite server on port 4175, checks layout and accessibility in portrait and landscape, plays all nine chapters through the installed engine package, and checks the win ending. It stops its server afterwards. Add `-- --record` to save the successful run's DOS input recording to `assets/teddy-tour.rec`, `-- --demo` to verify the shipped recording, `-- --lap` to check the vehicle chapter directly, or `-- --retry` to deliberately lose three tries and verify the saved chapter after a page reload, three fresh tries, recovery, and clearing the checkpoint on a win. Rebuild the DOS game after recording a new demonstration.
 
 `check:guidance` uses its own temporary server on port 4177. It checks actor-specific hints, then uses public keyboard controls to pass Maple Street’s three crate barriers. It also checks that spending the native gate quota keeps the completed goal visible through the road transition.
 
