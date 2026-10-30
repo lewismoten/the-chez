@@ -1,9 +1,9 @@
 // Original whole-object scenery for the stripe chase, tiled into native DOS blocks.
 // Uses Lewis Moten's MIT format and pixel helpers; see NOTICE.md.
-import { emptyBlock, type Block } from '../../GameMaker/web/src/formats/blocks.ts';
-import { newMap, type GameMap } from '../../GameMaker/web/src/formats/map.ts';
-import { matchColor } from '../../GameMaker/web/src/formats/palette.ts';
-import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
+import { emptyBlock, type Block } from '@lewismoten/gamemaker-sandbox-tools/formats/blocks';
+import { newMap, type GameMap } from '@lewismoten/gamemaker-sandbox-tools/formats/map';
+import { matchColor } from '@lewismoten/gamemaker-sandbox-tools/formats/palette';
+import { Pixels } from '@lewismoten/gamemaker-sandbox-tools/drawing';
 
 export function courseScenery(theme: string, palette: Uint8Array): { map: GameMap; blocks: Block[] } {
   const c = (r: number, g: number, b: number) => matchColor(palette, r, g, b);

@@ -1,9 +1,9 @@
 // Distinct, harmless physical challenges made from native collision and gravity blocks.
-import type { Block } from '../../GameMaker/web/src/formats/blocks.ts';
-import type { GameMap } from '../../GameMaker/web/src/formats/map.ts';
-import { matchColor } from '../../GameMaker/web/src/formats/palette.ts';
+import type { Block } from '@lewismoten/gamemaker-sandbox-tools/formats/blocks';
+import type { GameMap } from '@lewismoten/gamemaker-sandbox-tools/formats/map';
+import { matchColor } from '@lewismoten/gamemaker-sandbox-tools/formats/palette';
 import { parkErrand } from './park-errand.ts';
-import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
+import { Pixels } from '@lewismoten/gamemaker-sandbox-tools/drawing';
 
 export function courseObstacles(theme: string, map: GameMap, blocks: Block[], palette: Uint8Array, reserved: number[]): void {
   const used = new Set([...map.blocks, ...reserved]);

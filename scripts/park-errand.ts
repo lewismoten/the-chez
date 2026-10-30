@@ -1,8 +1,8 @@
 // A native two-objective park loop: find the leaf above the left branch, then open the right gate.
-import type { Block } from '../../GameMaker/web/src/formats/blocks.ts';
-import type { GameMap } from '../../GameMaker/web/src/formats/map.ts';
-import { matchColor } from '../../GameMaker/web/src/formats/palette.ts';
-import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
+import type { Block } from '@lewismoten/gamemaker-sandbox-tools/formats/blocks';
+import type { GameMap } from '@lewismoten/gamemaker-sandbox-tools/formats/map';
+import { matchColor } from '@lewismoten/gamemaker-sandbox-tools/formats/palette';
+import { Pixels } from '@lewismoten/gamemaker-sandbox-tools/drawing';
 import { PARK_GATE, PARK_LEAF } from '../src/park-route.ts';
 
 type Make = (picture: Pixels, solid?: number, gravity?: number) => number;
