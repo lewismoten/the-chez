@@ -2,7 +2,7 @@
 
 This project verifies the installed `@lewismoten/gamemaker-sandbox-engine` npm package from a separate Vite application. See the [README](../README.md) for setup.
 
-For fixture development and browser checks, authenticate to GitHub Packages, then install development dependencies with `npm ci`. This requires the tools package’s `3.1.0` release; see the candidate instructions below before publication.
+For fixture development and browser checks, install development dependencies with `npm ci`. The engine and tools are installed from npmjs.org.
 
 ## Verify the package integration
 
@@ -87,29 +87,22 @@ See [Game data and engine techniques](engine-techniques.md) for implementation d
 
 ## Development toolkit
 
-The toolkit is a GitHub Packages devDependency (`^3.1.0`). The first release is published by the source repository’s `tools-v3.1.0` tag workflow, using `GITHUB_TOKEN` like the engine release. The project’s `.npmrc` routes the `@lewismoten` scope to `https://npm.pkg.github.com/`. Its source is maintained in Game-Maker: Sandbox Edition; rebuilding or publishing that package is separate from building this consumer. Package tarballs are not committed here.
-
-Authenticate with a GitHub personal access token (classic) with `read:packages` and access to the package:
+The toolkit is a development dependency (`^3.1.0`) installed from npmjs.org. The project's `.npmrc` routes the `@lewismoten` scope to `https://registry.npmjs.org/`, and the lockfile records the published download URL and integrity checksum. No GitHub Packages login is needed for this setup.
 
 ```sh
-npm login --scope=@lewismoten --auth-type=legacy --registry=https://npm.pkg.github.com/
 npm ci
 ```
 
-Credentials belong in your user configuration, outside this repository. See [GitHub’s npm registry documentation](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry). The existing engine lock entry keeps its original download URL; new scoped resolutions use GitHub Packages.
-
-The tools lock entry has no hardcoded tarball URL before publication. npm resolves it through the configured scope registry. After the tagged release, run `npm install --package-lock-only --ignore-scripts` to record GitHub’s actual download URL.
+The toolkit's source is maintained in Game-Maker: Sandbox Edition; rebuilding or publishing that package is separate from building this consumer. Package tarballs are not committed here.
 
 `npm run check:isolation` copies this project into a temporary consumer with no sibling repository, runs a fresh `npm ci`, rebuilds the game and art, runs native checks and typechecking, and compares every public file byte. It removes the installed tools package before building the browser application and rejects any tools-package module in the runtime graph. The scratch installation is removed afterwards.
 
 See [copied-content provenance](../assets/source/README.md) for the game-specific source assets and their license.
 
-To verify an unpublished toolkit candidate, supply its tarball from outside this repository:
+To verify a future toolkit candidate, supply its tarball from outside this repository:
 
 ```sh
 npm run check:isolation -- --tools-package /path/to/gamemaker-sandbox-tools.tgz
 ```
 
 This overrides the dependency only in the temporary consumer; the project manifest and lockfile continue to use the registry version.
-
-Before that release is available, `npm ci --omit=dev` installs the browser application without the toolkit. To work on the fixture before publication, install a separately supplied candidate with `npm install --no-save --package-lock=false /path/to/gamemaker-sandbox-tools.tgz`; do not commit tarballs or change the registry dependency to a file path.
