@@ -1,8 +1,8 @@
 # the-chez
 
-A Vite + TypeScript application for testing and verifying that `@lewismoten/gamemaker-sandbox-engine` can be installed from npm and run from a separate project.
+A standalone Vite + TypeScript application that tests whether `@lewismoten/gamemaker-sandbox-engine` can be installed from npm and run in a separate project.
 
-The bundled Stripe Chase game provides sample data for exercising the engine.
+The bundled Stripe Chase game is sample content for verifying the engine integration.
 
 ## Setup
 
@@ -13,11 +13,9 @@ npm install
 npm run dev
 ```
 
-Open the URL printed by Vite. Choose **Play as Teddy** to play the sample game or **Watch Teddy** to run its demonstration.
+Open the URL printed by Vite. The game data is included; no GameMaker source checkout is required.
 
-The game data is committed to this repository. Running the application does not require a GameMaker source checkout.
-
-## Production build
+To build and preview the production application:
 
 ```sh
 npm run build
@@ -27,6 +25,6 @@ npm run preview
 ## Documentation
 
 - [Development and verification](docs/development.md)
-- [Playing the bundled game](docs/playing.md)
+- [Playing the sample game](docs/playing.md)
 - [Game data and engine techniques](docs/engine-techniques.md)
 - [Credits and notices](NOTICE.md)
