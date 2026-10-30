@@ -15,28 +15,31 @@ npm run check:release
 npm run check:guidance
 npm run check:music
 npm run check:isolation
+npm run check:archives
 ```
 
 `check` typechecks the application. `build` typechecks and builds it with Vite. The browser checks require locally installed Google Chrome; Playwright uses its `chrome` channel.
 
 - `check:release` builds into a temporary directory and previews it on port 4176. Public page controls play the complete shipped demonstration, check the mobile finale, and start a new game. It checks for missing assets and browser errors, removes the scratch build, and stops its server.
 - `check:guidance` uses port 4177. It checks actor-specific hints and uses public keyboard controls to pass Maple Street’s three crate barriers. Spending the native gate quota must keep the completed goal visible through the transition.
+- `check:archives` uses a scratch production server on port 4180. It checks the ZIP download, single-file bundled loading with loose game requests blocked, ZIP/SFX imports, keyboard access, and accessibility at 1440/390 in light/dark settings.
 - `check:music` uses port 4178. It checks muted intros, chapter changes, current-track resume, persistent settings, and audible barks while music is off.
 
 The checks use their own servers and leave the maintainer’s port 5173 server alone.
 
 ## Rebuild or inspect the fixture
 
-All commands work from this repository alone. Generic development APIs come from the `@lewismoten/gamemaker-sandbox-tools` devDependency; game-specific content is copied into `assets/source/`. Browser playback uses only `@lewismoten/gamemaker-sandbox-engine` and the committed local game data.
+All commands work from this repository alone. Generic development APIs come from the `@lewismoten/gamemaker-sandbox-tools` devDependency; game-specific content is copied into `assets/source/`. Browser playback uses `@lewismoten/gamemaker-sandbox-engine` and the runtime `@lewismoten/gamemaker-sandbox-archives` package to unpack the committed `public/stripe.zip`.
 
 ```sh
 npm run build:art
+npm run build:zip
 npm run build:game
 npm run check:game
 npm run check:browser
 ```
 
-`build:art` renders the landing page’s worn CitiCar. `build:game` writes the native DOS files to `public/game/`. These generated files are committed with their source. The toolkit is needed only when running development scripts.
+`build:zip` creates the downloadable `public/stripe.zip` from the generated game files, instructions, license, and notices, using a fixed DOS timestamp and sorted entries. `build:game` also runs this step. `build:art` renders the landing page’s worn CitiCar. `build:game` writes the native DOS files to `public/game/`. These generated files are committed with their source. The toolkit is needed only when running development scripts.
 
 `check:game` validates the fixture with the headless reference simulation from the tools package. It checks gates, inventory-tied flight, recovery paths, timed crossings, nap clouds, vehicle handling, text and animation limits, and the complete shipped recording. The recording must win without losing a try. This is separate from verifying the published npm package in the browser.
 
@@ -58,28 +61,30 @@ npm run check:browser -- --retry
 
 ## Source map
 
-| Path                                              | Purpose                                                                   |
-| ------------------------------------------------- | ------------------------------------------------------------------------- |
-| `src/main.ts`                                     | Load game files and run the npm engine; connect page controls and status. |
-| `src/chapters.ts`                                 | Chapter names, goals, entrances, and guidance.                            |
-| `src/checkpoint.ts`                               | Remember a validated chapter entrance.                                    |
-| `src/road-guide.ts`                               | Road atlas and contextual hints.                                          |
-| `src/music-control.ts`                            | Persistent music preference independent of effects.                       |
-| `scripts/build-game.ts`                           | Build the complete native game and its scene graph.                       |
-| `scripts/chapters.ts`                             | Assemble the chapter data.                                                |
-| `scripts/course-scenery.ts`                       | Draw complete original scenery and preserve backgrounds beneath pickups.  |
-| `scripts/course-obstacles.ts`                     | Crates, hedge lift, and recoverable foam trays.                           |
-| `scripts/crew-characters.ts`                      | Playable cast and walking jumps.                                          |
-| `scripts/park-errand.ts`                          | Leaf rescue, wooden gate, and return lift.                                |
-| `scripts/wind-kites.ts`                           | Moving stripe pickups and replacement posts.                              |
-| `scripts/leaf-crossing.ts`                        | Native timed WAIT / GO crossing.                                          |
-| `scripts/sky-laundry.ts`                          | Wind streams, cloud ledges, and nap clouds.                               |
-| `scripts/gwinn-maze.ts`                           | Four-way garden maze.                                                     |
-| `scripts/umbrella-weather.ts`                     | Inventory-powered floating and rain curtains.                             |
-| `scripts/victory-lap.ts`                          | Vehicle character and homeward road.                                      |
-| `scripts/stripe-car.ts`                           | Worn stripes and final repair.                                            |
-| `scripts/cartoons.ts` / `scripts/road-stories.ts` | Intro, road trips, victory, and retry animations.                         |
-| `scripts/music.ts`                                | Original chapter and ending themes.                                       |
+| Path                                              | Purpose                                                                       |
+| ------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `src/game-files.ts`                               | Fetch the game ZIP and unpack bundled or selected archives into engine files. |
+| `scripts/build-zip.ts`                            | Create the game distribution ZIP with the archives package.                   |
+| `src/main.ts`                                     | Load game files and run the npm engine; connect page controls and status.     |
+| `src/chapters.ts`                                 | Chapter names, goals, entrances, and guidance.                                |
+| `src/checkpoint.ts`                               | Remember a validated chapter entrance.                                        |
+| `src/road-guide.ts`                               | Road atlas and contextual hints.                                              |
+| `src/music-control.ts`                            | Persistent music preference independent of effects.                           |
+| `scripts/build-game.ts`                           | Build the complete native game and its scene graph.                           |
+| `scripts/chapters.ts`                             | Assemble the chapter data.                                                    |
+| `scripts/course-scenery.ts`                       | Draw complete original scenery and preserve backgrounds beneath pickups.      |
+| `scripts/course-obstacles.ts`                     | Crates, hedge lift, and recoverable foam trays.                               |
+| `scripts/crew-characters.ts`                      | Playable cast and walking jumps.                                              |
+| `scripts/park-errand.ts`                          | Leaf rescue, wooden gate, and return lift.                                    |
+| `scripts/wind-kites.ts`                           | Moving stripe pickups and replacement posts.                                  |
+| `scripts/leaf-crossing.ts`                        | Native timed WAIT / GO crossing.                                              |
+| `scripts/sky-laundry.ts`                          | Wind streams, cloud ledges, and nap clouds.                                   |
+| `scripts/gwinn-maze.ts`                           | Four-way garden maze.                                                         |
+| `scripts/umbrella-weather.ts`                     | Inventory-powered floating and rain curtains.                                 |
+| `scripts/victory-lap.ts`                          | Vehicle character and homeward road.                                          |
+| `scripts/stripe-car.ts`                           | Worn stripes and final repair.                                                |
+| `scripts/cartoons.ts` / `scripts/road-stories.ts` | Intro, road trips, victory, and retry animations.                             |
+| `scripts/music.ts`                                | Original chapter and ending themes.                                           |
 
 `assets/gwinn-door.voc`, `assets/teddy-bark.voc`, and `assets/teddy-yawn.voc` are short edits of Lewis Moten’s recordings. Gwinn cheers when Teddy opens a car door, Teddy barks at balloon dogs, and his yawn plays during a nap.
 
@@ -106,3 +111,14 @@ npm run check:isolation -- --tools-package /path/to/gamemaker-sandbox-tools.tgz
 ```
 
 This overrides the dependency only in the temporary consumer; the project manifest and lockfile continue to use the registry version.
+
+## Archive package release
+
+`@lewismoten/gamemaker-sandbox-archives` is a runtime dependency (`^3.1.0`); it contains no development tools. Its source package and `archives-v3.1.0` release workflow live in Game-Maker: Sandbox Edition. Publish that package to the consumer's configured registry before a normal fresh installation. Until that first release, use the separately supplied npm candidate outside the repository:
+
+```sh
+npm install --no-save --package-lock=false /path/to/gamemaker-sandbox-archives.tgz
+npm run check:isolation -- --archives-package /path/to/gamemaker-sandbox-archives.tgz
+```
+
+The candidate override changes only the scratch consumer. No npm tarballs are committed. `public/stripe.zip` is the intended game distribution asset and is committed with the game builder. Its files can also be unpacked by ordinary ZIP utilities.

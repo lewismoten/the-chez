@@ -2,11 +2,11 @@
 
 A standalone Vite + TypeScript application that tests whether `@lewismoten/gamemaker-sandbox-engine` can be installed from npm and run in a separate project.
 
-The bundled Stripe Chase game is sample content for verifying the engine integration.
+The bundled Stripe Chase game is sample content for verifying the engine integration. It downloads as one ZIP and is unpacked by `@lewismoten/gamemaker-sandbox-archives`.
 
 ## Setup
 
-Requires Node.js 22.12 or newer.
+Requires Node.js 22.12 or newer and the archive package release (see [development setup](docs/development.md#archive-package-release) for the pre-release candidate).
 
 ```sh
 npm ci --omit=dev

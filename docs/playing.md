@@ -31,3 +31,7 @@ The game’s guidance strip gives each road a short mission. Near a locked exit,
 ## Glovebox notebook
 
 The page’s optional notebook explains the counter gates, timed leaf crossing, bark exchanges, upward gravity and one-way cloud ledges, playable crew, recoverable foam trays, vehicle character, input recording, and music and cartoons. Each expandable entry names its source builder and links to actual downloadable DOS files. These are inspection examples; playing outside this page needs the complete `public/game/` folder. The notebook uses native HTML details controls and does not run a separate game simulation.
+
+## Game archives
+
+**Download Stripe Chase (.ZIP)** saves the complete native game in one file, with instructions, license, and credits. The bundled game loads that same ZIP through the archive package. Under **More Game-Maker games**, choose a folder, a ZIP, or a ZIP-based self-extracting EXE, then **Play selected game**. Files are unpacked locally in the browser. Ordinary executables are not game archives.
