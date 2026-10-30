@@ -18,20 +18,21 @@ try {
   server = await preview({ root, logLevel: 'error', build: { outDir: directory }, preview: { host: '127.0.0.1', port: 4176, strictPort: true } });
   browser = await chromium.launch({ channel: 'chrome', headless: true });
   const page = await browser.newPage({ viewport: { width: 390, height: 800 } });
-  const errors = [], missing = [];
+  const errors = [],
+    missing = [];
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('response', (response) => {
     if (response.url().startsWith('http://127.0.0.1:4176/') && response.status() >= 400) missing.push(response.url());
   });
   await page.goto('http://127.0.0.1:4176/');
   await page.locator('#watch-demo').click();
-  await page.waitForFunction(() => document.querySelector('#status')?.textContent === 'Teddy’s grand finale', null, { timeout: 270_000 });
+  await page.waitForFunction(() => document.querySelector('#status')?.textContent === 'Teddy’s grand finale', null, { timeout: 330_000 });
   assert.equal(await page.locator('#chapter-name').textContent(), 'Curtain call');
   assert.equal(await page.locator('#stripe-progress').textContent(), `${CHAPTERS.at(-1).required} / ${CHAPTERS.at(-1).required}`);
   await page.waitForTimeout(2000);
   await page.screenshot({ path: join(screenshots, 'mobile-finale.png') });
   await page.waitForTimeout(8000);
-  for (let attempt = 0; attempt < 15 && await page.locator('#status').textContent() !== 'Demo finished'; attempt++) {
+  for (let attempt = 0; attempt < 15 && (await page.locator('#status').textContent()) !== 'Demo finished'; attempt++) {
     await page.keyboard.press('Enter');
     await page.waitForTimeout(1000);
   }
@@ -44,7 +45,9 @@ try {
   }
   await page.screenshot({ path: join(screenshots, 'your-turn.png') });
   await page.locator('#start').click();
-  await page.waitForFunction(() => document.querySelector('#chapter-name')?.textContent === 'The Stripe Road' && document.querySelector('#status')?.textContent === 'Playing · 3 tries');
+  await page.waitForFunction(
+    () => document.querySelector('#chapter-name')?.textContent === 'The Stripe Road' && document.querySelector('#status')?.textContent === 'Playing · 3 tries',
+  );
   assert.equal(await page.locator('#game-overlay').isVisible(), false);
   assert.equal(await page.locator('#progress-label').textContent(), 'STRIPES');
   assert.equal(await page.locator('#bark').textContent(), 'Bark!');
@@ -54,6 +57,6 @@ try {
   console.log(`Production demo, mobile finale, and handoff to play: passed. Screenshots: ${screenshots}`);
 } finally {
   await browser?.close();
-  if (server) await new Promise((resolve, reject) => server.httpServer.close((error) => error ? reject(error) : resolve()));
+  if (server) await new Promise((resolve, reject) => server.httpServer.close((error) => (error ? reject(error) : resolve())));
   await rm(directory, { recursive: true, force: true });
 }

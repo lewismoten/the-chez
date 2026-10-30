@@ -9,9 +9,11 @@ import { chromium } from 'playwright-core';
 import { createServer } from 'vite';
 import { CHAPTERS } from '../src/chapters.ts';
 import { roadMessage } from '../src/road-guide.ts';
+import { UMBRELLA_HOME } from '../src/umbrella-route.ts';
 import { PARK_LEAF } from '../src/park-route.ts';
 import { MAZE_ROUTE } from './gwinn-maze.ts';
 const DRIVE_SCENE = CHAPTERS.findIndex((chapter) => chapter.mode === 'drive') + 2;
+const FLOAT_SCENE = CHAPTERS.findIndex((chapter) => chapter.mode === 'float') + 2;
 const MAZE_SCENE = CHAPTERS.findIndex((chapter) => chapter.mode === 'maze') + 2;
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -27,7 +29,7 @@ await server.listen();
 let browser;
 
 // This controller uses the package's public input callbacks. It lives only in the test browser.
-function installDriver({ chapters, mazeRoute, parkCounter }) {
+function installDriver({ chapters, mazeRoute, parkCounter, umbrellaHome }) {
   const clubSteps = [
     { from: 23, to: 26 },
     { from: 27, to: 30 },
@@ -43,6 +45,9 @@ function installDriver({ chapters, mazeRoute, parkCounter }) {
     parkPhase = 'approach',
     skyGap = 0,
     gapPhase = 'approach';
+  let floatPhase = 0,
+    floatWindow = 0,
+    tookAt = 0;
   let scene = 0,
     firstClock,
     lastClock,
@@ -55,6 +60,7 @@ function installDriver({ chapters, mazeRoute, parkCounter }) {
     mazeStep = 1;
   window.__chezEnter = (next) => {
     scene = next;
+    floatPhase = floatWindow = tookAt = 0;
     firstClock = lastClock = undefined;
     held = new Set();
     skyStop = 0;
@@ -92,6 +98,48 @@ function installDriver({ chapters, mazeRoute, parkCounter }) {
     const car = info.carX,
       hop = true;
     if (window.__chezTakeNaps) return;
+    if (info.mode === 'float') {
+      if (floatPhase === 0 && x >= umbrellaHome.x) {
+        key(77, false);
+        key(57, true);
+        tookAt = tick;
+        floatPhase = 1;
+      }
+      if (floatPhase === 1 && tick > tookAt + 4) {
+        key(57, false);
+        key(77, true);
+        floatPhase = 2;
+      }
+      const stop = [
+        { x: 26, y: 640, pass: 30 },
+        { x: 66, y: 550, pass: 70 },
+      ][floatWindow];
+      if (stop) {
+        if (floatPhase === 2 && x >= stop.x) {
+          key(77, false);
+          key(72, true);
+          floatPhase = 3;
+        }
+        if (floatPhase === 3 && y <= stop.y) {
+          key(72, false);
+          key(77, true);
+          floatPhase = 4;
+        }
+        if (floatPhase === 4 && x >= stop.pass) {
+          floatWindow++;
+          floatPhase = 2;
+        }
+      }
+      if (floatWindow === 2 && floatPhase === 2 && x >= 74) {
+        key(77, false);
+        floatPhase = 5;
+      }
+      if (floatPhase === 5 && y === 780) {
+        key(77, true);
+        floatPhase = 6;
+      }
+      return;
+    }
     if (info.mode === 'drive') {
       if (honkedAt < 0 && x <= 80) {
         key(57, true);
@@ -278,7 +326,15 @@ try {
       const page = await browser.newPage({ viewport: { width, height }, colorScheme });
       try {
         await page.goto('http://127.0.0.1:4175/');
-        for (const hint of [roadMessage(CHAPTERS[2], 0), roadMessage(CHAPTERS[2], 8, true), roadMessage(CHAPTERS[2], 3, false, true)]) {
+        for (const hint of [
+          roadMessage(CHAPTERS[2], 0),
+          roadMessage(CHAPTERS[2], 8, true),
+          roadMessage(CHAPTERS[2], 3, false, true),
+          roadMessage(CHAPTERS[FLOAT_SCENE - 2], 0),
+          roadMessage(CHAPTERS[FLOAT_SCENE - 2], 3, false, true),
+          roadMessage(CHAPTERS[FLOAT_SCENE - 2], 8, false, true),
+          roadMessage(CHAPTERS[FLOAT_SCENE - 2], 8, true, true),
+        ]) {
           await page.locator('#road-tip').evaluate((node, text) => {
             node.textContent = text;
           }, hint);
@@ -296,7 +352,7 @@ try {
         });
         assert.equal(await page.locator('#road-atlas-list li').count(), CHAPTERS.length);
         const notebook = page.locator('.notebook-grid details');
-        assert.equal(await notebook.count(), 11);
+        assert.equal(await notebook.count(), 12);
         await notebook.first().locator('summary').focus();
         await page.keyboard.press('Enter');
         assert.equal(await notebook.first().getAttribute('open'), '', 'notebook opens with the keyboard');
@@ -328,7 +384,7 @@ try {
   page.on('console', (message) => {
     if (message.text().startsWith('CHEZ entered')) console.log(message.text());
   });
-  await page.addInitScript(installDriver, { chapters: CHAPTERS, mazeRoute: MAZE_ROUTE, parkCounter: PARK_LEAF.counter });
+  await page.addInitScript(installDriver, { chapters: CHAPTERS, mazeRoute: MAZE_ROUTE, parkCounter: PARK_LEAF.counter, umbrellaHome: UMBRELLA_HOME });
   await page.addInitScript((watching) => {
     window.__chezDemo = watching;
   }, demo);
@@ -439,6 +495,18 @@ try {
       assert.equal(await page.locator('#bark').textContent(), 'Down ↓');
       assert.equal(await page.locator('#move-label').textContent(), 'Move Gwinn');
       await page.screenshot({ path: join(screenshots, 'gwinn-shortcut.png') });
+    }
+    if (!lap) {
+      await page.waitForFunction(
+        (scene) =>
+          window.__chezScene === scene && window.__chezWorld?.chr.x[0] === 26 && window.__chezWorld?.chr.y[0] <= 34 && window.__chezWorld?.chr.cseq === 9,
+        FLOAT_SCENE,
+        { timeout: 120_000 },
+      );
+      assert.equal(await page.locator('#hop').textContent(), 'Float ↑');
+      assert.equal(await page.locator('#bark').textContent(), 'Take');
+      assert.match(await page.locator('#road-tip').textContent(), /Umbrella ready/);
+      await page.screenshot({ path: join(screenshots, 'umbrella-weather.png') });
     }
     await page.waitForFunction(
       (scene) => window.__chezScene === scene && window.__chezWorld?.chr.x[0] <= 60 && window.__chezWorld?.chr.x[0] >= 50,
