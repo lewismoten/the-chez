@@ -1,9 +1,9 @@
 // Gwinn's leaf crossing: native timed block variants change both the sign and its safe barrier.
-import type { Block } from '../../GameMaker/web/src/formats/blocks.ts';
-import type { GameMap } from '../../GameMaker/web/src/formats/map.ts';
-import { matchColor } from '../../GameMaker/web/src/formats/palette.ts';
-import { Pixels } from '../../GameMaker/games/kit/pixels.ts';
-import { centered } from '../../GameMaker/games/kit/pcText.ts';
+import type { Block } from '@lewismoten/gamemaker-sandbox-tools/formats/blocks';
+import type { GameMap } from '@lewismoten/gamemaker-sandbox-tools/formats/map';
+import { matchColor } from '@lewismoten/gamemaker-sandbox-tools/formats/palette';
+import { Pixels } from '@lewismoten/gamemaker-sandbox-tools/drawing';
+import { centered } from '@lewismoten/gamemaker-sandbox-tools/drawing';
 
 export const LEAF_CROSSING = 45;
 export const LEAF_WAIT = 54;

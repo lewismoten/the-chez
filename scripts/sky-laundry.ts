@@ -1,7 +1,7 @@
 // Teddy's cloud route: visible lifts, one-way ledges, and sleepy clouds beneath each crossing.
-import type { Block } from '../../GameMaker/web/src/formats/blocks.ts';
-import type { GameMap } from '../../GameMaker/web/src/formats/map.ts';
-import { matchColor } from '../../GameMaker/web/src/formats/palette.ts';
+import type { Block } from '@lewismoten/gamemaker-sandbox-tools/formats/blocks';
+import type { GameMap } from '@lewismoten/gamemaker-sandbox-tools/formats/map';
+import { matchColor } from '@lewismoten/gamemaker-sandbox-tools/formats/palette';
 
 export const CLOUD_GAPS = [25, 26, 45, 46, 65, 66];
 export const NAP_COLUMNS = [24, 25, 44, 45, 64, 65];

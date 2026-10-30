@@ -1,8 +1,8 @@
 // Native flying stripe pickups, with visible wind posts that replace missed or barked-away kites.
-import type { Block } from '../../GameMaker/web/src/formats/blocks.ts';
-import type { GameMap } from '../../GameMaker/web/src/formats/map.ts';
-import type { Monster } from '../../GameMaker/web/src/formats/monster.ts';
-import { matchColor } from '../../GameMaker/web/src/formats/palette.ts';
+import type { Block } from '@lewismoten/gamemaker-sandbox-tools/formats/blocks';
+import type { GameMap } from '@lewismoten/gamemaker-sandbox-tools/formats/map';
+import type { Monster } from '@lewismoten/gamemaker-sandbox-tools/formats/monster';
+import { matchColor } from '@lewismoten/gamemaker-sandbox-tools/formats/palette';
 
 export const KITE = 16;
 export const KITE_STARTS = [17, 27, 37, 47, 57, 67, 77];
