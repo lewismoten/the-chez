@@ -1,10 +1,10 @@
 // Teddy's colors: one set of named ramps shared by every block, sprite and screen, and a
 // palette per time of day. The art never changes between levels; the .PAL does, so the
 // same town goes from a pink morning in the backyard to the Clown Club's lights at night.
-import { PaletteBuilder } from '@lewismoten/gamemaker-sandbox-tools/drawing';
+import { PaletteBuilder, TIME_OF_DAY_SKY as SKY, lightColor, type TimeOfDay } from '@lewismoten/gamemaker-sandbox-tools/drawing';
+export type { TimeOfDay } from '@lewismoten/gamemaker-sandbox-tools/drawing';
 
 type RGB = [number, number, number];
-export type TimeOfDay = 'morning' | 'noon' | 'afternoon' | 'sunset' | 'night' | 'show';
 
 /** [name, shades, dark, light, mid?, glows at night?] */
 const RAMPS: [string, number, RGB, RGB, RGB?, boolean?][] = [
@@ -39,47 +39,6 @@ const RAMPS: [string, number, RGB, RGB, RGB?, boolean?][] = [
   ['gold', 3, [150, 100, 10], [255, 230, 110]],
 ];
 
-const LIGHT: Record<TimeOfDay, { mul: RGB; add: RGB }> = {
-  morning: { mul: [1.0, 0.94, 0.94], add: [14, 4, 10] },
-  noon: { mul: [1, 1, 1], add: [0, 0, 0] },
-  afternoon: { mul: [1.02, 0.96, 0.86], add: [8, 4, 0] },
-  sunset: { mul: [0.9, 0.7, 0.74], add: [30, 10, 16] },
-  night: { mul: [0.46, 0.5, 0.78], add: [8, 8, 30] },
-  // Under the big top at night: warm show lights on everything.
-  show: { mul: [1.0, 0.9, 0.86], add: [12, 4, 6] },
-};
-
-/** Sky gradients per time of day (top to bottom of the 8 shades are dark to light). */
-const SKY: Record<TimeOfDay, [RGB, RGB, RGB?]> = {
-  morning: [
-    [120, 150, 230],
-    [255, 214, 200],
-    [200, 190, 240],
-  ],
-  noon: [
-    [70, 130, 230],
-    [200, 232, 255],
-  ],
-  afternoon: [
-    [90, 140, 220],
-    [250, 236, 200],
-    [170, 200, 240],
-  ],
-  sunset: [
-    [60, 40, 120],
-    [255, 170, 90],
-    [210, 90, 120],
-  ],
-  night: [
-    [8, 8, 30],
-    [40, 40, 96],
-  ],
-  show: [
-    [6, 6, 28],
-    [60, 40, 110],
-  ],
-};
-
 export interface Pal {
   pal: Uint8Array;
   r: (name: string) => number[];
@@ -91,7 +50,6 @@ export interface Pal {
 export function buildPalette(time: TimeOfDay): Pal {
   const b = new PaletteBuilder();
   b.designerColors();
-  const t = LIGHT[time];
   for (const [name, n, from, to, mid, glows] of RAMPS) {
     if (name === 'sky') {
       const [a, z, m] = SKY[time];
@@ -101,7 +59,7 @@ export function buildPalette(time: TimeOfDay): Pal {
     const lit = (c: RGB): RGB =>
       glows && (time === 'night' || time === 'sunset' || time === 'show')
         ? c
-        : (c.map((v, i) => Math.max(0, Math.min(255, Math.round(v * t.mul[i] + t.add[i])))) as RGB);
+        : lightColor(c, time);
     b.ramp(name, n, lit(from), lit(to), mid ? lit(mid) : undefined);
   }
   return wrap(b);
