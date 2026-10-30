@@ -9,11 +9,11 @@ The bundled Stripe Chase game is sample content for verifying the engine integra
 Requires Node.js 22.12 or newer.
 
 ```sh
-npm install
+npm ci --omit=dev
 npm run dev
 ```
 
-Open the URL printed by Vite. The game data is included; no GameMaker source checkout is required.
+Open the URL printed by Vite. This installs the browser application and uses the included game data. See [development](docs/development.md) to install the tools for rebuilding the sample game.
 
 To build and preview the production application:
 
