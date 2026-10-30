@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build:game": "tsx scripts/build-game.ts",
+    "build:game": "tsx scripts/build-game.ts && npm run build:zip",
     "check:game": "tsx scripts/check-game.ts",
     "check:browser": "tsx scripts/check-browser.mjs",
     "check:release": "tsx scripts/check-release.mjs",
@@ -14,7 +14,9 @@
     "check:guidance": "tsx scripts/check-guidance.mjs",
     "build:art": "tsx scripts/build-art.ts",
     "check:music": "tsx scripts/check-music.mjs",
-    "check:isolation": "tsx scripts/check-isolation.mjs"
+    "check:isolation": "tsx scripts/check-isolation.mjs",
+    "build:zip": "tsx scripts/build-zip.ts",
+    "check:archives": "tsx scripts/check-archives.mjs"
   },
   "repository": {
     "type": "git",
@@ -29,6 +31,7 @@
   },
   "homepage": "https://github.com/lewismoten/the-chez#readme",
   "dependencies": {
+    "@lewismoten/gamemaker-sandbox-archives": "^3.1.0",
     "@lewismoten/gamemaker-sandbox-engine": "^3.1.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.5"
