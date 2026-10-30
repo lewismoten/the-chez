@@ -1,6 +1,6 @@
 // Eight short, connected road jokes: Teddy earns trust, helps a leaf, and brings the crew home.
-import type { Pixels } from '../../GameMaker/games/kit/pixels.ts';
-import { centered } from '../../GameMaker/games/kit/pcText.ts';
+import type { Pixels } from '@lewismoten/gamemaker-sandbox-tools/drawing';
+import { centered } from '@lewismoten/gamemaker-sandbox-tools/drawing';
 
 type Gag = 'meter' | 'leaf' | 'puddle' | 'note' | 'balloons' | 'shortcut' | 'fitting' | 'umbrella';
 export const ROAD_BEATS: readonly { gag: Gag; lines: readonly [string, string] }[] = [

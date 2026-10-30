@@ -1,6 +1,6 @@
 // Original OPL2 themes for Stripe Chase; each chapter reshapes the same five-note hook.
-import { INSTRUMENTS } from '../../GameMaker/web/src/audio/compose.ts';
-import { tune, v } from '../../GameMaker/games/kit/tune.ts';
+import { INSTRUMENTS } from '@lewismoten/gamemaker-sandbox-tools/audio';
+import { tune, v } from '@lewismoten/gamemaker-sandbox-tools/audio';
 
 const { lead, pluck, bass, bell, pad } = INSTRUMENTS;
 const join = (bars: string[]) => bars.join(', ');
