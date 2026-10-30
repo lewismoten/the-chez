@@ -8,6 +8,11 @@ import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { chromium } from "playwright-core";
 import { build, preview } from "vite";
+import { createZip } from "@lewismoten/gamemaker-sandbox-archives/zip";
+import {
+  newGame,
+  serializeGame,
+} from "@lewismoten/gamemaker-sandbox-tools/formats/game";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const scratch = await mkdtemp(join(tmpdir(), "chez-archives-browser-"));
 const bytes = await readFile(join(root, "public/stripe.zip"));
@@ -105,6 +110,29 @@ try {
     await page.waitForTimeout(400);
     assert.equal(await page.locator("#status").textContent(), "Playing");
   }
+  await page.reload();
+  const collection = await createZip([
+    { name: "a/alpha.gam", data: serializeGame(newGame("Alpha")) },
+    { name: "b/beta.gam", data: serializeGame(newGame("Beta")) },
+  ]);
+  await page
+    .locator("#game-archive")
+    .setInputFiles({
+      name: "collection.zip",
+      mimeType: "application/zip",
+      buffer: Buffer.from(collection),
+    });
+  await page.locator("#play-engine").click();
+  await page.waitForFunction(() =>
+    document
+      .querySelector("#engine-status")
+      ?.textContent?.includes("several games"),
+  );
+  assert.ok(
+    !(await page.locator("#engine-status").textContent()).includes(
+      "unpackGames",
+    ),
+  );
   assert.deepEqual(errors, []);
   console.log(
     "Single-file download/playback, ZIP/SFX imports, keyboard controls, and 1440/390 light/dark accessibility passed.",
