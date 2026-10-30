@@ -9,7 +9,10 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { build } from "vite";
 const { values } = parseArgs({
-  options: { "tools-package": { type: "string" } },
+  options: {
+    "tools-package": { type: "string" },
+    "archives-package": { type: "string" },
+  },
 });
 const root = fileURLToPath(new URL("..", import.meta.url));
 const sandbox = await mkdtemp(join(tmpdir(), "chez-isolation-"));
@@ -44,6 +47,10 @@ try {
     pkg.devDependencies[tools] && !pkg.dependencies[tools],
     "tools must be development-only",
   );
+  assert.ok(
+    pkg.dependencies["@lewismoten/gamemaker-sandbox-archives"],
+    "archive extraction is a runtime dependency",
+  );
   await mkdir(consumer);
   for (const entry of await readdir(root, { withFileTypes: true })) {
     if (excluded.has(entry.name)) continue;
@@ -67,6 +74,20 @@ try {
       { cwd: consumer, stdio: "inherit" },
     );
   }
+  if (values["archives-package"]) {
+    execFileSync(
+      "npm",
+      [
+        "install",
+        "--save",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund",
+        resolve(values["archives-package"]),
+      ],
+      { cwd: consumer, stdio: "inherit" },
+    );
+  }
   execFileSync(
     "npm",
     ["ci", "--include=dev", "--ignore-scripts", "--no-audit", "--no-fund"],
@@ -86,7 +107,8 @@ try {
     recursive: true,
     force: true,
   });
-  let checked = 0;
+  let checked = 0,
+    archives = 0;
   await build({
     configFile: false,
     root: consumer,
@@ -103,11 +125,13 @@ try {
           );
           if (id.includes("/src/") || id.includes("/gamemaker-sandbox-engine/"))
             checked++;
+          if (id.includes("/gamemaker-sandbox-archives/")) archives++;
         },
       },
     ],
   });
   assert.ok(checked > 0, "inspect the actual application module graph");
+  assert.ok(archives > 0, "the browser must use the runtime archive package");
   process.stdout.write(
     `Isolated npm install, byte-identical fixture rebuild, native checks, and browser build with tools removed passed (${checked} runtime modules).\n`,
   );
