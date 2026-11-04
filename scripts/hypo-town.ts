@@ -7,6 +7,7 @@ import { Pixels } from '@lewismoten/gamemaker-sandbox-tools/drawing';
 import { C } from './hypo-art.ts';
 import { micro } from '../assets/source/teddy/art/draw.ts';
 import { R } from './hypo-colors.ts';
+import { garageBay, lightPool, lightWindow, rainOver } from './hypo-weather.ts';
 import { cornice, doorTile, hash, foreground, nearSide, roadLow, roadTop, shopDoor, shopWindow, sidewalk, signBoard, skyAt, windowTile, type Wall } from './hypo-tiles.ts';
 
 /** The car's row (its feet touch the road below it) and the first map row the picture covers. */
@@ -20,7 +21,8 @@ type Awning = 'awnR' | 'awnG' | 'awnB';
 type Lot =
   | { at: number; kind: 'house'; wall: Wall; floors: number }
   | { at: number; kind: 'shop'; wall: Wall; floors: number; name: string; awning: Awning; goods: 'cups' | 'books' | 'tools' }
-  | { at: number; kind: 'park'; trees: 'oak' | 'blossom' | 'plain' | 'cross' | 'finish' };
+  | { at: number; kind: 'park'; trees: 'oak' | 'blossom' | 'plain' | 'cross' | 'finish' }
+  | { at: number; kind: 'garage' };
 /** Every lot is four blocks wide, so a repeated lot repeats its blocks exactly. */
 const LOT_W = 4;
 
@@ -33,14 +35,18 @@ const SHOPS = [
 const PARKS = ['oak', 'blossom', 'oak', 'blossom', 'plain'] as const;
 /** The lot sequence: house, shop, park, repeating; two parks meet at the turtle crossing and three at the finish. */
 const KINDS = 'HSPHSPHSPHSPPHSPHSPHSPPPH';
+/** The park road's lots: mostly lawns and trees with a few houses and shops. */
+const PARK_KINDS = 'PHPPSPPHPPPSPPHPPSPPPPPPH';
 /** The street is the Control Run's; the race is the tricycle trial's, the same lots in other walls, shops and trees. */
-export type TownKind = 'street' | 'race';
+export type TownKind = 'street' | 'race' | 'park' | 'night';
 function makeLots(kind: TownKind): Lot[] {
-  const race = kind === 'race';
+  const shift = { street: 0, race: 2, park: 1, night: 3 }[kind];
+  const race = shift > 0;
   let shopCount = race ? 2 : 0;
-  return [...KINDS].map((k, i): Lot => {
+  return [...(kind === 'park' ? PARK_KINDS : KINDS)].map((k, i): Lot => {
     const at = i * LOT_W;
-    const wall = WALLS[(i * 3 + 1 + (race ? 2 : 0)) % 4];
+    if (kind === 'night' && i === 22) return { at, kind: 'garage' };
+    const wall = WALLS[(i * 3 + 1 + shift) % 4];
     const floors = [3, 3, 4, 3, 5, 3, 4, 3][(i + (race ? 3 : 0)) % 8];
     if (k === 'H') return { at, kind: 'house', wall, floors };
     if (k === 'S') return { at, kind: 'shop', wall: wall === 'siding' ? 'brick' : wall, floors, ...SHOPS[shopCount++ % 3] };
@@ -109,7 +115,8 @@ function skyline(s: Scene, x0: number, w: number, bottom: number): void {
   }
 }
 
-function lamp(s: Scene, x: number, groundY: number): void {
+function lamp(s: Scene, x: number, groundY: number, night = false): void {
+  if (night) lightPool(s.pic, x + 1, groundY + 10, 40, 24, groundY - 14);
   const top = groundY - 54;
   s.pic.rect(x, top + 6, 3, 54, R('iron', 1));
   s.pic.rect(x - 1, groundY - 8, 5, 8, R('iron', 0));
@@ -195,7 +202,14 @@ function hydrant(s: Scene, x: number, y: number): void {
   s.pic.rect(x - 1, y - 1, 8, 1, R('iron', 0));
 }
 
-function paintLot(s: Scene, lot: Lot): void {
+function paintLot(s: Scene, lot: Lot, night = false): void {
+  if (lot.kind === 'garage') {
+    // the night trial's home: a brick front with the garage's lit bay open, light spilling on the street
+    paintLot(s, { at: lot.at, kind: 'house', wall: 'brick', floors: 3 }, night);
+    lightPool(s.pic, (lot.at + 2) * 20 + 10, FEET + 12, 70, 34, FEET - 10);
+    garageBay(s.pic, lot.at * 20, 99);
+    return;
+  }
   const gx = (n: number) => (lot.at + n) * 20;
   if (lot.kind === 'park') {
     for (let x = lot.at; x < lot.at + LOT_W; x++) {
@@ -207,7 +221,7 @@ function paintLot(s: Scene, lot: Lot): void {
     }
     if (lot.trees === 'oak') {
       tree(s, gx(2), FEET, 'oak');
-      lamp(s, gx(0) + 6, FEET);
+      lamp(s, gx(0) + 6, FEET, night);
       bunting(s, gx(0) + 7, gx(4) - 1, FEET - 49, 9);
     }
     if (lot.trees === 'blossom') {
@@ -221,8 +235,8 @@ function paintLot(s: Scene, lot: Lot): void {
       for (let x = 1; x <= 3; x++) for (let bar = 0; bar < 20; bar += 6) s.pic.rect((lot.at + x) * 20 + bar + 1, 6 * 20 + 1, 4, 40, C.white);
     }
     if (lot.trees === 'finish') {
-      lamp(s, gx(0) + 8, FEET);
-      lamp(s, gx(3) + 6, FEET);
+      lamp(s, gx(0) + 8, FEET, night);
+      lamp(s, gx(3) + 6, FEET, night);
       // a checkered banner hung between the lamps, FINISH across it, and a mat on the sidewalk
       const top = FEET - 53;
       const banner = new Pixels(gx(3) - gx(0) - 8 - 3, 16, C.white);
@@ -237,7 +251,7 @@ function paintLot(s: Scene, lot: Lot): void {
     }
     if (lot.trees === 'plain') {
       bench(s, gx(1) + 4, FEET + 3);
-      lamp(s, gx(3) + 6, FEET);
+      lamp(s, gx(3) + 6, FEET, night);
     }
     return;
   }
@@ -251,6 +265,8 @@ function paintLot(s: Scene, lot: Lot): void {
       else if (f === 0) tile = i === door ? doorTile(lot.wall, DOOR[lot.wall] === 'wood' ? 'wood' : DOOR[lot.wall] === 'brick' ? 'brick' : DOOR[lot.wall] === 'siding' ? 'siding' : 'blue') : windowTile(lot.wall, DRESSING[lot.wall]);
       else tile = windowTile(lot.wall, DRESSING[lot.wall]);
       s.put(lot.at + i, row, tile);
+      const window = f !== lot.floors - 1 && !(f === 0 && (lot.kind === 'shop' || i === door));
+      if (night && window && hash(lot.at + i, f, 5) < 0.6) lightWindow(s.pic, (lot.at + i) * 20, row * 20);
     }
   }
   // the shop's name on a painted board across the frieze
@@ -281,7 +297,8 @@ export function paintTown(kind: TownKind = 'street'): { scene: Scene; cut: () =>
     if (x % 12 === 3) meter(s, x * 20 + 9, 8 * 20 + 19);
     if (x % 12 === 9) bin(s, x * 20 + 4, 8 * 20 + 19);
   }
-  for (const lot of kind === 'street' ? LOTS : makeLots(kind)) paintLot(s, lot);
+  for (const lot of kind === 'street' ? LOTS : makeLots(kind)) paintLot(s, lot, kind === 'night');
+  if (kind === 'park') rainOver(s.pic);
   return {
     scene: s,
     cut: () => {
@@ -306,9 +323,9 @@ export function paintTown(kind: TownKind = 'street'): { scene: Scene; cut: () =>
 }
 void C;
 
-let cached: Pixels | undefined;
+const cached = new Map<TownKind, Pixels>();
 /** A 320x200 view of the street, as the engine shows it, starting at block column `tile`. */
-export function townView(tile: number): Pixels {
-  cached ??= paintTown().scene.pic;
-  return cached.crop(tile * 20, 0, 320, ROWS * 20);
+export function townView(tile: number, kind: TownKind = 'street'): Pixels {
+  if (!cached.has(kind)) cached.set(kind, paintTown(kind).scene.pic);
+  return cached.get(kind)!.crop(tile * 20, 0, 320, ROWS * 20);
 }

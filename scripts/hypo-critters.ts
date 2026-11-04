@@ -125,3 +125,35 @@ export function wave(): Pixels {
   p.rect(0, 9, 3, 3, C.gold);
   return p;
 }
+
+/** The neighbor's riding mower, facing right: a green deck with a spinning blade, the neighbor under a big umbrella. */
+export function mower(turn: 0 | 1): Pixels {
+  const p = clear();
+  // the umbrella: a dome of red and white wedges over the seat, its pole down to the lap
+  const dome: [number, number][] = [[4, 12], [2, 14], [1, 15], [1, 15]];
+  dome.forEach(([from, to], y) => {
+    for (let x = from; x <= to; x++) p.set(x, y, (x >> 2) % 2 ? C.white : R('flag', 0));
+  });
+  for (const x of [1, 4, 7, 10, 13, 15]) p.set(x, 4, x % 2 ? C.white : R('flag', 0));
+  p.line(8, 4, 8, 10, R('iron', 1));
+  // the neighbor: a yellow raincoat, a tan face, hands on the wheel
+  p.rect(6, 5, 5, 5, R('flag', 1));
+  p.rect(6, 5, 1, 5, R('paint', 0));
+  p.disc(8, 6, 1, C.tan);
+  p.line(11, 7, 14, 9, R('flag', 1));
+  // the mower: seat, steering post, body, hood, deck and wheels
+  p.rect(4, 9, 4, 2, R('iron', 1));
+  p.line(13, 9, 14, 12, R('iron', 2));
+  p.rect(4, 11, 13, 4, R('leaf', 2));
+  p.rect(4, 11, 13, 1, R('leaf', 4));
+  p.rect(13, 12, 6, 3, R('leaf', 3));
+  p.rect(4, 15, 15, 1, R('leaf', 0));
+  p.rect(12, 16, 7, 2, R('iron', 1));
+  p.rect(12 + turn * 2, 16, 3, 1, R('iron', 2));
+  p.disc(6, 16, 3, C.black);
+  p.set(6, 16, C.white);
+  p.disc(16, 17, 1, C.black);
+  // clippings flying off the deck
+  for (const [x, y] of turn ? [[18, 15], [19, 13], [17, 14]] : [[19, 15], [18, 13], [19, 17]]) p.set(x, y, R('leaf', 4));
+  return p;
+}

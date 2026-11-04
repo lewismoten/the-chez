@@ -90,15 +90,24 @@ export function dial(mph: 20 | 25 | 30): Pixels {
   return p;
 }
 
-/** A time of day for a level: the shared palette tinted, except the three stripe slots. Each level's .pal is its own. */
-export function timeOfDay(pal: Uint8Array, when: 'dusk' | 'dawn' | 'night' | 'late'): Uint8Array {
-  const [kr, kg, kb] = { dusk: [1, 0.78, 0.7], dawn: [0.95, 0.88, 1], night: [0.45, 0.55, 0.85], late: [0.66, 0.7, 0.92] }[when];
+/** A time of day for a level: the shared palette tinted, except the three stripe slots and any `keep` slots
+ * (lit windows, lamps, rain drops stay bright). Each level's .pal is its own. */
+export function timeOfDay(pal: Uint8Array, when: 'dusk' | 'dawn' | 'night' | 'late' | 'rain' | 'gold', keep: readonly number[] = []): Uint8Array {
+  const [kr, kg, kb] = { dusk: [1, 0.78, 0.7], dawn: [0.95, 0.88, 1], night: [0.4, 0.5, 0.82], late: [0.66, 0.7, 0.92], rain: [0.62, 0.7, 0.8], gold: [1, 0.9, 0.72] }[when];
   const out = pal.slice();
   for (let i = 0; i < 256; i++) {
-    if (i >= SLOT.low && i <= SLOT.pin) continue;
-    out[i * 3] = Math.min(63, Math.round(pal[i * 3] * kr));
-    out[i * 3 + 1] = Math.min(63, Math.round(pal[i * 3 + 1] * kg));
-    out[i * 3 + 2] = Math.min(63, Math.round(pal[i * 3 + 2] * kb));
+    if ((i >= SLOT.low && i <= SLOT.pin) || keep.includes(i)) continue;
+    let r = pal[i * 3];
+    let g = pal[i * 3 + 1];
+    let b = pal[i * 3 + 2];
+    if (when === 'rain') {
+      // rain drains the color: pull each channel toward the gray
+      const gray = (r + g + b) / 3;
+      [r, g, b] = [r, g, b].map((c) => gray * 0.55 + c * 0.45);
+    }
+    out[i * 3] = Math.min(63, Math.round(r * kr));
+    out[i * 3 + 1] = Math.min(63, Math.round(g * kg));
+    out[i * 3 + 2] = Math.min(63, Math.round(b * kb));
   }
   return out;
 }

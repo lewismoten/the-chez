@@ -31,6 +31,8 @@ const RAMPS = {
   flag: [[54, 10, 8], [63, 50, 10], [12, 28, 56], [10, 42, 20]] as Rgb[],
   bloom: [[60, 24, 34], [62, 52, 14], [40, 20, 48]] as Rgb[],
   glow: [[63, 58, 32], [63, 62, 52]] as Rgb[],
+  water: [[10, 18, 31], [20, 33, 48], [38, 52, 62]] as Rgb[],
+  drop: [[44, 56, 63]] as Rgb[],
 };
 
 export type RampName = keyof typeof RAMPS;

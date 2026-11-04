@@ -6,8 +6,15 @@ import { POSES } from '../assets/source/teddy/sprites/teddy.ts';
 import { GWINN } from '../assets/source/teddy/sprites/gwinn.ts';
 import { docLeo } from '../assets/source/teddy/sprites/people.ts';
 import { C, car, dial, palette, type Stage } from './hypo-art.ts';
-import { townView } from './hypo-town.ts';
+import { townView, type TownKind } from './hypo-town.ts';
 import { CHEZ_WINDOW } from '../assets/source/chez.ts';
+
+/** A level's own street for a card's backdrop, and the palette to show it in (rain, night). */
+export interface Look {
+  kind: TownKind;
+  pal: Uint8Array;
+  tile?: number;
+}
 
 export const TITLE = 'THE STRIPE HYPOTHESIS';
 export const TITLE_CARD = 'THE STRIPE\nHYPOTHESIS';
@@ -53,8 +60,8 @@ function plaque(p: Pixels, x: number, y: number, w: number, h: number): void {
 }
 
 /** A 320x200 card: the street behind a plaque with the headline, the car at full size, and short lines of text. */
-export function card(headline: string, lines: string[], footer: string, stage: Stage = 0, tile = 0): Uint8Array {
-  const p = townView(tile);
+export function card(headline: string, lines: string[], footer: string, stage: Stage = 0, tile = 0, look?: Look): Uint8Array {
+  const p = townView(tile, look?.kind);
   const parts = headline.split('\n');
   const height = 12 + parts.length * 20 + lines.length * 11;
   plaque(p, 40, 4, 240, height);
@@ -67,13 +74,13 @@ export function card(headline: string, lines: string[], footer: string, stage: S
     width: 320,
     height: 200,
     pixels: p.px,
-    palette: palette(stage),
+    palette: look?.pal ?? palette(stage),
   });
 }
 
 /** The results page: the street, a panel with the dial and verdict, and a footer. */
-function resultsBase(): Pixels {
-  const p = townView(24);
+function resultsBase(look?: Look): Pixels {
+  const p = townView(look?.tile ?? 24, look?.kind);
   plaque(p, 40, 4, 240, 26);
   clubCentered(p, 10, clubArt('TRIAL RESULTS'), C.cream, 2);
   plaque(p, 40, 40, 240, 112);
@@ -166,9 +173,9 @@ export function garageCartoon(): Uint8Array {
 }
 
 /** The needle climbs to the top speed and stops; the stamp lands. */
-export function resultsCartoon(top: 25 | 30 = 25, reason?: string, stage: Stage = 0, then?: (reel: Reel) => void): Uint8Array {
-  const reel = new Reel(palette(stage));
-  const base = resultsBase();
+export function resultsCartoon(top: 25 | 30 = 25, reason?: string, stage: Stage = 0, then?: (reel: Reel) => void, look?: Look): Uint8Array {
+  const reel = new Reel(look?.pal ?? palette(stage));
+  const base = resultsBase(look);
   const speeds = top === 25 ? ([20, 25] as const) : ([20, 25, 30] as const);
   for (const mph of speeds)
     for (let i = 0; i < 6; i++)

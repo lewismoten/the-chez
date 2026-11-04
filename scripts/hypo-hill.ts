@@ -35,7 +35,7 @@ export function carRise(x: number): number {
 const rise = (x: number): number => carRise(x - 10);
 
 /** The grassy bank behind the sidewalk: two blocks tall, its top edge lit. */
-function bank(): Pixels {
+export function bank(): Pixels {
   const p = new Pixels(20, 40, 0);
   for (let y = 0; y < 40; y++)
     for (let x = 0; x < 20; x++) {
@@ -49,9 +49,9 @@ function bank(): Pixels {
 }
 
 /** The darker verge under the road, repeating every four rows so a block's shift leaves it unchanged. */
-const verge = (x: number, y: number): number => R('leaf', hash(x % 20, y % 4, 33) < 0.3 ? 1 : 0);
+export const verge = (x: number, y: number): number => R('leaf', hash(x % 20, y % 4, 33) < 0.3 ? 1 : 0);
 
-function band(): Pixels {
+export function band(): Pixels {
   const b = new Pixels(20, 100, 0);
   [bank(), sidewalk(0), roadTop(), roadLow()].reduce((y, tile) => {
     b.blit(tile, 0, y);
