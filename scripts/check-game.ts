@@ -59,11 +59,11 @@ for (const name of ['story.txt', 'help.txt', 'credits.txt']) {
   assert.ok(lines.length <= 16 && lines.every((line) => line.length <= 30), `${name}: notice lines must be 30 characters or fewer`);
 }
 assert.ok(new TextDecoder().decode(bytes('credits.txt')).includes('Claude Sonnet 5.5'), 'the credits name the AI that wrote the game');
-for (const name of ['intro.fli', 'garage.fli', 'results.fli']) {
+for (const name of ['intro.fli', 'garage.fli', 'results.fli', 'hill.fli']) {
   assert.deepEqual(fliFaults(bytes(name)), [], `${name}: animation must fit the original DOS player`);
   const movie = parseFli(bytes(name));
   const seconds = (movie.frameCount * movie.speed) / 70;
-  assert.ok(seconds >= 1.5 && seconds <= 8, `${name}: ${seconds}s should be readable but short`);
+  assert.ok(seconds >= 1.5 && seconds <= 14, `${name}: ${seconds}s should be readable and skippable (a results cartoon includes the stripe cartoon)`);
 }
 for (const [name, limit] of [
   ['gate.voc', 0.8],

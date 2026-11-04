@@ -8,6 +8,7 @@ import { parseSoundSet, serializeSoundSet } from '@lewismoten/gamemaker-sandbox-
 import { SPEAKER, mix, osc, sample } from '@lewismoten/gamemaker-sandbox-tools/audio';
 import { chapterSong, openingSong, retrySong, winningSong } from './music.ts';
 import { card, garageCartoon, introCartoon, resultsCard, resultsCartoon, TITLE, TITLE_CARD } from './hypo-cards.ts';
+import { addStripeCartoon } from './hypo-stripes.ts';
 import { drivewayFiles, DRIVEWAY } from './hypo-driveway.ts';
 import { streetFiles, STREET } from './hypo-street.ts';
 import { hillFiles } from './hypo-hill.ts';
@@ -41,7 +42,7 @@ put('lost.gif', card('ONE MORE TRY?', ['SCIENCE NEVER GIVES UP.'], 'TEDDY BELIEV
 put('intro.fli', introCartoon());
 put('garage.fli', garageCartoon());
 put('results.fli', resultsCartoon());
-put('hill.fli', resultsCartoon(30, 'IT WAS A HILL.', 1));
+put('hill.fli', resultsCartoon(30, 'IT WAS A HILL.', 1, (reel) => addStripeCartoon(reel, 1)));
 put('lost.lst', serializeSlideList([{ name: 'lost.gif', pause: 0 }]));
 put('won.lst', serializeSlideList([{ name: 'results.gif', pause: 0 }]));
 put('intro.cmf', openingSong());

@@ -12,7 +12,7 @@ import { CHEZ_WINDOW } from '../assets/source/chez.ts';
 export const TITLE = 'THE STRIPE HYPOTHESIS';
 export const TITLE_CARD = 'THE STRIPE\nHYPOTHESIS';
 
-function scaled(p: Pixels, src: Pixels, x: number, y: number, scale: number): void {
+export function scaled(p: Pixels, src: Pixels, x: number, y: number, scale: number): void {
   for (let py = 0; py < src.h; py++)
     for (let px = 0; px < src.w; px++) {
       const color = src.px[py * src.w + px];
@@ -31,7 +31,7 @@ function inside(poly: readonly (readonly [number, number])[], x: number, y: numb
 }
 
 /** THE CHEZ at `scale`, with Teddy's head looking out of the door window, clipped to the glass. */
-function carWithTeddy(scale: number): Pixels {
+export function carWithTeddy(scale: number): Pixels {
   const out = car('right', scale);
   const head = POSES.front.crop(2, 4, 16, 11);
   const k = Math.max(1, Math.floor(scale / 4));
@@ -98,7 +98,7 @@ export function resultsCard(mph: 25 | 30 = 25, reason?: string, stage: Stage = 0
   });
 }
 
-const garageRoom = (headline = ''): Pixels => {
+export const garageRoom = (headline = ''): Pixels => {
   const p = new Pixels(320, 200, C.dark);
   p.rect(0, 0, 320, 142, C.navy);
   p.rect(0, 142, 320, 58, C.asphalt);
@@ -166,7 +166,7 @@ export function garageCartoon(): Uint8Array {
 }
 
 /** The needle climbs to the top speed and stops; the stamp lands. */
-export function resultsCartoon(top: 25 | 30 = 25, reason?: string, stage: Stage = 0): Uint8Array {
+export function resultsCartoon(top: 25 | 30 = 25, reason?: string, stage: Stage = 0, then?: (reel: Reel) => void): Uint8Array {
   const reel = new Reel(palette(stage));
   const base = resultsBase();
   const speeds = top === 25 ? ([20, 25] as const) : ([20, 25, 30] as const);
@@ -195,5 +195,6 @@ export function resultsCartoon(top: 25 | 30 = 25, reason?: string, stage: Stage 
     },
     40,
   );
+  then?.(reel);
   return reel.fli(5);
 }
