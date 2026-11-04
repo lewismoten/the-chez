@@ -7,3 +7,5 @@ These are local copies of Lewis Moten’s MIT-licensed Game-Maker: Sandbox Editi
 - `chez.ts`: the measured CitiCar drawing copied from `games/kit/chez.ts`.
 
 Imports of generic helpers were adapted to `@lewismoten/gamemaker-sandbox-tools`. Game-specific pixel and palette data is retained locally. See [NOTICE.md](../../NOTICE.md) for credits and the repository’s [LICENSE](LICENSE) for the license.
+
+The street and card art in `scripts/hypo-town.ts`, `hypo-tiles.ts`, `hypo-colors.ts` and `hypo-cards.ts` borrows its method from Tune-Up's parade street in Game-Maker: Sandbox Edition (`games/tuneup/`, Lewis Moten, MIT): one wide picture painted from repeating 20-pixel pieces (brick fronts with windows and bunting, lamp posts, a dithered sky, a road with lane marks and curbs), cut into the fewest unique blocks, with palette ramps in the free slots of the shared palette. The pictures themselves are new.
