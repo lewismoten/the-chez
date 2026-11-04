@@ -1,13 +1,16 @@
-TEDDY'S STRIPE CHASE
+THE STRIPE HYPOTHESIS
 
 For Lewis Moten, Teddy,
-Gwinn, Doc Leo and THE CHEZ.
+Gwinn, Doc Leo, THE CHEZ.
 
 Engine, source art, car:
 Game-Maker Sandbox Edition
 by Lewis Moten (MIT)
 
-Dog barks/yawn: Lewis Moten
-Game, art, text, music,
-and sounds:
+Dog barks: Lewis Moten
+Design note:
+Claude Opus 5.5
+Code, art, text, levels:
+Claude Sonnet 5.5
+Music themes (OPL2):
 OpenAI Codex (GPT-6/6.1)

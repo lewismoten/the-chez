@@ -1,70 +1,53 @@
 # Game data and engine techniques
 
-The bundled game exercises the npm engine using native Game-Maker files: maps, characters, background blocks, inventory, counters, music, sound, and animations. The page displays controls and guidance; the engine runs the game rules.
+The bundled game exercises the npm engine using native Game-Maker files: maps, characters, background blocks, counters, timed blocks, scene links, music, sound, and animations. The page displays controls and guidance; the engine runs the game rules.
 
 For controls, see [Playing the bundled game](playing.md). For rebuilding and checking the fixture, see [Development and verification](development.md).
 
-## Original maps and scenery
+## Speeds that change, and a speedometer that agrees
 
-All walking-course maps are built from a blank map. The source project supplies the cast, rather than level geometry or scenery fragments. Stripe variants preserve the particular background beneath each piece and restore it on collection.
+`scripts/hypo-car.ts` builds THE CHEZ as a native `.CHR` in three speeds. The steering frames are not momentum frames: each tick moves the car a fixed number of pixels (`PIXELS_PER_TICK`: 4, 5 or 6), so 20, 25 and 30 mph are exact in the engine. Releasing the key stops the car, which keeps play easy for slow hands. The speedometer is the top block (`pic1`) of every frame of the same character, drawn by `dial(mph)` in `scripts/hypo-art.ts`, so the number on screen is the number the file moves at. Moving the dial with the car means it needs no map blocks and works on a scrolling view.
 
-The courses use distinct sky colors and ground treatments. Sky Laundry keeps its complete hanging shirts above each cloud route; its builder adds platforms and air streams without clearing the backdrop.
+A downhill or uphill stretch is a scene link on the crest block into a scene with the same map and the other speed's character file. `scripts/check-speed.ts` measures all three speeds in the headless simulation and proves a crest link fires. `check:game` repeats those checks on the shipped files. Phase 1 ships only the 25 mph car (Control Run is flat); the 30 and 20 mph cars are built and checked, ready for the hill levels.
 
-## Walking and crew
+## Stripes as a palette swap
 
-Walking characters use a single jump impulse for each press, instead of repeating the source character’s upward step while held. Every obstacle uses native Game-Maker collision, gravity, or animation; the page does not run additional platforming rules. Both sides of each foam tray have a return lift. The course check verifies recovery in both directions, optional balloon rewards, Doc Leo’s independent squeak, and each playable character’s own block set.
+`car()` in `scripts/hypo-art.ts` draws one picture of THE CHEZ with its stripes in three reserved palette slots (250 lower stripe, 251 upper stripe, 252 white pinstripe). `palette(stage)` fills those slots with the body red (bare car) or with charcoal and white, so each trial's `.PAL` is a real palette swap and no art is redrawn. `check:game` verifies that the four palettes differ only in those three slots.
 
-## The stripes return
+## The turtle with a countdown
 
-`scripts/stripe-car.ts` draws the measured CitiCar with only a few racing stripe fragments, then restores the full pattern during the final fitting cartoon. It compares two versions of the project’s own car drawing, changing only the stripe pixels while keeping the roof, door window, wheels, and lights. The car stays worn during the search, including the title, chapter cards, and landing-page art. The final fitting cartoon restores all the stripes, then puts Teddy in the passenger window before the victory lap.
+`scripts/hypo-street.ts` builds the Control Run crossing from twelve block variants per cell, advancing every nine ticks: six of WAIT (the turtle and an arm are solid, a sign's bar drains) and six of GO (all clear). PLAYGAME animates block ids globally, so the barrier, the turtle and the four sign blocks stay in phase. Neither state hurts the car.
 
-`scripts/road-stories.ts` supplies eight connected, captioned jokes and their animated props: Doc Leo’s wildly optimistic speed claim, Gwinn’s suspicious leaf, Doc Leo’s turn at the controls, the leaf’s thank-you, friendly balloon dogs, Gwinn’s extraordinarily long shortcut, an umbrella with a flight plan, and fitting the last stripe. `scripts/cartoons.ts` stages the crew, restores the stripes, and drives into the next road. Each short FLI can be skipped with the engine’s normal keys.
+## Teddy, four ways (and two in the garage)
 
-## Sky Laundry
+`scripts/hypo-driveway.ts` gives Teddy a native four-way character: front, back and side poses, with left drawn by mirroring the side frames. Arrows (and A, D, W) walk and Space barks. The scenery has zero gravity. Two pickups add to extra counter 21; the garage door asks for both, spends them and opens. Its scene link sits on that door, so touching it is leaving.
 
-- The air streams are two animated background blocks with upward gravity. Their arrows move while both animation frames keep the same pull.
-- Cloud ledges are solid only on top. Teddy can rise through them from below, then settle on them from above. The route uses three different crossing heights.
-- Marked Z clouds start Teddy's sleep animation. Game-Maker stores extra lives, so the builder gives him two extras and the page shows three total tries. After those tries, the page starts a fresh engine session at the same chapter's safe entrance.
-- Each stripe gets artwork over its exact underlying tile. Touching a piece replaces it with that same background, so collecting it leaves a clean sky rather than a floating rectangle.
+## Hens, a honk and a rival on a set path
 
-## Wind kites
+`scripts/hypo-tricycle.ts` builds Trial 1 with a native `.MON` file. The rival tricycle is a monster on a normal march (two legs, because a corner more than half the map away is walked the short way round the wrap) at a set 4 pixels a tick, a little under the 25 mph car's 5, and dies at the corner (`end` -1). The hens are still monsters with a solid monster block: the engine pushes the car back from a solid monster and cancels its motion, so the car stops cleanly and nothing hurts. A moving hen made the car judder, so hens stand and peck. Every monster has power 150 (nothing at 100 or more dies by touching the car), so hens, rival and car never fight; only the honk, power 200, beats a hen. The honk is the car's Space sequence (`carCharacter(25, undefined, wave)` in `scripts/hypo-car.ts`) with a first frame whose bottom block is `MONBL` and whose top block is the wave's monster number: that frame gives birth to the wave, which flies in the car's last direction at 10 pixels a tick for eight ticks. Touching a hen kills her into her `newmon`, a flapping hen that climbs away and disappears. The honk sound is the car's horn effect. Release Right before tapping Space (the engine follows one key at a time); `check:game` plays a honk-at-every-hen run and a Space-while-Right-is-held run.
 
-`scripts/wind-kites.ts` turns stripe pieces into native moving actors on a closed four-corner path above Maple Street. PLAYGAME measures these normal-path corners from the starting cell; the last corner returns to (0, 0) so each loop stays in the same patch of sky. Touching a kite collects it. Wind posts send replacements every 64 ticks, so barking away or missing the first batch cannot strand Teddy. Kites expire after 320 ticks to keep the population bounded. Seven ground pieces leave only one kite needed for the eight-piece quota.
+## The wind tunnel: upward gravity and one-way ledges
 
-## Park leaf errand
+`scripts/hypo-garage.ts` builds Level 5, Teddy on foot with gravity. Gravity is per block (`grav` bits: 1 up, 2 right, 4 down, 8 left), taken from the block Teddy is mostly in, and adds one pixel a tick each tick (movement is capped at 11). Every block pulls down; a fan's draft is two columns of blocks with `grav` 1 (a three-frame animated chain of streaks) from a grate in the floor or bench up through the bench above, which is solid on top only (`solid` 1), so Teddy rises through it, overshoots and lands back on it. A post of crates beside each draft keeps a player who holds Right inside the draft until the bench top is cleared; the bench then catches him. Standing still in a draft works too. The grates are animated chains too (three turns of a box fan seen from above). The third bench holds a counter pickup (the stripe roll) and the door, which stays shut until the roll is in. `teddyData(true)` in `scripts/hypo-driveway.ts` drops walking up and down for this level.
 
-`scripts/park-errand.ts` builds a leftward upper branch, Gwinn’s leaf, a wooden leaf gate, and a return lift. `src/park-route.ts` shares the coordinates with the page; the native counter and door remain authoritative. The leaf uses extra counter 20, independently of the park’s stripe counter 23. The return lift lets a player who crosses the hedge too early come back for it.
+## Rain, puddles and night: one street, three palettes
 
-## Leaf crossing
+`paintTown` in `scripts/hypo-town.ts` paints the street scenery in four moods (`street`, `race`, `park`, `night`), and `scripts/hypo-weather.ts` holds what weather adds. Rain streaks repeat every 20 pixels and are drawn last, so they add no art blocks. A palette swap (`timeOfDay` in `scripts/hypo-art.ts`) drains or tints every color except the three stripe slots and any `keep` slots: the rain palette keeps its drops, the night palette keeps the lamp and window light and the car's lamps. Lamp light is the glow ramp dithered thinner toward the edge of an ellipse, and the night garage is a lit open bay drawn into the last lot. `scripts/hypo-road.ts` cuts any of these into a block set with the car's lane as the floor.
 
-`scripts/leaf-crossing.ts` builds Gwinn’s timed Downtown crossing from eighteen background block slots. Five barrier rows, a two-tile sign, and a leaf that swaps sides share a 54-tick WAIT / 54-tick GO cycle. The closed variants are solid; the open variants are passable. Labels, striped barriers, and directional chevrons explain the state without depending on color. Neither state hurts Teddy or costs a try. This uses PLAYGAME’s global block animation, including collision with the displayed variant, rather than a page timer.
+A puddle (`scripts/hypo-mower.ts`) is built from animated blocks: three ripple frames for each of a left cap, a middle and a right cap, on the car's row and the road row below. On the car's row, frame 0 has left gravity (grav 12) and frames 1 and 2 do not; cells start on different frames of the chain, so the ripples travel and the car is pulled back for about a third of the time. Left gravity alone on every cell is a wall (the car holds still), so the animation is what turns a wall into a slowdown: the car crosses at about 3 px a tick instead of 5, and `check:game` proves it still arrives.
 
-## Gwinn’s shortcut
+## A float that follows a slope
 
-`scripts/gwinn-maze.ts` builds a garden maze and a native four-way Gwinn character. All scenery has zero gravity; character frames move in fixed steps, so Up and Down walk instead of hopping. Three-cell corridors give room to turn, pawprints indicate the exit route, and side nooks hold spare stripes. The maze has no hazards or disappearing paths. `MAZE_ROUTE` describes a safe route for verification.
+`scripts/hypo-down.ts` is the hill's downhill made longer: the 30 mph car falls one pixel for every six across, and the road art follows the same line column by column, so everything on the bank repeats every 240 pixels (a whole-block shift) and the picture still cuts into under 150 blocks. The parade float (`scripts/hypo-float.ts`) is nine monsters of one path in lockstep, each a block of a 60 by 60 picture that is sheared to follow the road. A monster path is relative to its start, so a corner more than half the map away is walked backward through the wrap; two legs of about 36 and 84 blocks along the 1-in-6 line keep it going forward. Its speed is one value on both legs, below the car's, so a car that holds Right passes it.
 
-## Umbrella Weather
+## The shipped recording
 
-`scripts/umbrella-weather.ts` builds Teddy’s inventory-gated umbrella flight. Space takes the marked umbrella; its native object ID enables the Up/W movement sequences. Releasing Up lets air friction slow the ascent while the walking or idle frames add a gentle downward drift. Three rain curtains have high, low, and high openings, with a safe floor throughout. `src/umbrella-route.ts` shares the pickup and opening coordinates. The carried umbrella picture is retained in the following road’s block set.
-
-## Victory ride
-
-The vehicle is a new `.CHR` and `.CBL`, played by the same engine. Its steering frames add momentum instead of moving a fixed distance; the idle sequence lets that momentum decay. A bounce adds an upward impulse while keeping the horizontal momentum, and the horn sequence leaves the car rolling. The car sprite comes from the measured `chezPicture` drawing, reduced to the engine's 20-pixel actor width, with Teddy in the passenger window. The larger cartoons show the full car drawing.
-
-The bounce has three protected ticks so a car stopped against a bump can rise before steering resumes. This avoids the engine's corner adjustment pushing the car down again while it is still too low to clear the bump.
-
-Neutral spacer sequences also make steer-and-bounce inputs safe when both keys arrive in the same tick. They account for the original player's behavior when it resumes a sequence before that sequence's first frame has played.
-
-## Native instruction cards
-
-Every native chapter card states its collection target, including ten cheer flags for the victory lap. The first road has its own card teaching the crate hop and ten-piece goal. The opening and park instructions stay up for four seconds and can be skipped with the engine’s normal keys. These instructions are DOS GIF/LST files played by the engine, so the standalone game carries its targets with it.
+`npm run record:demo` plays the built game headless through all ten levels with arrows only, never holding two keys, and saves `assets/teddy-tour.rec`. `check:game` replays it, requires a win without a nap, and requires the keys to stay among arrows, Space and Enter.
 
 ## Website state and guidance
 
-`src/checkpoint.ts` stores only a validated road entrance in local browser storage, tied to the current chapter order. It never restores live engine objects, inventory, or a demonstration’s position.
+`src/checkpoint.ts` stores only a validated level entrance in local browser storage, tied to the current level order. It never restores live engine objects or a demonstration's position.
 
-`src/chapters.ts` supplies the page's names, goals, entrances, and control labels. The game check compares those values with the built DOS scene graph and gates, including the victory road's entrance on the right.
+`src/chapters.ts` supplies the page's names, goals, entrances and doors. The game check compares those values with the built DOS scene graph.
 
-Every exit has one scene link, on its locked tile. The finish ribbon is checked from both sides so bouncing over it cannot bypass the cheer quota.
-
-`src/music-control.ts` remembers the music setting and controls the engine’s song playback independently of effects.
+`src/music-control.ts` remembers the music setting and controls the engine's song playback independently of effects.

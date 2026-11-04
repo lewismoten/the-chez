@@ -6,6 +6,8 @@
     "dev": "vite",
     "build:game": "tsx scripts/build-game.ts && npm run build:zip",
     "check:game": "tsx scripts/check-game.ts",
+    "check:speed": "tsx scripts/check-speed.ts",
+    "record:demo": "tsx scripts/record-demo.ts",
     "check:browser": "tsx scripts/check-browser.mjs",
     "check:release": "tsx scripts/check-release.mjs",
     "build": "tsc --noEmit && vite build",
@@ -14,6 +16,7 @@
     "check:guidance": "tsx scripts/check-guidance.mjs",
     "build:art": "tsx scripts/build-art.ts",
     "check:music": "tsx scripts/check-music.mjs",
+    "check:axe": "tsx scripts/check-axe.mjs",
     "check:isolation": "tsx scripts/check-isolation.mjs",
     "build:zip": "tsx scripts/build-zip.ts",
     "check:archives": "tsx scripts/check-archives.mjs"

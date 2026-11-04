@@ -61,8 +61,8 @@ export const CHEZ_BODY: Pt[] = [
 ];
 /** The door window: its front edge slanted, its back edge (nearly) upright. */
 export const CHEZ_WINDOW: Pt[] = [
-  [12.5, 2.8],
-  [18.5, 2.8],
+  [12.5, 3.6],
+  [18.5, 3.6],
   [24.5, 8.3],
   [13.0, 8.3],
 ];
@@ -80,7 +80,7 @@ export const CHEZ_WHEELS = [9.35, 31.1];
 export const CHEZ_AXLE = 16.75;
 const TIRE = 3.25;
 /** The roof's black panel comes down to here. */
-const ROOF_EDGE = 2.05;
+const ROOF_EDGE = 4.6;
 /** The racing stripes' band: its middle along the front, the step up it takes over the rear
  * quarter (from KINK[1] back to KINK[0], an S curve), where it ends at the back, and each dark
  * stripe's width and the gap between their middles (both at least a pixel apart when small). */
@@ -155,7 +155,7 @@ function profile(k: ChezInk, port: boolean, s: number, t = s): Pixels {
       if (!onChez(X, Y)) continue;
       // flat red sides, lit along the top of the hood's slope, shadowed under the door
       let c = k.body[Y > 16.9 ? 0 : X > 17.9 && Y - 1.3 - (X - 17.9) * fall < Math.max(0.9, 1.5 * px) ? 2 : 1];
-      if (Y < ROOF_EDGE || (Y < 1.3 + px && X < 17.9 + 1 / s))
+      if (Y < ROOF_EDGE || (Y < 1.3 + px && X < 17.9 + 1 / s) || (X > 17.9 && X < 24.6 && Y < 4.6 + (X - 20.5) * (3.7 / 4)))
         c = k.roof; // (at least a pixel of it)
       else if (inPoly(CHEZ_WINDOW, X, Y)) c = k.glass[0];
       else if (X >= BAND_END - (s >= 2 ? px : 0)) {
@@ -184,7 +184,7 @@ function profile(k: ChezInk, port: boolean, s: number, t = s): Pixels {
         if (p.get(x, y) !== HOLE && p.get(x, y) !== k.glass[0]) p.set(x, y, k.trim);
       }
     };
-    seam(12.1, 13.7, 2.2, 18.1);
+    seam(12.1, 13.7, 3.0, 18.1);
     seam(26.1, 26.1, 8.3, 18.1);
     box(14.5, 10.6, 1.5, 0.6, k.chrome ?? k.hub);
     if (s >= 3) for (let x = 28.4; x < 31.8; x += 0.5) p.set(at(x), atY(BAND) - (Math.round(x * 2) % 3 === 0 ? 1 : 0), pin); // "electric"

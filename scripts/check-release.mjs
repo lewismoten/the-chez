@@ -25,13 +25,13 @@ try {
     build: { outDir: directory },
     preview: { host: "127.0.0.1", port: 4176, strictPort: true },
   });
-  browser = await chromium.launch({ channel: "chrome", headless: true });
+  browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 390, height: 800 } });
   const archiveRequests = [],
     looseRequests = [];
   page.on("request", (request) => {
     const path = new URL(request.url()).pathname;
-    if (path === "/stripe.zip") archiveRequests.push(path);
+    if (path === "/hypothesis.zip") archiveRequests.push(path);
     if (path.startsWith("/game/")) looseRequests.push(path);
   });
   const errors = [],
@@ -48,9 +48,9 @@ try {
   await page.locator("#watch-demo").click();
   await page.waitForFunction(
     () =>
-      document.querySelector("#status")?.textContent === "Teddy’s grand finale",
+      document.querySelector("#status")?.textContent === "The experiment ends",
     null,
-    { timeout: 330_000 },
+    { timeout: 540_000 },
   );
   assert.equal(
     await page.locator("#chapter-name").textContent(),
@@ -58,7 +58,7 @@ try {
   );
   assert.equal(
     await page.locator("#stripe-progress").textContent(),
-    `${CHAPTERS.at(-1).required} / ${CHAPTERS.at(-1).required}`,
+    CHAPTERS.at(-1).readout,
   );
   await page.waitForTimeout(2000);
   await page.screenshot({ path: join(screenshots, "mobile-finale.png") });
@@ -87,13 +87,13 @@ try {
   await page.waitForFunction(
     () =>
       document.querySelector("#chapter-name")?.textContent ===
-        "The Stripe Road" &&
+        "The Hypothesis" &&
       document.querySelector("#status")?.textContent === "Playing · 3 tries",
   );
   assert.equal(await page.locator("#game-overlay").isVisible(), false);
-  assert.equal(await page.locator("#progress-label").textContent(), "STRIPES");
+  assert.equal(await page.locator("#progress-label").textContent(), "THINGS FETCHED");
   assert.equal(await page.locator("#bark").textContent(), "Bark!");
-  assert.equal(await page.locator("#hop").textContent(), "Hop ↑");
+  assert.equal(await page.locator("#hop").textContent(), "Up ↑");
   assert.equal(
     archiveRequests.length,
     1,

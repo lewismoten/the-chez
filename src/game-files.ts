@@ -7,15 +7,15 @@ import {
 let archive: Promise<ArrayBuffer> | undefined;
 
 export async function bundledFiles(): Promise<GameFiles> {
-  const bytes = await (archive ??= fetch("/stripe.zip").then((response) => {
-    if (!response.ok) throw new Error("Could not load Stripe Chase.");
+  const bytes = await (archive ??= fetch("/hypothesis.zip").then((response) => {
+    if (!response.ok) throw new Error("Could not load The Stripe Hypothesis.");
     return response.arrayBuffer();
   })).catch((error: unknown) => {
     archive = undefined;
     throw error;
   });
   return new GameFiles(
-    (await unpackGame(bytes, { name: "stripe.zip" })).entries,
+    (await unpackGame(bytes, { name: "hypothesis.zip" })).entries,
   );
 }
 

@@ -2,8 +2,6 @@
 import './style.css';
 import { type GameFiles, Machine, runGame } from '@lewismoten/gamemaker-sandbox-engine';
 import { bundledFiles, selectedFiles } from './game-files';
-import { UMBRELLA_SLOT } from './umbrella-route';
-import { PARK_GATE, PARK_LEAF } from './park-route';
 import { CHAPTERS } from './chapters';
 import { fillRoadAtlas, roadMessage } from './road-guide';
 import { createMusicControl } from './music-control';
@@ -38,41 +36,16 @@ let launch = 0;
 let retryScene = loadCheckpoint();
 const chapterLabels = CHAPTERS.map((chapter) => chapter.name);
 const chapterGoals = CHAPTERS.map((chapter) => chapter.required);
+const goalText = (index: number) => (chapterGoals[index] > 0 ? `0 / ${chapterGoals[index]}` : (CHAPTERS[index].readout ?? ''));
 
 function chapterControls(index: number) {
   const driving = CHAPTERS[index]?.mode === 'drive';
-  const maze = CHAPTERS[index]?.mode === 'maze';
-  const floating = CHAPTERS[index]?.mode === 'float';
-  for (const [id, direction] of [
-    ['left', 'left'],
-    ['right', 'right'],
-  ])
-    document
-      .querySelector(`#${id}`)!
-      .setAttribute('aria-label', `${driving ? 'Drive' : 'Move'} ${driving ? 'THE\u00a0CHEZ' : (CHAPTERS[index]?.actor ?? 'Teddy')} ${direction}`);
-  document.querySelector('#bark-key')!.textContent = maze ? '↓ / Space' : 'Space';
-  progressLabel.textContent = driving ? 'CHEERS' : 'STRIPES';
-  document.querySelector('#move-label')!.textContent = driving ? 'Drive THE\u00a0CHEZ' : `Move ${CHAPTERS[index]?.actor ?? 'Teddy'}`;
-  document.querySelector('#hop-label')!.textContent = maze ? 'Up' : floating ? 'Float' : driving ? 'Bounce' : 'Hop';
-  document.querySelector('#bark-label')!.textContent = maze
-    ? 'Down'
-    : floating
-      ? 'Take'
-      : driving
-        ? 'Honk'
-        : CHAPTERS[index]?.actor === 'Doc Leo'
-          ? 'Squeak'
-          : 'Bark';
-  document.querySelector('#hop')!.textContent = maze ? 'Up ↑' : floating ? 'Float ↑' : driving ? 'Bounce ↑' : 'Hop ↑';
-  document.querySelector('#bark')!.textContent = maze
-    ? 'Down ↓'
-    : floating
-      ? 'Take'
-      : driving
-        ? 'Honk!'
-        : CHAPTERS[index]?.actor === 'Doc Leo'
-          ? 'Squeak!'
-          : 'Bark!';
+  for (const direction of ['left', 'right'])
+    document.querySelector(`#${direction}`)!.setAttribute('aria-label', `${driving ? 'Drive THE\u00a0CHEZ' : 'Move Teddy'} ${direction}`);
+  progressLabel.textContent = CHAPTERS[index]?.goal ?? 'GOAL';
+  document.querySelector('#move-label')!.textContent = driving ? 'Drive THE\u00a0CHEZ' : 'Move Teddy';
+  document.querySelector('#bark-label')!.textContent = driving ? 'Honk' : 'Bark';
+  document.querySelector('#bark')!.textContent = driving ? 'Honk!' : 'Bark!';
 }
 
 async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: number) {
@@ -94,7 +67,7 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
   chapterControls(chapterIndex);
   if (skipMenu) {
     chapterName.textContent = chapterLabels[chapterIndex];
-    stripeProgress.textContent = `0 / ${chapterGoals[chapterIndex]}`;
+    stripeProgress.textContent = goalText(chapterIndex);
     sayRoad(roadMessage(CHAPTERS[chapterIndex], 0));
   } else {
     sayRoad('Playing a selected Game-Maker game. F1 opens its own instructions.');
@@ -112,7 +85,14 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
         musicLink.session(session);
         if (skipMenu && resume !== undefined) {
           const title = session.game.scenes[0];
-          title.links[0] = { ...title.links[0], toScene: resume, to: { x: CHAPTERS[resume - 2].startX, y: 39 } };
+          title.links[0] = {
+            ...title.links[0],
+            toScene: resume,
+            to: {
+              x: CHAPTERS[resume - 2].startX,
+              y: CHAPTERS[resume - 2].startY,
+            },
+          };
           title.files[0] = title.files[1] = '';
         }
         session.onScene = (scene) => {
@@ -127,7 +107,7 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
             chapterControls(chapterIndex);
             sayRoad(roadMessage(CHAPTERS[chapterIndex], 0));
             chapterName.textContent = chapterLabels[chapterIndex];
-            stripeProgress.textContent = `0 / ${chapterGoals[chapterIndex]}`;
+            stripeProgress.textContent = goalText(chapterIndex);
           }
           if (skipMenu && scene === 1 && machine === current) {
             finished = true;
@@ -136,9 +116,12 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
               forgetCheckpoint();
             }
             chapterName.textContent = 'Curtain call';
-            stripeProgress.textContent = `${chapterGoals[chapterIndex]} / ${chapterGoals[chapterIndex]}`;
-            status.textContent = demo ? 'Teddy’s grand finale' : 'Stripes restored!';
-            sayRoad('Teddy did it! Teamwork was the real turbo button.');
+            stripeProgress.textContent =
+              chapterGoals[chapterIndex] > 0
+                ? `${chapterGoals[chapterIndex]} / ${chapterGoals[chapterIndex]}`
+                : (CHAPTERS[chapterIndex].readout ?? '');
+            status.textContent = demo ? 'The experiment ends' : 'Results are in!';
+            sayRoad('Top speed: 25 mph. Inconclusive. More trials are coming.');
           }
         };
       },
@@ -146,17 +129,13 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
         if (!skipMenu || finished || machine !== current) return;
         const chapter = CHAPTERS[chapterIndex];
         const required = chapter.required;
-        const gate = world.bg[world.blkmap[world.map[39 * 100 + chapter.carX]]];
-        // An opened native gate has already spent its quota; keep the completed goal visible.
-        const found = gate.solid === 0 ? required : Math.min(required, Math.max(0, world.ci.meter[21 + chapterIndex] - 1));
-        const nearGate =
-          Math.abs(world.chr.x[0] - chapter.carX) <= (chapter.mode === 'float' ? 5 : 3) && (chapter.mode === 'float' || Math.abs(world.chr.y[0] - 39) <= 2);
-        const leafReady =
-          chapter.errand === 'leaf' &&
-          (world.ci.meter[PARK_LEAF.counter] > 1 || world.bg[world.blkmap[world.map[PARK_GATE.y * 100 + PARK_GATE.x]]].solid === 0);
-        const nearLeafGate = chapter.errand === 'leaf' && Math.abs(world.chr.x[0] - PARK_GATE.x) <= 3;
-        sayRoad(roadMessage(chapter, found, nearGate || nearLeafGate, chapter.mode === 'float' ? world.ci.inv.includes(UMBRELLA_SLOT) : leafReady));
-        const label = `${found} / ${required}`;
+        const gate = world.bg[world.blkmap[world.map[chapter.doorY * 100 + chapter.doorX]]];
+        // An opened native door has already spent its quota; keep the completed goal visible.
+        const found =
+          chapter.counter === undefined ? 0 : gate.solid === 0 ? required : Math.min(required, Math.max(0, world.ci.meter[chapter.counter] - 1));
+        const nearGate = Math.abs(world.chr.x[0] - chapter.doorX) <= 4 && Math.abs(world.chr.y[0] - chapter.doorY) <= 4;
+        sayRoad(roadMessage(chapter, found, nearGate));
+        const label = required > 0 ? `${found} / ${required}` : (chapter.readout ?? '');
         if (stripeProgress.textContent !== label) stripeProgress.textContent = label;
         if (!demo) {
           const tries = world.ci.lives + 1;
@@ -175,15 +154,15 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
         if (skipMenu && how !== 'won')
           sayRoad(
             how === 'lost'
-              ? 'A tiny nap calls for another go. Try this road again with three fresh tries.'
-              : 'Teddy kept your road. Continue whenever you are ready.',
+              ? 'Science calls for another go. Try this level again with three fresh tries.'
+              : 'Teddy kept your place. Continue whenever you are ready.',
           );
-        status.textContent = skipMenu && how === 'won' ? 'Stripes restored!' : how === 'lost' ? 'Try again' : 'Game finished';
+        status.textContent = skipMenu && how === 'won' ? 'Results are in!' : how === 'lost' ? 'Try again' : 'Game finished';
       },
     });
     if (machine === current && demo) {
       status.textContent = 'Demo finished';
-      sayRoad('Teddy showed the route. Your turn to move, hop, bark, and zoom.');
+      sayRoad('Teddy showed the route. Your turn to walk, drive, and wait for the turtle.');
     }
     if (machine === current && !skipMenu) sayRoad('Selected game finished. Restart returns to Teddy’s adventure.');
     if (machine === current && !demo && !finished && outcome === undefined) status.textContent = 'Game finished';
@@ -191,17 +170,17 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
       overlayTitle.textContent = demo
         ? 'Your turn, Teddy!'
         : finished
-          ? 'Teddy did it!'
+          ? 'Inconclusive!'
           : outcome === 'lost'
             ? 'Teddy tries again!'
-            : 'Ready for another chase?';
+            : 'Ready for another trial?';
       overlayText.textContent = demo
-        ? 'Teddy showed the way. Move, hop, and bark the stripes home.'
+        ? 'Teddy showed the way. Fetch, drive, and wait for the turtle.'
         : finished
-          ? 'THE\u00a0CHEZ is 900% more dashing. Teamwork was the real turbo button.'
+          ? 'Top speed: 25 mph. Inconclusive. Doc Leo says the next trial will prove it.'
           : outcome === 'lost'
             ? `${chapterLabels[lastScene - 2]} is ready for another go. Three fresh tries!`
-            : 'The wind can wait. Teddy and the crew are ready whenever you are.';
+            : 'The clipboard can wait. Teddy and the crew are ready whenever you are.';
       const canContinue = retryScene !== undefined;
       if (demo && retryScene !== undefined)
         overlayText.textContent = `${chapterLabels[retryScene - 2]} is saved for you. Continue there with three fresh tries.`;
@@ -238,10 +217,10 @@ async function startBundled(demo = false) {
 if (retryScene !== undefined) {
   const chapter = CHAPTERS[retryScene - 2];
   overlayTitle.textContent = 'Teddy kept your place!';
-  overlayText.textContent = `${chapter.name} is ready. Continue from its safe entrance with three fresh tries, or choose Restart for a brand-new chase.`;
+  overlayText.textContent = `${chapter.name} is ready. Continue from its safe entrance with three fresh tries, or choose Restart for a brand-new experiment.`;
   startButton.textContent = 'Continue with Teddy';
   chapterName.textContent = chapter.name;
-  stripeProgress.textContent = `0 / ${chapter.required}`;
+  stripeProgress.textContent = goalText(retryScene - 2);
   status.textContent = 'Road saved';
   chapterControls(retryScene - 2);
   sayRoad(roadMessage(chapter, 0));
@@ -290,6 +269,7 @@ for (const [id, scan] of [
   ['left', 75],
   ['right', 77],
   ['hop', 72],
+  ['down', 80],
   ['bark', 57],
 ] as const) {
   const button = document.querySelector<HTMLButtonElement>(`#${id}`)!;

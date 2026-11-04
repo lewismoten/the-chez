@@ -1,0 +1,113 @@
+// The Stripe Hypothesis art: one car sprite whose stripes are palette slots, so each trial's
+// palette (bare red, one stripe, both stripes, the white pinstripe) is a real palette swap.
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { matchColor, parsePalette } from '@lewismoten/gamemaker-sandbox-tools/formats/palette';
+import { Pixels } from '@lewismoten/gamemaker-sandbox-tools/drawing';
+import { chezPicture, type ChezInk } from '../assets/source/chez.ts';
+import { micro } from '../assets/source/teddy/art/draw.ts';
+import { R, addStreetColors } from './hypo-colors.ts';
+
+/** Palette slots the car's stripes use: lower stripe, upper stripe, white pinstripe. */
+export const SLOT = { low: 250, high: 251, pin: 252 } as const;
+/** Trial stage: 0 bare red, 1 lower stripe, 2 both stripes, 3 the white pinstripe too. */
+export type Stage = 0 | 1 | 2 | 3;
+
+const disk = (name: string) => new Uint8Array(readFileSync(fileURLToPath(new URL(`../assets/source/teddy/disk/${name}`, import.meta.url))));
+const BASE = parsePalette(disk('backyard.pal'));
+const nearest = (r: number, g: number, b: number) => matchColor(BASE, r, g, b);
+/** Colors for drawing, always from the shared base slots (never the three stripe slots). */
+export const C = {
+  red: nearest(54, 11, 7),
+  black: nearest(6, 8, 10),
+  white: nearest(63, 61, 56),
+  gold: nearest(63, 45, 12),
+  navy: nearest(4, 13, 19),
+  cream: nearest(61, 56, 43),
+  dark: nearest(9, 12, 15),
+  asphalt: nearest(17, 19, 22),
+  sky: nearest(14, 30, 42),
+  green: nearest(10, 43, 23),
+  tan: nearest(50, 30, 13),
+};
+
+/** The palette for a trial: the shared art, plus the three stripe slots for that stage. */
+export function palette(stage: Stage): Uint8Array {
+  const p = BASE.slice();
+  addStreetColors(p);
+  const set = (slot: number, rgb: number[]) => p.set(rgb, slot * 3);
+  const red = Array.from(BASE.subarray(C.red * 3, C.red * 3 + 3));
+  set(SLOT.low, stage >= 1 ? [9, 10, 12] : red);
+  set(SLOT.high, stage >= 2 ? [9, 10, 12] : red);
+  set(SLOT.pin, stage >= 3 ? [63, 61, 56] : red);
+  return p;
+}
+
+export const carInk: ChezInk = {
+  body: [R('carRed', 0), R('carRed', 1), R('carRed', 2)],
+  trim: R('carRed', 0),
+  glass: [R('glass', 0), R('glass', 2)],
+  roof: C.black,
+  tire: C.black,
+  hub: C.white,
+  bumper: C.black,
+  lamp: C.gold,
+  tail: C.red,
+  rim: C.white,
+  lens: C.white,
+};
+
+/** THE CHEZ with stripe pixels in the reserved slots; pair it with palette(stage). */
+export function car(facing: 'left' | 'right' = 'right', scale = 1): Pixels {
+  const plain = chezPicture({ ...carInk, stripe: R('carRed', 1), pin: R('carRed', 1) }, facing, scale);
+  const marked = chezPicture({ ...carInk, stripe: SLOT.low, pin: SLOT.pin }, facing, scale);
+  const out = plain.crop(0, 0, plain.w, plain.h);
+  for (let i = 0; i < out.px.length; i++) {
+    if (marked.px[i] === plain.px[i]) continue;
+    const y = Math.floor(i / plain.w) / scale;
+    out.px[i] = marked.px[i] === SLOT.pin ? SLOT.pin : y < 13 ? SLOT.high : SLOT.low;
+  }
+  return out;
+}
+
+/** The speedometer block: a ring of blocks with a needle and the speed in 3x5 digits. */
+export function dial(mph: 20 | 25 | 30): Pixels {
+  const p = new Pixels(20, 20, 255);
+  const cx = 9.5,
+    cy = 9.5;
+  for (let y = 0; y < 20; y++)
+    for (let x = 0; x < 20; x++) {
+      const d = Math.hypot(x - cx, y - cy);
+      if (d <= 9.6) p.px[y * 20 + x] = C.dark;
+      if (d > 8.2 && d <= 9.6) p.px[y * 20 + x] = C.cream;
+    }
+  // Needle: 20 points left, 25 straight up, 30 right of up.
+  const angle = ((mph - 25) / 5) * 0.5;
+  for (let r = 0; r <= 6; r += 0.5) p.set(Math.round(cx + Math.sin(angle) * r), Math.round(cy - 3 - Math.cos(angle) * r + 3), C.gold);
+  // Tick marks for the three speeds, then the reading.
+  for (const a of [-0.5, 0, 0.5]) p.set(Math.round(cx + Math.sin(a) * 7), Math.round(cy - Math.cos(a) * 7), C.cream);
+  micro(p, 6, 11, String(mph), C.white);
+  return p;
+}
+
+/** A time of day for a level: the shared palette tinted, except the three stripe slots and any `keep` slots
+ * (lit windows, lamps, rain drops stay bright). Each level's .pal is its own. */
+export function timeOfDay(pal: Uint8Array, when: 'dusk' | 'dawn' | 'night' | 'late' | 'rain' | 'gold', keep: readonly number[] = []): Uint8Array {
+  const [kr, kg, kb] = { dusk: [1, 0.78, 0.7], dawn: [0.95, 0.88, 1], night: [0.4, 0.5, 0.82], late: [0.66, 0.7, 0.92], rain: [0.62, 0.7, 0.8], gold: [1, 0.9, 0.72] }[when];
+  const out = pal.slice();
+  for (let i = 0; i < 256; i++) {
+    if ((i >= SLOT.low && i <= SLOT.pin) || keep.includes(i)) continue;
+    let r = pal[i * 3];
+    let g = pal[i * 3 + 1];
+    let b = pal[i * 3 + 2];
+    if (when === 'rain') {
+      // rain drains the color: pull each channel toward the gray
+      const gray = (r + g + b) / 3;
+      [r, g, b] = [r, g, b].map((c) => gray * 0.55 + c * 0.45);
+    }
+    out[i * 3] = Math.min(63, Math.round(r * kr));
+    out[i * 3 + 1] = Math.min(63, Math.round(g * kg));
+    out[i * 3 + 2] = Math.min(63, Math.round(b * kb));
+  }
+  return out;
+}

@@ -1,35 +1,16 @@
-// Gentle road guidance from the engine's counters and position; the native game keeps every rule.
+// Gentle level guidance from the engine's counters and position; the native game keeps every rule.
 import { CHAPTERS, type ChapterInfo } from './chapters';
 
-export function roadMessage(chapter: ChapterInfo, found: number, nearGate = false, taskReady = false): string {
-  const driving = chapter.mode === 'drive';
+export function roadMessage(chapter: ChapterInfo, found: number, nearGate = false): string {
+  if (chapter.required === 0) return nearGate ? 'The finish is just ahead. Keep holding Right.' : chapter.mission;
   const remaining = Math.max(0, chapter.required - found);
-  const noun = driving ? 'cheer' : 'stripe';
-  if (chapter.mode === 'float') {
-    if (!taskReady) return 'Take the umbrella near the start with Space. Hold Up to open and rise; release to fold and sink.';
-    if (remaining > 0) return `Umbrella ready! Find ${remaining} more stripe${remaining === 1 ? '' : 's'} through the HIGH / LOW / HIGH rain windows.`;
-    return nearGate
-      ? 'Stripes ready! Let go of Up and sink beside THE\u00a0CHEZ on the right.'
-      : 'Stripes ready! Keep floating through the rain windows, then fold and sink at THE\u00a0CHEZ on the right.';
-  }
-  if (chapter.errand === 'leaf') {
-    if (!taskReady) {
-      if (nearGate) return 'The wooden gate needs Gwinn’s leaf. Ride the return stream on the LEFT; the leaf is above the hedge.';
-      if (remaining === 0) return 'Stripes ready. Ride up, then LEFT for Gwinn’s leaf. Bring it RIGHT to the wooden gate.';
-      return `Find ${chapter.required} stripes and Gwinn’s leaf. Ride up, then LEFT along the upper branch. Bring the leaf RIGHT to the wooden gate.`;
-    }
-    if (remaining > 0)
-      return `Leaf rescued! Find ${remaining} more stripe${remaining === 1 ? '' : 's'} along the trail to the RIGHT, then reach THE\u00a0CHEZ.`;
-  }
-  const rescued = chapter.errand === 'leaf' ? 'Leaf rescued! ' : '';
-  if (remaining === 0)
-    return driving ? 'The crowd approves! Finish at HOME on the left.' : `${rescued}Your stripes are ready. Reach THE\u00a0CHEZ on the right.`;
-  if (nearGate) return `${chapter.actor ?? 'Teddy'} needs ${remaining} more ${noun}${remaining === 1 ? '' : 's'}. ${chapter.help}`;
-  return `${rescued}Gather ${chapter.required} ${noun}s. ${chapter.mission}`;
+  if (remaining === 0) return chapter.found ?? (chapter.required === 1 ? 'Tape found. Walk into the garage door.' : 'Both things fetched. Walk into the garage door.');
+  if (nearGate) return `The garage wants ${remaining} more ${remaining === 1 ? 'thing' : 'things'}. ${chapter.help}`;
+  return chapter.mission;
 }
 
 export function fillRoadAtlas(list: HTMLOListElement): void {
-  for (const [index, chapter] of CHAPTERS.entries()) {
+  for (const [index, chapter] of CHAPTERS.filter((entry) => !entry.continues).entries()) {
     const item = document.createElement('li');
     const number = document.createElement('span');
     number.className = 'road-number';

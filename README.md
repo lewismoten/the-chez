@@ -2,7 +2,7 @@
 
 A standalone Vite + TypeScript application that tests whether `@lewismoten/gamemaker-sandbox-engine` can be installed from npm and run in a separate project.
 
-The bundled Stripe Chase game is sample content for verifying the engine integration. It downloads as one ZIP and is unpacked by `@lewismoten/gamemaker-sandbox-archives`.
+The bundled sample game, The Stripe Hypothesis, is content for verifying the engine integration. Doc Leo swears racing stripes make THE CHEZ faster; Teddy has doubts, and the speedometer gets the last word. It downloads as one ZIP and is unpacked by `@lewismoten/gamemaker-sandbox-archives`.
 
 ## Setup
 

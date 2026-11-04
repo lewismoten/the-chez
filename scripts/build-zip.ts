@@ -23,13 +23,13 @@ entries.push(
   {
     name: "readme.txt",
     data: new TextEncoder().encode(
-      "STRIPE CHASE\r\n\r\nTeddy has packed an entire adventure into one ZIP. Gwinn packed the packing list.\r\n\r\nKeep all files together. Open STRIPE.GAM with a compatible Game-Maker player,\r\nor choose this ZIP in the browser player. The archive contains game data;\r\nuse the player of your choice. HELP.TXT has the controls.\r\n\r\nSee LICENSE.TXT, NOTICE.TXT, and CREDITS.TXT for credits and licensing.\r\n",
+      "THE STRIPE HYPOTHESIS\r\n\r\nDoc Leo has packed an entire experiment into one ZIP. Gwinn packed the packing list.\r\n\r\nKeep all files together. Open HYPO.GAM with a compatible Game-Maker player,\r\nor choose this ZIP in the browser player. The archive contains game data;\r\nuse the player of your choice. HELP.TXT has the controls.\r\n\r\nSee LICENSE.TXT, NOTICE.TXT, and CREDITS.TXT for credits and licensing.\r\n",
     ),
   },
 );
 entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 const bytes = await createZip(entries, new Date(2000, 0, 1, 12));
-writeFileSync(join(root, "public/stripe.zip"), bytes);
+writeFileSync(join(root, "public/hypothesis.zip"), bytes);
 console.log(
-  `Built public/stripe.zip (${entries.length} files, ${bytes.length} bytes)`,
+  `Built public/hypothesis.zip (${entries.length} files, ${bytes.length} bytes)`,
 );

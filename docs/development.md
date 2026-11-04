@@ -21,15 +21,17 @@ npm run check:archives
 `check` typechecks the application. `build` typechecks and builds it with Vite. The browser checks require locally installed Google Chrome; Playwright uses its `chrome` channel.
 
 - `check:release` builds into a temporary directory and previews it on port 4176. Public page controls play the complete shipped demonstration, check the mobile finale, and start a new game. It checks for missing assets and browser errors, removes the scratch build, and stops its server.
-- `check:guidance` uses port 4177. It checks actor-specific hints and uses public keyboard controls to pass Maple Street’s three crate barriers. Spending the native gate quota must keep the completed goal visible through the transition.
+- `check:guidance` uses port 4177. It checks each level's guidance text, the road atlas (one entry per level) and the tip on a phone after continuing at the hill.
+- `check:browser` uses port 4175. It plays the hill with the real keyboard in the browser engine: the 20 mph climb, the crest scene change, the 30 mph descent and the ending, reading the engine's world every frame.
+- `check:axe` uses ports 5431 to 5434. axe-core at 1440 and 390, light and dark, and no sideways scroll at 390.
 - `check:archives` uses a scratch production server on port 4180. It checks the ZIP download, single-file bundled loading with loose game requests blocked, ZIP/SFX imports, keyboard access, and accessibility at 1440/390 in light/dark settings.
-- `check:music` uses port 4178. It checks muted intros, chapter changes, current-track resume, persistent settings, and audible barks while music is off.
+- `check:music` uses port 4178. It checks muted intros, level songs, current-track resume, the saved setting, and audible barks while music is off.
 
 The checks use their own servers and leave the maintainer’s port 5173 server alone.
 
 ## Rebuild or inspect the fixture
 
-All commands work from this repository alone. Generic development APIs come from the `@lewismoten/gamemaker-sandbox-tools` devDependency; game-specific content is copied into `assets/source/`. Browser playback uses `@lewismoten/gamemaker-sandbox-engine` and the runtime `@lewismoten/gamemaker-sandbox-archives` package to unpack the committed `public/stripe.zip`.
+All commands work from this repository alone. Generic development APIs come from the `@lewismoten/gamemaker-sandbox-tools` devDependency; game-specific content is copied into `assets/source/`. Browser playback uses `@lewismoten/gamemaker-sandbox-engine` and the runtime `@lewismoten/gamemaker-sandbox-archives` package to unpack the committed `public/hypothesis.zip`.
 
 ```sh
 npm run build:art
@@ -39,13 +41,15 @@ npm run check:game
 npm run check:browser
 ```
 
-`build:zip` creates the downloadable `public/stripe.zip` from the generated game files, instructions, license, and notices, using a fixed DOS timestamp and sorted entries. `build:game` also runs this step. `build:art` renders the landing page’s worn CitiCar. `build:game` writes the native DOS files to `public/game/`. These generated files are committed with their source. The toolkit is needed only when running development scripts.
+`build:zip` creates the downloadable `public/hypothesis.zip` from the generated game files, instructions, license, and notices, using a fixed DOS timestamp and sorted entries. `build:game` also runs this step. `build:art` renders the landing page’s worn CitiCar. `build:game` writes the native DOS files to `public/game/`. These generated files are committed with their source. The toolkit is needed only when running development scripts.
 
-`check:game` validates the fixture with the headless reference simulation from the tools package. It checks gates, inventory-tied flight, recovery paths, timed crossings, nap clouds, vehicle handling, text and animation limits, and the complete shipped recording. The recording must win without losing a try. This is separate from verifying the published npm package in the browser.
+`check:game` validates the fixture with the headless reference simulation from the tools package. It checks the scene graph, the garage door and its pickups, the three car speeds (20, 25 and 30 mph) with their speedometers, the stripe palette swaps, the timed turtle crossing, text and animation limits, and the shipped recording, which must win without losing a try and use only arrows, Space and Enter, one key at a time. `check:speed` runs just the speed measurements.
 
 `check:browser` imports local fixture helpers and the installed development toolkit. It starts a temporary Vite server on port 4175, checks portrait and landscape layout and accessibility in light and dark settings, and plays all nine chapters through the installed npm engine. It stops its server afterwards.
 
-Additional browser modes:
+**Phase 1 status:** `check:browser`, `check:guidance` and `check:release` still describe the old nine-chapter game's route and need rewriting for the new levels (phase 2). `check:game`, `check:speed`, `npm run check` and `npm run build` are current.
+
+Additional browser modes (stale until then):
 
 ```sh
 npm run check:browser -- --record
@@ -54,7 +58,7 @@ npm run check:browser -- --lap
 npm run check:browser -- --retry
 ```
 
-- `--record` saves a successful run’s DOS input recording to `assets/teddy-tour.rec`. Rebuild the game afterwards to copy it into `public/game/`.
+- `--record` saved a browser run’s DOS input recording. Use `npm run record:demo` instead, which plays the game headless and saves `assets/teddy-tour.rec`; rebuild the game afterwards to copy it into `public/game/`.
 - `--demo` verifies the shipped recording.
 - `--lap` checks the vehicle chapter directly.
 - `--retry` deliberately loses three tries, reloads the saved chapter, and verifies recovery with three fresh tries and clearing the checkpoint on a win.
@@ -66,25 +70,20 @@ npm run check:browser -- --retry
 | `src/game-files.ts`                               | Fetch the game ZIP and unpack bundled or selected archives into engine files. |
 | `scripts/build-zip.ts`                            | Create the game distribution ZIP with the archives package.                   |
 | `src/main.ts`                                     | Load game files and run the npm engine; connect page controls and status.     |
-| `src/chapters.ts`                                 | Chapter names, goals, entrances, and guidance.                                |
-| `src/checkpoint.ts`                               | Remember a validated chapter entrance.                                        |
-| `src/road-guide.ts`                               | Road atlas and contextual hints.                                              |
+| `src/chapters.ts`                                 | Level names, goals, entrances, doors, and guidance.                                |
+| `src/checkpoint.ts`                               | Remember a validated level entrance.                                        |
+| `src/road-guide.ts`                               | Experiment log and contextual hints.                                              |
 | `src/music-control.ts`                            | Persistent music preference independent of effects.                           |
 | `scripts/build-game.ts`                           | Build the complete native game and its scene graph.                           |
-| `scripts/chapters.ts`                             | Assemble the chapter data.                                                    |
-| `scripts/course-scenery.ts`                       | Draw complete original scenery and preserve backgrounds beneath pickups.      |
-| `scripts/course-obstacles.ts`                     | Crates, hedge lift, and recoverable foam trays.                               |
-| `scripts/crew-characters.ts`                      | Playable cast and walking jumps.                                              |
-| `scripts/park-errand.ts`                          | Leaf rescue, wooden gate, and return lift.                                    |
-| `scripts/wind-kites.ts`                           | Moving stripe pickups and replacement posts.                                  |
-| `scripts/leaf-crossing.ts`                        | Native timed WAIT / GO crossing.                                              |
-| `scripts/sky-laundry.ts`                          | Wind streams, cloud ledges, and nap clouds.                                   |
-| `scripts/gwinn-maze.ts`                           | Four-way garden maze.                                                         |
-| `scripts/umbrella-weather.ts`                     | Inventory-powered floating and rain curtains.                                 |
-| `scripts/victory-lap.ts`                          | Vehicle character and homeward road.                                          |
-| `scripts/stripe-car.ts`                           | Worn stripes and final repair.                                                |
-| `scripts/cartoons.ts` / `scripts/road-stories.ts` | Intro, road trips, victory, and retry animations.                             |
-| `scripts/music.ts`                                | Original chapter and ending themes.                                           |
+| `scripts/hypo-art.ts`                             | Palettes, the stripe palette-swap car and the speedometer drawing.            |
+| `scripts/hypo-car.ts`                             | The 20, 25 and 30 mph car characters, each carrying its own speedometer.      |
+| `scripts/hypo-driveway.ts`                        | Level 1: four-way Teddy, pickups and the garage door.                         |
+| `scripts/hypo-street.ts`                          | Level 2: the flat street and the timed turtle crossing.                       |
+| `scripts/hypo-hill.ts`                             | Level 3: the hill, sheared along the car's path, with the 20 and 30 mph cars. |
+| `scripts/hypo-cards.ts`                           | Title, level and results cards; intro, garage and results cartoons.           |
+| `scripts/check-speed.ts`                          | Measures the three speeds in the headless simulation and the crest link.      |
+| `scripts/record-demo.ts`                          | Plays the game headless and saves the shipped `.REC` demonstration.           |
+| `scripts/music.ts`                                | Original level and ending themes.                                           |
 
 `assets/gwinn-door.voc`, `assets/teddy-bark.voc`, and `assets/teddy-yawn.voc` are short edits of Lewis Moten’s recordings. Gwinn cheers when Teddy opens a car door, Teddy barks at balloon dogs, and his yawn plays during a nap.
 
@@ -121,4 +120,4 @@ npm install --no-save --package-lock=false /path/to/gamemaker-sandbox-archives.t
 npm run check:isolation -- --archives-package /path/to/gamemaker-sandbox-archives.tgz
 ```
 
-The candidate override changes only the scratch consumer. No npm tarballs are committed. `public/stripe.zip` is the intended game distribution asset and is committed with the game builder. Its files can also be unpacked by ordinary ZIP utilities.
+The candidate override changes only the scratch consumer. No npm tarballs are committed. `public/hypothesis.zip` is the intended game distribution asset and is committed with the game builder. Its files can also be unpacked by ordinary ZIP utilities.
