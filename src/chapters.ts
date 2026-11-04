@@ -13,6 +13,8 @@ export interface ChapterInfo {
   doorX: number;
   doorY: number;
   counter?: number;
+  /** What the progress tile shows when there is no counter: the level's top speed. */
+  readout?: string;
   actor: 'Teddy' | 'THE CHEZ';
   mode: 'walk' | 'drive';
 }
@@ -44,6 +46,7 @@ export const CHAPTERS: readonly ChapterInfo[] = [
     startY: 39,
     doorX: 90,
     doorY: 39,
+    readout: '25 MPH',
     actor: 'THE CHEZ',
     mode: 'drive',
   },

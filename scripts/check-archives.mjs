@@ -15,7 +15,7 @@ import {
 } from "@lewismoten/gamemaker-sandbox-tools/formats/game";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const scratch = await mkdtemp(join(tmpdir(), "chez-archives-browser-"));
-const bytes = await readFile(join(root, "public/stripe.zip"));
+const bytes = await readFile(join(root, "public/hypothesis.zip"));
 let server, browser;
 try {
   await build({
@@ -29,7 +29,7 @@ try {
     build: { outDir: scratch },
     preview: { host: "127.0.0.1", port: 4180, strictPort: true },
   });
-  browser = await chromium.launch({ channel: "chrome", headless: true });
+  browser = await chromium.launch({ headless: true });
   for (const width of [1440, 390])
     for (const colorScheme of ["light", "dark"]) {
       const page = await browser.newPage({
@@ -76,7 +76,7 @@ try {
   const download = page.waitForEvent("download");
   await page.locator("#download-game").click();
   const got = await download;
-  assert.equal(got.suggestedFilename(), "stripe.zip");
+  assert.equal(got.suggestedFilename(), "hypothesis.zip");
   assert.deepEqual(await readFile(await got.path()), bytes);
   requests.length = 0;
   await page.locator("#start").click();
@@ -84,7 +84,7 @@ try {
     () =>
       document.querySelector("#status")?.textContent === "Playing · 3 tries",
   );
-  assert.equal(requests.filter((p) => p === "/stripe.zip").length, 1);
+  assert.equal(requests.filter((p) => p === "/hypothesis.zip").length, 1);
   assert.deepEqual(
     requests.filter((p) => p.startsWith("/game/")),
     [],
@@ -93,7 +93,7 @@ try {
   stub[0] = 77;
   stub[1] = 90;
   for (const [name, buffer] of [
-    ["stripe.zip", bytes],
+    ["hypothesis.zip", bytes],
     ["stripe.exe", Buffer.concat([stub, bytes])],
   ]) {
     await page.reload();

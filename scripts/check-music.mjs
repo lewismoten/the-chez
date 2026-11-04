@@ -8,7 +8,7 @@ const root=fileURLToPath(new URL('..',import.meta.url));
 const server=await createServer({root,logLevel:'error',server:{host:'127.0.0.1',port:4178,strictPort:true}});
 await server.listen();let browser;
 try {
-  browser=await chromium.launch({channel:'chrome',headless:true});
+  browser=await chromium.launch({headless:true});
   const page=await browser.newPage({viewport:{width:390,height:800}});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/src/main.ts',async route=>{

@@ -7,7 +7,7 @@ import { serializeSlideList } from '@lewismoten/gamemaker-sandbox-tools/formats/
 import { parseSoundSet, serializeSoundSet } from '@lewismoten/gamemaker-sandbox-tools/formats/sound';
 import { SPEAKER, mix, osc, sample } from '@lewismoten/gamemaker-sandbox-tools/audio';
 import { chapterSong, openingSong, retrySong, winningSong } from './music.ts';
-import { card, garageCartoon, introCartoon, resultsCard, resultsCartoon, TITLE } from './hypo-cards.ts';
+import { card, garageCartoon, introCartoon, resultsCard, resultsCartoon, TITLE, TITLE_CARD } from './hypo-cards.ts';
 import { drivewayFiles, DRIVEWAY } from './hypo-driveway.ts';
 import { streetFiles, STREET } from './hypo-street.ts';
 import { CHAPTERS } from '../src/chapters.ts';
@@ -25,7 +25,7 @@ drivewayFiles(put);
 streetFiles(put);
 
 // Cards: the title, one per level, the results card and the retry card.
-put('menu.gif', card(TITLE, ['DOC LEO, PHD', 'TEDDY, FRONT SEAT'], 'A SCIENCE ADVENTURE'));
+put('menu.gif', card(TITLE_CARD, ['DOC LEO, PHD', 'TEDDY, FRONT SEAT'], 'A SCIENCE ADVENTURE'));
 put('card1.gif', card('THE HYPOTHESIS', ['FETCH THE CLIPBOARD', 'AND THE STOPWATCH.'], 'ARROWS WALK. SPACE BARKS.'));
 put('card2.gif', card('CONTROL RUN', ['NO STRIPES. 25 MPH.', 'WAIT FOR THE TURTLE.'], 'HOLD RIGHT TO DRIVE.'));
 put('card1.lst', serializeSlideList([{ name: 'card1.gif', pause: 3 }]));
@@ -113,23 +113,53 @@ end.files[1] = 'win.cmf';
 end.files[2] = 'lost.lst';
 end.files[3] = 'retry.cmf';
 const stems = ['yard', 'street'];
-const actors: [string, string][] = [['teddy.chr', 'teddy.cbl'], ['car25.chr', 'car.cbl']];
+const actors: [string, string][] = [
+  ['teddy.chr', 'teddy.cbl'],
+  ['car25.chr', 'car.cbl'],
+];
 const exits = ['garage.fli', 'results.fli'];
-const doors = [{ x: DRIVEWAY.doorX, y: DRIVEWAY.doorY }, { x: STREET.finishX, y: STREET.row }];
+const doors = [
+  { x: DRIVEWAY.doorX, y: DRIVEWAY.doorY },
+  { x: STREET.finishX, y: STREET.row },
+];
 CHAPTERS.forEach((chapter, index) => {
   const scene = emptyScene(ADVTYPE);
   const stem = stems[index];
   scene.desc = chapter.name;
   scene.pos = { x: 140 + index * 50, y: 110 };
-  scene.files = [`${stem}.pal`, `${stem}.map`, `${stem}.bbl`, `${stem}.mon`, `${stem}.mbl`, ...actors[index], 'hypo.snd', `${stem}.cmf`, `card${index + 1}.lst`, exits[index], ...new Array(9).fill('')];
+  scene.files = [
+    `${stem}.pal`,
+    `${stem}.map`,
+    `${stem}.bbl`,
+    `${stem}.mon`,
+    `${stem}.mbl`,
+    ...actors[index],
+    'hypo.snd',
+    `${stem}.cmf`,
+    `card${index + 1}.lst`,
+    exits[index],
+    ...new Array(9).fill(''),
+  ];
   const next = CHAPTERS[index + 1];
-  scene.links[0] = { toScene: next ? index + 3 : 1, from: doors[index], to: next ? { x: next.startX, y: next.startY } : { x: 0, y: 0 } };
+  scene.links[0] = {
+    toScene: next ? index + 3 : 1,
+    from: doors[index],
+    to: next ? { x: next.startX, y: next.startY } : { x: 0, y: 0 },
+  };
   game.scenes.push(scene);
 });
-title.links[0] = { toScene: 2, from: { x: 0, y: 0 }, to: { x: CHAPTERS[0].startX, y: CHAPTERS[0].startY } };
+title.links[0] = {
+  toScene: 2,
+  from: { x: 0, y: 0 },
+  to: { x: CHAPTERS[0].startX, y: CHAPTERS[0].startY },
+};
 put('hypo.gam', serializeGame(game));
 writeFileSync(
   join(output, 'manifest.json'),
-  JSON.stringify(readdirSync(output).filter((name) => name !== 'manifest.json').sort()),
+  JSON.stringify(
+    readdirSync(output)
+      .filter((name) => name !== 'manifest.json')
+      .sort(),
+  ),
 );
 console.log(`Built ${output}`);

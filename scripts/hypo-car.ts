@@ -17,7 +17,14 @@ export function carSprites(): Block[] {
   const car = carActor();
   for (let y = 0; y < 10; y++) for (let x = 0; x < 20; x++) sprites[0].pixels[(y + 10) * 20 + x] = car.px[y * 20 + x];
   // Teddy's matching ears and white blaze peek out of the passenger door window.
-  for (const [x, y, c] of [[9, 11, C.tan], [11, 11, C.tan], [9, 12, C.tan], [10, 12, C.white], [11, 12, C.tan], [10, 13, C.white]])
+  for (const [x, y, c] of [
+    [9, 11, C.tan],
+    [11, 11, C.tan],
+    [9, 12, C.tan],
+    [10, 12, C.white],
+    [11, 12, C.tan],
+    [10, 13, C.white],
+  ])
     sprites[0].pixels[y * 20 + x] = c;
   sprites[1].pixels.set(sprites[0].pixels);
   for (const x of [5, 15]) sprites[1].pixels[18 * 20 + x] = C.gold;
@@ -31,9 +38,20 @@ export function carCharacter(mph: Mph): Character {
   const character = newCharacter();
   character.meter[1] = 2;
   // PLAYGAME can resume frame -1 after two keys arrive together; neutral spacers keep that harmless.
-  for (const index of [4, 6, 8, 10, 12, 14, 16, 18]) Object.assign(character.sequences[index], { sound: 0, bloc: 50, jstkBut: 0 });
+  for (const index of [4, 6, 8, 10, 12, 14, 16, 18])
+    Object.assign(character.sequences[index], {
+      sound: 0,
+      bloc: 50,
+      jstkBut: 0,
+    });
   const top = DIAL_SLOT[mph];
-  const frame = (pic: number, x = 0): Frame => ({ ...emptyFrame(), pic1: top, pic2: pic, pause: 1, x });
+  const frame = (pic: number, x = 0): Frame => ({
+    ...emptyFrame(),
+    pic1: top,
+    pic2: pic,
+    pause: 1,
+    x,
+  });
   const set = (index: number, frames: Frame[], options: Partial<Sequence> = {}) => {
     const sequence = character.sequences[index];
     sequence.frames = [...frames, ...Array.from({ length: 10 - frames.length }, () => emptyFrame(true))];
@@ -47,6 +65,10 @@ export function carCharacter(mph: Mph): Character {
   drive(7, 75, -BACKING);
   drive(15, 30, -BACKING);
   // Space honks while the car sits still.
-  set(11, [{ ...frame(2), pause: 3 }, frame(0)], { key: (57 << 8) | 32, norepeat: 1, sound: 20 });
+  set(11, [{ ...frame(2), pause: 3 }, frame(0)], {
+    key: (57 << 8) | 32,
+    norepeat: 1,
+    sound: 20,
+  });
   return character;
 }

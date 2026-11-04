@@ -25,13 +25,13 @@ try {
     build: { outDir: directory },
     preview: { host: "127.0.0.1", port: 4176, strictPort: true },
   });
-  browser = await chromium.launch({ channel: "chrome", headless: true });
+  browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 390, height: 800 } });
   const archiveRequests = [],
     looseRequests = [];
   page.on("request", (request) => {
     const path = new URL(request.url()).pathname;
-    if (path === "/stripe.zip") archiveRequests.push(path);
+    if (path === "/hypothesis.zip") archiveRequests.push(path);
     if (path.startsWith("/game/")) looseRequests.push(path);
   });
   const errors = [],

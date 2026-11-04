@@ -14,7 +14,15 @@ export async function measure(mph: Mph, ticks = 40, crest = false): Promise<numb
   bbl[1].solid = 15;
   for (let x = 0; x < 100; x++) map.blocks[40 * 100 + x] = 1;
   const sim = new Sim(
-    { map, bbl, mon: newMonsterSet(), mbl: Array.from({ length: 100 }, (_, i) => emptyBlock(i, true)), chr: carCharacter(mph), cbl: carSprites(), links: crest ? [{ toScene: 3, from: { x: 30, y: 39 }, to: { x: 31, y: 39 } }] : [] },
+    {
+      map,
+      bbl,
+      mon: newMonsterSet(),
+      mbl: Array.from({ length: 100 }, (_, i) => emptyBlock(i, true)),
+      chr: carCharacter(mph),
+      cbl: carSprites(),
+      links: crest ? [{ toScene: 3, from: { x: 30, y: 39 }, to: { x: 31, y: 39 } }] : [],
+    },
     { x: 10, y: 39 },
     newCharInfo(),
   );

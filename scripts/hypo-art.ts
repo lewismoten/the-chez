@@ -34,7 +34,7 @@ export const C = {
 export function palette(stage: Stage): Uint8Array {
   const p = BASE.slice();
   const set = (slot: number, rgb: number[]) => p.set(rgb, slot * 3);
-  const red = [54, 11, 7];
+  const red = Array.from(BASE.subarray(C.red * 3, C.red * 3 + 3));
   set(SLOT.low, stage >= 1 ? [9, 10, 12] : red);
   set(SLOT.high, stage >= 2 ? [9, 10, 12] : red);
   set(SLOT.pin, stage >= 3 ? [63, 61, 56] : red);
@@ -85,7 +85,8 @@ export function carActor(): Pixels {
 /** The speedometer block: a ring of blocks with a needle and the speed in 3x5 digits. */
 export function dial(mph: 20 | 25 | 30): Pixels {
   const p = new Pixels(20, 20, 255);
-  const cx = 9.5, cy = 9.5;
+  const cx = 9.5,
+    cy = 9.5;
   for (let y = 0; y < 20; y++)
     for (let x = 0; x < 20; x++) {
       const d = Math.hypot(x - cx, y - cy);

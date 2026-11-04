@@ -22,7 +22,7 @@ const server = await createServer({ root, logLevel: 'error', server: { host: '12
 await server.listen();
 let browser;
 try {
-  browser = await chromium.launch({ channel: 'chrome', headless: true });
+  browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 390, height: 800 } });
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));

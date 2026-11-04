@@ -314,7 +314,7 @@ function installDriver({ chapters, mazeRoute, parkCounter, umbrellaHome }) {
 }
 
 try {
-  browser = await chromium.launch({ channel: 'chrome', headless: true });
+  browser = await chromium.launch({ headless: true });
   for (const [width, height] of [
     [390, 800],
     [1440, 900],
