@@ -156,7 +156,8 @@ export function matchNear(pal: Uint8Array, r: number, g: number, b: number): num
 }
 
 /** Teddy walking four ways: front, back and side poses (left is the side pose mirrored). */
-function teddyFiles(put: (name: string, data: Uint8Array) => void): void {
+/** Teddy's character and sprites; `sideOnly` drops Up and Down (the garage level has gravity and only walks sideways). */
+export function teddyData(sideOnly = false): { chr: Uint8Array; cbl: Uint8Array } {
   const sprites = Array.from({ length: 50 }, (_, i) => emptyBlock(i, true));
   const poses = [
     POSES.front,
@@ -200,7 +201,7 @@ function teddyFiles(put: (name: string, data: Uint8Array) => void): void {
     [15, 32, walkRight, 4, 0, 0],
     [17, 17, back, 0, -4, 0],
   ] as [number, number, number[], number, number, number][])
-    walk(i, scan, pics, x, y, o);
+    if (!sideOnly || ![9, 11, 17].includes(i)) walk(i, scan, pics, x, y, o);
   character.sequences[0].frames[0] = { ...emptyFrame(), pic1: 50, pic2: 0 };
   // Space barks: the same bark Teddy always had.
   const bark = character.sequences[19];
@@ -211,6 +212,11 @@ function teddyFiles(put: (name: string, data: Uint8Array) => void): void {
     sound: 9,
     jstkBut: 4,
   });
-  put('teddy.chr', serializeCharacter(character));
-  put('teddy.cbl', serializeBlocks(sprites));
+  return { chr: serializeCharacter(character), cbl: serializeBlocks(sprites) };
+}
+
+function teddyFiles(put: (name: string, data: Uint8Array) => void): void {
+  const files = teddyData();
+  put('teddy.chr', files.chr);
+  put('teddy.cbl', files.cbl);
 }
