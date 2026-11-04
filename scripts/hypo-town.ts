@@ -33,15 +33,22 @@ const SHOPS = [
 const PARKS = ['oak', 'blossom', 'oak', 'blossom', 'plain'] as const;
 /** The lot sequence: house, shop, park, repeating; two parks meet at the turtle crossing and three at the finish. */
 const KINDS = 'HSPHSPHSPHSPPHSPHSPHSPPPH';
-let shopCount = 0;
-const LOTS: Lot[] = [...KINDS].map((k, i) => {
-  const at = i * LOT_W;
-  const wall = WALLS[(i * 3 + 1) % 4];
-  const floors = [3, 3, 4, 3, 5, 3, 4, 3][i % 8];
-  if (k === 'H') return { at, kind: 'house', wall, floors };
-  if (k === 'S') return { at, kind: 'shop', wall: wall === 'siding' ? 'brick' : wall, floors, ...SHOPS[shopCount++ % 3] };
-  return { at, kind: 'park', trees: i === 11 ? 'cross' : i === 22 ? 'finish' : i === 12 || i >= 21 ? 'plain' : PARKS[i % 5] };
-});
+/** The street is the Control Run's; the race is the tricycle trial's, the same lots in other walls, shops and trees. */
+export type TownKind = 'street' | 'race';
+function makeLots(kind: TownKind): Lot[] {
+  const race = kind === 'race';
+  let shopCount = race ? 2 : 0;
+  return [...KINDS].map((k, i): Lot => {
+    const at = i * LOT_W;
+    const wall = WALLS[(i * 3 + 1 + (race ? 2 : 0)) % 4];
+    const floors = [3, 3, 4, 3, 5, 3, 4, 3][(i + (race ? 3 : 0)) % 8];
+    if (k === 'H') return { at, kind: 'house', wall, floors };
+    if (k === 'S') return { at, kind: 'shop', wall: wall === 'siding' ? 'brick' : wall, floors, ...SHOPS[shopCount++ % 3] };
+    const trees = i === 11 ? (race ? 'blossom' : 'cross') : i === 22 ? 'finish' : i === 12 || i >= 21 ? 'plain' : PARKS[(i + (race ? 2 : 0)) % 5];
+    return { at, kind: 'park', trees };
+  });
+}
+const LOTS: Lot[] = makeLots('street');
 export const TOWN_LOTS = LOTS;
 
 export class Scene {
@@ -258,7 +265,7 @@ export interface Town {
 }
 
 /** Paint the whole street and cut it into blocks, adding any extra pictures via `extra`. */
-export function paintTown(): { scene: Scene; cut: () => Town } {
+export function paintTown(kind: TownKind = 'street'): { scene: Scene; cut: () => Town } {
   const s = new Scene();
   sky(s);
   // clouds at the top and a far skyline behind the houses
@@ -274,7 +281,7 @@ export function paintTown(): { scene: Scene; cut: () => Town } {
     if (x % 12 === 3) meter(s, x * 20 + 9, 8 * 20 + 19);
     if (x % 12 === 9) bin(s, x * 20 + 4, 8 * 20 + 19);
   }
-  for (const lot of LOTS) paintLot(s, lot);
+  for (const lot of kind === 'street' ? LOTS : makeLots(kind)) paintLot(s, lot);
   return {
     scene: s,
     cut: () => {

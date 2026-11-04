@@ -1,7 +1,7 @@
 // The driving character in three speeds. Each is its own native character file: Right moves a fixed
 // number of pixels every tick (5 = 25 mph, 6 = 30 mph, 4 = 20 mph), and its top block is the
 // speedometer showing that same number. A scene link on the hill's crest swaps the file.
-import { emptyBlock, type Block } from '@lewismoten/gamemaker-sandbox-tools/formats/blocks';
+import { emptyBlock, MONBL, type Block } from '@lewismoten/gamemaker-sandbox-tools/formats/blocks';
 import { emptyFrame, newCharacter, type Character, type Frame, type Sequence } from '@lewismoten/gamemaker-sandbox-tools/formats/character';
 import { C, dial } from './hypo-art.ts';
 import { CAR_H, carSprite } from './hypo-carsprite.ts';
@@ -41,7 +41,7 @@ export function carSprites(): Block[] {
 }
 
 /** `hill` makes every driving frame also move one pixel up or down (and drops reversing, which can't follow a slope). */
-export function carCharacter(mph: Mph, hill?: 'up' | 'down'): Character {
+export function carCharacter(mph: Mph, hill?: 'up' | 'down', wave?: number): Character {
   const character = newCharacter();
   character.meter[1] = 2;
   // PLAYGAME can resume frame -1 after two keys arrive together; neutral spacers keep that harmless.
@@ -75,8 +75,10 @@ export function carCharacter(mph: Mph, hill?: 'up' | 'down'): Character {
     drive(7, 75, -BACKING);
     drive(15, 30, -BACKING);
   }
-  // Space honks while the car sits still.
-  set(11, [{ ...frame(2), pause: 3 }, frame(0)], {
+  // Space honks while the car sits still. With a `wave`, the honk also sends that monster ahead of the car
+  // (a frame whose bottom block is MONBL gives birth to its top block's number; y is the block below the top).
+  const birth: Frame[] = wave === undefined ? [] : [{ ...emptyFrame(), pic1: wave, pic2: MONBL, y: 20, pause: 1 }];
+  set(11, [...birth, { ...frame(2), pause: 3 }, frame(0)], {
     key: (57 << 8) | 32,
     norepeat: 1,
     sound: 20,
