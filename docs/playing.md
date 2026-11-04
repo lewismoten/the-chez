@@ -1,17 +1,19 @@
 # Playing the bundled game
 
-The Stripe Hypothesis is the game fixture included with this engine verification project. Doc Leo, PhD, swears racing stripes make THE CHEZ go faster. Teddy rides along with a clipboard. So far there are three levels; later trials add one stripe at a time.
+The Stripe Hypothesis is the game fixture included with this engine verification project. Doc Leo, PhD, swears racing stripes make THE CHEZ go faster. Teddy rides along with a clipboard. There are seven levels (six scenes of play, the hill counting as two); each trial adds a stripe.
 
 Start the application using the [setup instructions](../README.md), then choose **Play as Teddy**.
 
 ## Controls and levels
 
-Arrows carry the whole game: the four arrows walk Teddy in the driveway, Right drives THE CHEZ, and Space barks (or honks). A and D also work for left and right. F1 shows instructions. Touch buttons are below the game.
+Arrows carry the whole game: the four arrows walk Teddy in the driveway and the maze, Left and Right walk him in the garage, Right drives THE CHEZ, and Space barks (or honks). A and D also work for left and right. F1 shows instructions. Touch buttons are below the game.
 
 1. **The Hypothesis.** Teddy walks the driveway four ways. Fetch Doc Leo's clipboard (by the left lawn) and the stopwatch (on the right), then walk into the garage door. The door stays shut until both are in, and opens as soon as Teddy touches it.
 2. **Control Run.** THE CHEZ has no stripes. Hold Right to drive at 25 mph; the speedometer riding above the car reads 25. Halfway along, a turtle crosses. The sign counts down WAIT, then GO, and its bar drains so you can see how long is left. Holding Right is safe, since the barrier simply holds the car until it opens. Drive through the checkered finish.
 3. **Gwinn and the Tape.** A hedge maze at dusk. Gwinn has the stripe tape and sits on it at a dead end. Walk the corridors with the arrows, touch the tape roll, then walk into the garage door on the far side. After it, a short cartoon puts the first stripe on: a squeegee, the paint dries, Gwinn sniffs it.
-4. **Trial 1: Uphill** (and **Downhill**). The first stripe is on. The road climbs a real hill at 20 mph, with the speedometer reading 20. At the crest a short card appears and the car changes to 30 mph on the same hill, now going down; press Right again to roll. The page's speed reading follows the car. Reversing is off on the slope. Drive to the finish at the bottom.
+4. **Trial 1: Tricycle.** One charcoal stripe is on. A kid on a tricycle (a friendly rival who rides a little slower than the car, at a set pace) races you to the corner. Three hens stand in the road and hold the car back, gently and without hurting anyone. Release Right and tap Space: the honk (a short sound) sends a sound wave ahead of the car and the hen flaps away. Then hold Right again. Waiting does not move a hen, and the rival never has to be beaten: reaching the corner ends the trial. A results cartoon reads **A TRICYCLE KEPT UP.** and the garage cartoon puts on the second stripe.
+5. **Wind Tunnel.** Teddy on foot in Doc Leo's garage at night. Gravity pulls down, so Teddy walks and falls. Each box fan blows up through a grate in the floor or a bench: step into its draft (animated streaks) and it lifts Teddy up through the bench above, which is solid on top only, and drops him back onto it. Holding Right while you rise is fine (a post keeps you in the draft). Climb three benches to the white stripe roll, then walk into the door. A cartoon puts on the third stripe.
+6. **Trial 2: Uphill** (and **Downhill**). All three stripes are on. The road climbs a real hill at 20 mph, with the speedometer reading 20. At the crest a short card appears and the car changes to 30 mph on the same hill, now going down; press Right again to roll. The page's speed reading follows the car. Reversing is off on the slope. Drive to the finish at the bottom.
 
 After the control run, a results cartoon reads **TOP SPEED: 25 MPH. INCONCLUSIVE.** After the hill, the last card reads **TOP SPEED: 30 MPH. INCONCLUSIVE. IT WAS A HILL.** Teddy is not convinced.
 

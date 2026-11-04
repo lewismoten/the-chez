@@ -50,7 +50,7 @@ try {
     () =>
       document.querySelector("#status")?.textContent === "The experiment ends",
     null,
-    { timeout: 330_000 },
+    { timeout: 540_000 },
   );
   assert.equal(
     await page.locator("#chapter-name").textContent(),

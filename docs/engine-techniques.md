@@ -18,9 +18,17 @@ A downhill or uphill stretch is a scene link on the crest block into a scene wit
 
 `scripts/hypo-street.ts` builds the Control Run crossing from twelve block variants per cell, advancing every nine ticks: six of WAIT (the turtle and an arm are solid, a sign's bar drains) and six of GO (all clear). PLAYGAME animates block ids globally, so the barrier, the turtle and the four sign blocks stay in phase. Neither state hurts the car.
 
-## Teddy, four ways
+## Teddy, four ways (and two in the garage)
 
 `scripts/hypo-driveway.ts` gives Teddy a native four-way character: front, back and side poses, with left drawn by mirroring the side frames. Arrows (and A, D, W) walk and Space barks. The scenery has zero gravity. Two pickups add to extra counter 21; the garage door asks for both, spends them and opens. Its scene link sits on that door, so touching it is leaving.
+
+## Hens, a honk and a rival on a set path
+
+`scripts/hypo-tricycle.ts` builds Trial 1 with a native `.MON` file. The rival tricycle is a monster on a normal march (two legs, because a corner more than half the map away is walked the short way round the wrap) at a set 4 pixels a tick, a little under the 25 mph car's 5, and dies at the corner (`end` -1). The hens are still monsters with a solid monster block: the engine pushes the car back from a solid monster and cancels its motion, so the car stops cleanly and nothing hurts. A moving hen made the car judder, so hens stand and peck. Every monster has power 150 (nothing at 100 or more dies by touching the car), so hens, rival and car never fight; only the honk, power 200, beats a hen. The honk is the car's Space sequence (`carCharacter(25, undefined, wave)` in `scripts/hypo-car.ts`) with a first frame whose bottom block is `MONBL` and whose top block is the wave's monster number: that frame gives birth to the wave, which flies in the car's last direction at 10 pixels a tick for eight ticks. Touching a hen kills her into her `newmon`, a flapping hen that climbs away and disappears. The honk sound is the car's horn effect. Release Right before tapping Space (the engine follows one key at a time); `check:game` plays a honk-at-every-hen run and a Space-while-Right-is-held run.
+
+## The wind tunnel: upward gravity and one-way ledges
+
+`scripts/hypo-garage.ts` builds Level 5, Teddy on foot with gravity. Gravity is per block (`grav` bits: 1 up, 2 right, 4 down, 8 left), taken from the block Teddy is mostly in, and adds one pixel a tick each tick (movement is capped at 11). Every block pulls down; a fan's draft is two columns of blocks with `grav` 1 (a three-frame animated chain of streaks) from a grate in the floor or bench up through the bench above, which is solid on top only (`solid` 1), so Teddy rises through it, overshoots and lands back on it. A post of crates beside each draft keeps a player who holds Right inside the draft until the bench top is cleared; the bench then catches him. Standing still in a draft works too. The grates are animated chains too (three turns of a box fan seen from above). The third bench holds a counter pickup (the stripe roll) and the door, which stays shut until the roll is in. `teddyData(true)` in `scripts/hypo-driveway.ts` drops walking up and down for this level.
 
 ## The shipped recording
 

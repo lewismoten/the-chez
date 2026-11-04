@@ -13,6 +13,8 @@ import { drivewayFiles, DRIVEWAY } from './hypo-driveway.ts';
 import { streetFiles, STREET } from './hypo-street.ts';
 import { hillFiles } from './hypo-hill.ts';
 import { TAPE, tapeFiles } from './hypo-tape.ts';
+import { TRICYCLE, tricycleFiles } from './hypo-tricycle.ts';
+import { WIND, garageFiles } from './hypo-garage.ts';
 import { CHAPTERS } from '../src/chapters.ts';
 
 const here = fileURLToPath(new URL('..', import.meta.url));
@@ -28,32 +30,36 @@ drivewayFiles(put);
 streetFiles(put);
 hillFiles(put);
 tapeFiles(put);
+tricycleFiles(put);
+garageFiles(put);
 
 // Cards: the title, one per level, the results card and the retry card.
 put('menu.gif', card(TITLE_CARD, ['DOC LEO, PHD', 'TEDDY, FRONT SEAT'], 'A SCIENCE ADVENTURE', 3, 12));
 put('card1.gif', card('THE HYPOTHESIS', ['FETCH THE CLIPBOARD', 'AND THE STOPWATCH.'], 'ARROWS WALK. SPACE BARKS.', 0, 56));
 put('card2.gif', card('CONTROL RUN', ['NO STRIPES. 25 MPH.', 'WAIT FOR THE TURTLE.'], 'HOLD RIGHT TO DRIVE.', 0, 0));
 put('card3.gif', card('GWINN AND\nTHE TAPE', ['GWINN HAS THE TAPE.', 'SHE IS NOT SORRY.'], 'ARROWS WALK THE MAZE.', 0, 40));
-put('card4.gif', card('UPHILL TRIAL', ['ONE STRIPE. 20 MPH.', 'IT IS A REAL HILL.'], 'HOLD RIGHT TO DRIVE.', 1, 26));
-put('card5.gif', card('OVER THE CREST', ['THE NEEDLE SAYS 30.', 'THE ROAD SAYS DOWNHILL.'], 'HOLD RIGHT TO DRIVE.', 1, 52));
-put('card1.lst', serializeSlideList([{ name: 'card1.gif', pause: 3 }]));
-put('card2.lst', serializeSlideList([{ name: 'card2.gif', pause: 3 }]));
-put('card3.lst', serializeSlideList([{ name: 'card3.gif', pause: 3 }]));
-put('card4.lst', serializeSlideList([{ name: 'card4.gif', pause: 3 }]));
-put('card5.lst', serializeSlideList([{ name: 'card5.gif', pause: 3 }]));
-put('results.gif', resultsCard(30, 'IT WAS A HILL.', 1));
+put('card4.gif', card('TRIAL 1:\nTHE TRICYCLE', ['A KID ON A TRICYCLE.', 'HENS HAVE OPINIONS.'], 'RIGHT DRIVES. SPACE HONKS.', 1, 36));
+put('card5.gif', card('WIND TUNNEL', ['DOC LEO BUILT A DRAFT.', 'FANS LIFT. BENCHES CATCH.'], 'ARROWS WALK. STEP INTO A FAN.', 2, 20));
+put('card6.gif', card('UPHILL TRIAL', ['THREE STRIPES. 20 MPH.', 'IT IS A REAL HILL.'], 'HOLD RIGHT TO DRIVE.', 3, 26));
+put('card7.gif', card('OVER THE CREST', ['THE NEEDLE SAYS 30.', 'THE ROAD SAYS DOWNHILL.'], 'HOLD RIGHT TO DRIVE.', 3, 52));
+for (let n = 1; n <= 7; n++) put(`card${n}.lst`, serializeSlideList([{ name: `card${n}.gif`, pause: 3 }]));
+put('results.gif', resultsCard(30, 'IT WAS A HILL.', 3));
 put('lost.gif', card('ONE MORE TRY?', ['SCIENCE NEVER GIVES UP.'], 'TEDDY BELIEVES IN YOU', 0, 72));
 put('intro.fli', introCartoon());
 put('garage.fli', garageCartoon());
 put('results.fli', resultsCartoon());
 put('stripe.fli', stripeCartoon(0));
-put('hill.fli', resultsCartoon(30, 'IT WAS A HILL.', 1, (reel) => addStripeCartoon(reel, 1)));
+put('tric.fli', resultsCartoon(25, 'A TRICYCLE KEPT UP.', 1, (reel) => addStripeCartoon(reel, 1)));
+put('wind.fli', stripeCartoon(2));
+put('hill.fli', resultsCartoon(30, 'IT WAS A HILL.', 3));
 put('lost.lst', serializeSlideList([{ name: 'lost.gif', pause: 0 }]));
 put('won.lst', serializeSlideList([{ name: 'results.gif', pause: 0 }]));
 put('intro.cmf', openingSong());
 put('yard.cmf', chapterSong(0));
 put('street.cmf', chapterSong(1));
 put('tape.cmf', chapterSong(4));
+put('tric.cmf', chapterSong(3));
+put('garage.cmf', chapterSong(5));
 put('hill.cmf', chapterSong(2));
 put('win.cmf', winningSong());
 put('retry.cmf', retrySong());
@@ -129,21 +135,25 @@ end.files[0] = 'won.lst';
 end.files[1] = 'win.cmf';
 end.files[2] = 'lost.lst';
 end.files[3] = 'retry.cmf';
-const stems = ['yard', 'street', 'tape', 'hill', 'hill'];
+const stems = ['yard', 'street', 'tape', 'tric', 'garage', 'hill', 'hill'];
 const actors: [string, string][] = [
   ['teddy.chr', 'teddy.cbl'],
   ['car25.chr', 'car.cbl'],
   ['teddy.chr', 'teddy.cbl'],
+  ['car25w.chr', 'car.cbl'],
+  ['teddy-side.chr', 'teddy.cbl'],
   ['car20.chr', 'car.cbl'],
   ['car30.chr', 'car.cbl'],
 ];
-const exits = ['garage.fli', 'results.fli', 'stripe.fli', '', 'hill.fli'];
+const exits = ['garage.fli', 'results.fli', 'stripe.fli', 'tric.fli', 'wind.fli', '', 'hill.fli'];
 const doors = [
   { x: DRIVEWAY.doorX, y: DRIVEWAY.doorY },
   { x: STREET.finishX, y: STREET.row },
   { x: TAPE.doorX, y: TAPE.doorY },
-  { x: CHAPTERS[3].doorX, y: CHAPTERS[3].doorY },
-  { x: CHAPTERS[4].doorX, y: CHAPTERS[4].doorY },
+  { x: TRICYCLE.finishX, y: TRICYCLE.row },
+  { x: WIND.doorX, y: WIND.doorY },
+  { x: CHAPTERS[5].doorX, y: CHAPTERS[5].doorY },
+  { x: CHAPTERS[6].doorX, y: CHAPTERS[6].doorY },
 ];
 CHAPTERS.forEach((chapter, index) => {
   const scene = emptyScene(ADVTYPE);

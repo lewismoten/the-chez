@@ -21,6 +21,8 @@ import { dial, palette, SLOT } from './hypo-art.ts';
 import { measure } from './check-speed.ts';
 import { carRise, HILL } from './hypo-hill.ts';
 import { TAPE } from './hypo-tape.ts';
+import { TRICYCLE } from './hypo-tricycle.ts';
+import { WIND } from './hypo-garage.ts';
 
 const root = join(import.meta.dirname, '../public/game');
 const bytes = (name: string) => new Uint8Array(readFileSync(join(root, name)));
@@ -60,7 +62,7 @@ for (const name of ['story.txt', 'help.txt', 'credits.txt']) {
   assert.ok(lines.length <= 16 && lines.every((line) => line.length <= 30), `${name}: notice lines must be 30 characters or fewer`);
 }
 assert.ok(new TextDecoder().decode(bytes('credits.txt')).includes('Claude Sonnet 5.5'), 'the credits name the AI that wrote the game');
-for (const name of ['intro.fli', 'garage.fli', 'results.fli', 'hill.fli']) {
+for (const name of ['intro.fli', 'garage.fli', 'results.fli', 'tric.fli', 'wind.fli', 'hill.fli']) {
   assert.deepEqual(fliFaults(bytes(name)), [], `${name}: animation must fit the original DOS player`);
   const movie = parseFli(bytes(name));
   const seconds = (movie.frameCount * movie.speed) / 70;
@@ -114,7 +116,7 @@ for (const stage of [1, 2, 3] as const) {
   assert.notDeepEqual(swapped.slice(250 * 3, 253 * 3), base.slice(250 * 3, 253 * 3), `stage ${stage} must change the stripes`);
 }
 assert.deepEqual(Array.from(bytes('street.pal')), Array.from(base), 'Control Run has no stripes (the bare palette)');
-assert.deepEqual(Array.from(bytes('hill.pal')), Array.from(palette(1)), 'the hill trial has the first stripe');
+assert.deepEqual(Array.from(bytes('hill.pal')), Array.from(palette(3)), 'the hill trial has all three stripes');
 
 function stage(scene: number, x: number, y: number, progress = newCharInfo()) {
   const entry = game.scenes[scene];
@@ -180,17 +182,117 @@ assert.ok(passedAt >= 0, 'holding Right must get the car past the turtle on its 
 assert.ok(blockedAt >= 0, 'the closed barrier must stop the car before it passes');
 assert.ok(passedAt > blockedAt, 'the car passes only after the barrier opens');
 
+// Level 4, the tricycle: hens stand in the road and hold the car back (no hurt) until Space honks; the honk is a
+// wave fired ahead that sends the hen flapping; the rival's set pace is below the car's, so a patient player finishes.
+{
+  const entry = game.scenes[5];
+  const mons = parseMonsters(bytes(entry.files[3]));
+  const rider = mons.find((m) => m.used && m.end === -1 && m.towards === 0 && m.march[0][0].pic > 0 && m.power >= 100)!;
+  assert.ok(rider.march[0][0].pic < PIXELS_PER_TICK[25], 'the tricycle is a little slower than the car');
+  assert.ok(rider.march[0].every((c) => c.pic === 0 || c.pic === rider.march[0][0].pic), 'the tricycle holds one set pace');
+  const hens = TRICYCLE.hens;
+  const run = stage(5, TRICYCLE.startX, TRICYCLE.row);
+  await run.run(4);
+  const hp = run.w.ci.meter[0];
+  run.press(77);
+  let furthest = 0;
+  for (let tick = 0; tick < 300 && run.link === -1; tick++) {
+    await run.tick();
+    furthest = Math.max(furthest, run.pos.x);
+  }
+  assert.equal(run.link, -1, 'holding Right alone must not get past the first hen');
+  assert.ok(furthest < hens[0] * 20, `the first hen holds the car back (reached ${furthest})`);
+  run.release(77);
+  await run.tick();
+  run.press(57);
+  await run.tick();
+  await run.tick();
+  run.release(57);
+  for (let k = 0; k < 12; k++) await run.tick();
+  run.press(77);
+  for (let tick = 0; tick < 60; tick++) await run.tick();
+  assert.ok(run.pos.x > hens[0] * 20 + 20, 'a honk clears the hen and the car drives on');
+  assert.equal(run.w.ci.meter[0], hp, 'a hen and a honk never hurt');
+  // honking at every hen reaches the corner without a hurt
+  let honks = 0;
+  const hist: number[] = [];
+  for (let tick = 0; tick < 900 && run.link === -1; tick++) {
+    await run.tick();
+    hist.push(run.pos.x);
+    const last = hist.slice(-8);
+    if (last.length === 8 && Math.max(...last) - Math.min(...last) <= 12) {
+      honks++;
+      run.release(77);
+      await run.tick();
+      run.press(57);
+      await run.tick();
+      await run.tick();
+      run.release(57);
+      for (let k = 0; k < 8; k++) await run.tick();
+      run.press(77);
+      hist.length = 0;
+    }
+  }
+  assert.equal(run.link, 0, 'honking at each hen reaches the corner');
+  assert.equal(honks, hens.length - 1, 'one honk for each of the other hens');
+  assert.equal(run.w.ci.meter[0], hp, 'the whole race is free of hurt');
+}
+
+// Level 5, the Wind Tunnel: gravity pulls Teddy down; each fan's draft (two cells of "suck up" gravity) lifts him through
+// the one-way bench above and drops him on it, whether he holds Right or stands still; the roll gates the door.
+{
+  const entry = game.scenes[6];
+  assert.equal(entry.files[5], 'teddy-side.chr', 'the garage uses the side-walking Teddy');
+  const chr = parseCharacter(bytes('teddy-side.chr'));
+  assert.ok(chr.sequences[9].frames.every((f) => f.pic2 >= 50) && chr.sequences[11].frames.every((f) => f.pic2 >= 50), 'no walking up or down in the garage');
+  const map = parseMap(bytes(entry.files[1]));
+  const blocks = parseBlocks(bytes(entry.files[2]), 150);
+  for (const [f, fan] of WIND.fans.entries()) {
+    const aboveId = map.blocks[(fan.row - 1) * 100 + fan.x];
+    const above = blocks[aboveId];
+    assert.equal(above.grav & 1, 1, `fan ${f + 1}: the draft pulls up`);
+    assert.notEqual(above.nextBl, aboveId, `fan ${f + 1}: the draft is animated`);
+    assert.equal(blocks[map.blocks[fan.row * 100 + fan.x]].ntime > 0, true, `fan ${f + 1}: the grate turns`);
+  }
+  const benches = [67, 63, 59];
+  const lift = async (x: number, y: number, row: number, hold: boolean) => {
+    const walk = stage(6, x, y);
+    await walk.run(4);
+    if (hold) walk.press(77);
+    let landed = false;
+    for (let tick = 0; tick < 120 && !landed; tick++) {
+      await walk.tick();
+      landed = tick > 10 && walk.pos.y === (row - 1) * 20 && walk.w.ci.gravy === 0;
+    }
+    assert.ok(landed, `from (${x},${y}) ${hold ? 'holding Right' : 'standing still'} the draft puts Teddy on the bench at row ${row}`);
+  };
+  for (const [f, fan] of WIND.fans.entries()) {
+    const row = f === 0 ? WIND.startY : benches[f - 1] - 1;
+    await lift(fan.x + 1, row, benches[f], false);
+    await lift(fan.x - 1, row, benches[f], true);
+  }
+  const floor = stage(6, WIND.startX, WIND.startY);
+  await floor.run(4);
+  floor.press(77);
+  for (let tick = 0; tick < 700 && floor.link === -1; tick++) await floor.tick();
+  assert.equal(floor.link, 0, 'holding Right alone climbs all three benches, fetches the roll and leaves by the door');
+  const doorShut = stage(6, WIND.doorX - 2, WIND.doorY);
+  doorShut.press(77);
+  await doorShut.run(120);
+  assert.equal(doorShut.link, -1, 'the door stays shut without the roll');
+}
+
 // Levels 3 and 4: the 20 mph climb stays on the road's line, the crest link swaps in the 30 mph car at the top
 // (same map, new character file), the downhill stays on the line, and the finish link ends the game.
-assert.equal(game.scenes[5].files[1], game.scenes[6].files[1], 'both halves of the hill share one map');
-assert.notEqual(game.scenes[5].files[5], game.scenes[6].files[5], 'the crest swaps the car');
+assert.equal(game.scenes[7].files[1], game.scenes[8].files[1], 'both halves of the hill share one map');
+assert.notEqual(game.scenes[7].files[5], game.scenes[8].files[5], 'the crest swaps the car');
 for (const [scene, startX, startY, expect] of [
-  [5, HILL.startX, HILL.startY, 5],
-  [6, HILL.crestX, HILL.crestY, 6],
+  [7, HILL.startX, HILL.startY, 7],
+  [8, HILL.crestX, HILL.crestY, 8],
 ] as const) {
   const run = stage(scene, startX, startY);
   await run.run(4);
-  const speedAt = scene === 5 ? 4 : 6;
+  const speedAt = scene === 7 ? 4 : 6;
   run.press(77);
   let ticks = 0;
   while (run.link === -1 && ticks < 400) {
@@ -199,7 +301,7 @@ for (const [scene, startX, startY, expect] of [
     assert.equal(run.pos.y, 20 * HILL.startY - carRise(run.pos.x), `the car stays on the road's line at x=${run.pos.x}`);
   }
   assert.equal(run.link, 0, `scene ${expect}: holding Right reaches the link`);
-  assert.ok(Math.abs(ticks * speedAt - (scene === 5 ? 640 : 960)) <= 40, `scene ${expect}: ${ticks} ticks at ${speedAt} px`);
+  assert.ok(Math.abs(ticks * speedAt - (scene === 7 ? 640 : 960)) <= 40, `scene ${expect}: ${ticks} ticks at ${speedAt} px`);
 }
 
 // The shipped recording wins without a nap, visits both levels and uses one arrow at a time.

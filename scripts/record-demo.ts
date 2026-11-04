@@ -106,7 +106,29 @@ for (let i = 0; i < 200 && sim.scene === 4; i++) {
 }
 hold(undefined);
 for (let wait = 0; wait < 40; wait++) await step();
-// Levels 4 and 5 (the hill): hold Right; again after each scene change.
+// Level 4, the tricycle: hold Right. A hen stops the car, so let go, tap Space (the honk), wait for the hen
+// to flap away and hold Right again: never two keys at once, and no timing that needs quick hands.
+const SPACE = 57;
+hold(RIGHT);
+const recent: number[] = [];
+for (let i = 0; i < 3000 && sim.scene === 5; i++) {
+  await step();
+  recent.push(sim.pos.x);
+  const last = recent.slice(-10);
+  if (last.length === 10 && Math.max(...last) - Math.min(...last) <= 12) {
+    hold(undefined);
+    for (let wait = 0; wait < 12; wait++) await step();
+    hold(SPACE);
+    for (let wait = 0; wait < 4; wait++) await step();
+    hold(undefined);
+    for (let wait = 0; wait < 20; wait++) await step();
+    hold(RIGHT);
+    recent.length = 0;
+  }
+}
+hold(undefined);
+for (let wait = 0; wait < 40; wait++) await step();
+// The hill (the last two levels): hold Right; again after each scene change.
 hold(RIGHT);
 scene = sim.scene;
 for (let i = 0; i < 3000 && !sim.ended; i++) {

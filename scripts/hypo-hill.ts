@@ -124,7 +124,7 @@ export function hillFiles(put: (name: string, data: Uint8Array) => void): void {
   const map = newMap();
   map.blocks.set(cut.map);
   // Gravity stays off on the hill: the frames' own offsets carry the car along the road.
-  put('hill.pal', palette(1));
+  put('hill.pal', palette(3));
   put('hill.map', serializeMap(map));
   put('hill.bbl', serializeBlocks(blocks as Block[]));
   put('hill.mon', serializeMonsters(newMonsterSet()));
