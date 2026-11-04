@@ -94,7 +94,7 @@ text('credits.txt', [
   '',
   'Dog barks: Lewis Moten',
   'Code, art, text, levels:',
-  'Claude Opus 5.5',
+  'Claude Sonnet 5.5',
   'Music themes (OPL2):',
   'OpenAI Codex (GPT-6/6.1)',
 ]);

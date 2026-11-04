@@ -56,7 +56,7 @@ for (const name of ['story.txt', 'help.txt', 'credits.txt']) {
   const lines = new TextDecoder().decode(bytes(name)).trimEnd().split(/\r?\n/);
   assert.ok(lines.length <= 16 && lines.every((line) => line.length <= 30), `${name}: notice lines must be 30 characters or fewer`);
 }
-assert.ok(new TextDecoder().decode(bytes('credits.txt')).includes('Claude Opus 5.5'), 'the credits name the AI that wrote the game');
+assert.ok(new TextDecoder().decode(bytes('credits.txt')).includes('Claude Sonnet 5.5'), 'the credits name the AI that wrote the game');
 for (const name of ['intro.fli', 'garage.fli', 'results.fli']) {
   assert.deepEqual(fliFaults(bytes(name)), [], `${name}: animation must fit the original DOS player`);
   const movie = parseFli(bytes(name));
