@@ -7,7 +7,7 @@ import {
 let archive: Promise<ArrayBuffer> | undefined;
 
 export async function bundledFiles(): Promise<GameFiles> {
-  const bytes = await (archive ??= fetch("/hypothesis.zip").then((response) => {
+  const bytes = await (archive ??= fetch(`${import.meta.env.BASE_URL}hypothesis.zip`).then((response) => {
     if (!response.ok) throw new Error("Could not load The Stripe Hypothesis.");
     return response.arrayBuffer();
   })).catch((error: unknown) => {
