@@ -90,3 +90,10 @@ export function addStripeCartoon(reel: Reel, from: 0 | 1 | 2): void {
     );
   reel.fadeOut(4);
 }
+
+/** The whole cartoon on its own, for a level whose exit is the garage. */
+export function stripeCartoon(from: 0 | 1 | 2): Uint8Array {
+  const reel = new Reel(palette(from));
+  addStripeCartoon(reel, from);
+  return reel.fli(5);
+}

@@ -4,7 +4,7 @@ import { CHAPTERS, type ChapterInfo } from './chapters';
 export function roadMessage(chapter: ChapterInfo, found: number, nearGate = false): string {
   if (chapter.required === 0) return nearGate ? 'The finish is just ahead. Keep holding Right.' : chapter.mission;
   const remaining = Math.max(0, chapter.required - found);
-  if (remaining === 0) return 'Both things fetched. Walk into the garage door.';
+  if (remaining === 0) return chapter.required === 1 ? 'Tape found. Walk into the garage door.' : 'Both things fetched. Walk into the garage door.';
   if (nearGate) return `The garage wants ${remaining} more ${remaining === 1 ? 'thing' : 'things'}. ${chapter.help}`;
   return chapter.mission;
 }

@@ -20,6 +20,7 @@ import { carCharacter, PIXELS_PER_TICK, type Mph } from './hypo-car.ts';
 import { dial, palette, SLOT } from './hypo-art.ts';
 import { measure } from './check-speed.ts';
 import { carRise, HILL } from './hypo-hill.ts';
+import { TAPE } from './hypo-tape.ts';
 
 const root = join(import.meta.dirname, '../public/game');
 const bytes = (name: string) => new Uint8Array(readFileSync(join(root, name)));
@@ -149,6 +150,21 @@ open.press(72);
 await open.run(60);
 assert.equal(open.link, 0, 'touching the garage with both items leaves the level at once');
 
+// Level 3, the maze: the garage stays shut without the tape; the tape counts once; the door then opens.
+const tapeShut = stage(4, TAPE.doorX, TAPE.doorY + 2);
+tapeShut.press(72);
+await tapeShut.run(60);
+assert.equal(tapeShut.link, -1, 'the maze garage must stay shut without the tape');
+const tapeWalker = stage(4, TAPE.tapeX, TAPE.tapeY + 2);
+tapeWalker.press(72);
+await tapeWalker.run(30);
+assert.equal(tapeWalker.w.ci.meter[TAPE.counter], 2, 'touching the tape counts exactly one');
+const tapeOpen = stage(4, TAPE.doorX, TAPE.doorY + 2);
+tapeOpen.w.ci.meter[TAPE.counter] = 1 + TAPE.required;
+tapeOpen.press(72);
+await tapeOpen.run(60);
+assert.equal(tapeOpen.link, 0, 'touching the garage with the tape leaves the level at once');
+
 // Level 2: the crossing is a solid closed barrier, then a clear road, on a fixed cycle.
 const road = stage(3, STREET.crossX - 6, STREET.row);
 const closedAt = () => road.w.bg[road.w.blkmap[road.w.map[STREET.row * 100 + STREET.crossX]]].solid !== 0;
@@ -166,15 +182,15 @@ assert.ok(passedAt > blockedAt, 'the car passes only after the barrier opens');
 
 // Levels 3 and 4: the 20 mph climb stays on the road's line, the crest link swaps in the 30 mph car at the top
 // (same map, new character file), the downhill stays on the line, and the finish link ends the game.
-assert.equal(game.scenes[4].files[1], game.scenes[5].files[1], 'both halves of the hill share one map');
-assert.notEqual(game.scenes[4].files[5], game.scenes[5].files[5], 'the crest swaps the car');
+assert.equal(game.scenes[5].files[1], game.scenes[6].files[1], 'both halves of the hill share one map');
+assert.notEqual(game.scenes[5].files[5], game.scenes[6].files[5], 'the crest swaps the car');
 for (const [scene, startX, startY, expect] of [
-  [4, HILL.startX, HILL.startY, 4],
-  [5, HILL.crestX, HILL.crestY, 5],
+  [5, HILL.startX, HILL.startY, 5],
+  [6, HILL.crestX, HILL.crestY, 6],
 ] as const) {
   const run = stage(scene, startX, startY);
   await run.run(4);
-  const speedAt = scene === 4 ? 4 : 6;
+  const speedAt = scene === 5 ? 4 : 6;
   run.press(77);
   let ticks = 0;
   while (run.link === -1 && ticks < 400) {
@@ -183,7 +199,7 @@ for (const [scene, startX, startY, expect] of [
     assert.equal(run.pos.y, 20 * HILL.startY - carRise(run.pos.x), `the car stays on the road's line at x=${run.pos.x}`);
   }
   assert.equal(run.link, 0, `scene ${expect}: holding Right reaches the link`);
-  assert.ok(Math.abs(ticks * speedAt - (scene === 4 ? 640 : 960)) <= 40, `scene ${expect}: ${ticks} ticks at ${speedAt} px`);
+  assert.ok(Math.abs(ticks * speedAt - (scene === 5 ? 640 : 960)) <= 40, `scene ${expect}: ${ticks} ticks at ${speedAt} px`);
 }
 
 // The shipped recording wins without a nap, visits both levels and uses one arrow at a time.
@@ -193,7 +209,7 @@ const allowed = new Set([72, 75, 77, 80, 57, 28]);
 const held = new Set<number>();
 let event = 0,
   due = events[0]?.delta ?? Infinity;
-for (let tick = 1; tick <= 5000 && !tour.ended; tick++) {
+for (let tick = 1; tick <= 9000 && !tour.ended; tick++) {
   while (event < events.length && due <= tick) {
     const key = events[event].key;
     assert.ok(allowed.has(key & 0x7f), `the recording must use arrows, Space and Enter only (key ${key & 0x7f})`);

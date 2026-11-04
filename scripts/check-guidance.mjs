@@ -5,10 +5,12 @@ import { CHAPTERS } from '../src/chapters.ts';
 import { roadMessage } from '../src/road-guide.ts';
 import { continueAt, withPage } from './page-check.mjs';
 
-const [yard, street, uphill, downhill] = CHAPTERS;
+const [yard, street, tape, uphill, downhill] = CHAPTERS;
 assert.equal(roadMessage(yard, 0), yard.mission);
 assert.match(roadMessage(yard, 1, true), /1 more thing/);
 assert.match(roadMessage(yard, 2), /Both things fetched/);
+assert.equal(roadMessage(tape, 0), tape.mission);
+assert.match(roadMessage(tape, 1), /Tape found/);
 for (const chapter of [street, uphill, downhill]) {
   assert.equal(roadMessage(chapter, 0), chapter.mission);
   assert.match(roadMessage(chapter, 0, true), /finish is just ahead/);

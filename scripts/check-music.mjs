@@ -29,7 +29,7 @@ await withPage({ port: 4178, patches: [[anchor, spy]] }, async ({ page, errors, 
   await page.waitForTimeout(180);
   await page.keyboard.up('Space');
   await page.waitForFunction((n) => window.__effects > n, before);
-  await continueAt(page, url, 4);
+  await continueAt(page, url, 5);
   assert.equal(await button.getAttribute('aria-pressed'), 'false', 'the preference survives a reload');
   await page.locator('#start').click();
   await page.waitForFunction(() => document.querySelector('#chapter-name').textContent === 'Trial 1: Uphill' && document.querySelector('#status').textContent === 'Playing · 3 tries');

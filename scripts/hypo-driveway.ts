@@ -142,7 +142,7 @@ export function drivewayFiles(put: (name: string, data: Uint8Array) => void): vo
   teddyFiles(put);
 }
 
-function matchNear(pal: Uint8Array, r: number, g: number, b: number): number {
+export function matchNear(pal: Uint8Array, r: number, g: number, b: number): number {
   let best = 0,
     bestD = Infinity;
   for (let i = 0; i < 248; i++) {

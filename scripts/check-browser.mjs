@@ -6,7 +6,7 @@ import { CHAPTERS } from '../src/chapters.ts';
 import { carRise } from './hypo-hill.ts';
 import { continueAt, withPage } from './page-check.mjs';
 
-const [, , uphill, downhill] = CHAPTERS;
+const [, , , uphill, downhill] = CHAPTERS;
 const hook = ['onFrame: (world) => {', 'onFrame: (world) => { (window.__trace ??= []).push([world.chr.x[0] * 20 + world.chr.x[1], world.chr.y[0] * 20 + world.chr.y[1], document.querySelector("#chapter-name").textContent]);'];
 
 await withPage({ port: 4175, width: 1280, height: 900, patches: [hook] }, async ({ page, errors, url }) => {

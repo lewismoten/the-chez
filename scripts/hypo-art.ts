@@ -89,3 +89,16 @@ export function dial(mph: 20 | 25 | 30): Pixels {
   micro(p, 6, 11, String(mph), C.white);
   return p;
 }
+
+/** A time of day for a level: the shared palette tinted, except the three stripe slots. Each level's .pal is its own. */
+export function timeOfDay(pal: Uint8Array, when: 'dusk' | 'dawn' | 'night'): Uint8Array {
+  const [kr, kg, kb] = { dusk: [1, 0.78, 0.7], dawn: [0.95, 0.88, 1], night: [0.45, 0.55, 0.85] }[when];
+  const out = pal.slice();
+  for (let i = 0; i < 256; i++) {
+    if (i >= SLOT.low && i <= SLOT.pin) continue;
+    out[i * 3] = Math.min(63, Math.round(pal[i * 3] * kr));
+    out[i * 3 + 1] = Math.min(63, Math.round(pal[i * 3 + 1] * kg));
+    out[i * 3 + 2] = Math.min(63, Math.round(pal[i * 3 + 2] * kb));
+  }
+  return out;
+}
