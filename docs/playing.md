@@ -1,6 +1,6 @@
 # Playing the bundled game
 
-The Stripe Hypothesis is the game fixture included with this engine verification project. Doc Leo, PhD, swears racing stripes make THE CHEZ go faster. Teddy rides along with a clipboard. Phase 1 has two levels; later trials add one stripe at a time.
+The Stripe Hypothesis is the game fixture included with this engine verification project. Doc Leo, PhD, swears racing stripes make THE CHEZ go faster. Teddy rides along with a clipboard. So far there are three levels; later trials add one stripe at a time.
 
 Start the application using the [setup instructions](../README.md), then choose **Play as Teddy**.
 
@@ -10,12 +10,13 @@ Arrows carry the whole game: the four arrows walk Teddy in the driveway, Right d
 
 1. **The Hypothesis.** Teddy walks the driveway four ways. Fetch Doc Leo's clipboard (by the left lawn) and the stopwatch (on the right), then walk into the garage door. The door stays shut until both are in, and opens as soon as Teddy touches it.
 2. **Control Run.** THE CHEZ has no stripes. Hold Right to drive at 25 mph; the speedometer riding above the car reads 25. Halfway along, a turtle crosses. The sign counts down WAIT, then GO, and its bar drains so you can see how long is left. Holding Right is safe, since the barrier simply holds the car until it opens. Drive through the checkered finish.
+3. **Trial 1: Uphill** (and **Downhill**). The first stripe is on. The road climbs a real hill at 20 mph, with the speedometer reading 20. At the crest a short card appears and the car changes to 30 mph on the same hill, now going down; press Right again to roll. The page's speed reading follows the car. Reversing is off on the slope. Drive to the finish at the bottom.
 
-After the control run, a results card reads **TOP SPEED: 25 MPH. INCONCLUSIVE.** Teddy is not convinced.
+After the control run, a results cartoon reads **TOP SPEED: 25 MPH. INCONCLUSIVE.** After the hill, the last card reads **TOP SPEED: 30 MPH. INCONCLUSIVE. IT WAS A HILL.** Teddy is not convinced.
 
 **Watch Teddy** plays a complete demonstration using a DOS `.REC` input recording through the same engine. It holds one key at a time, which is also how a slow, steady player can win. Choose **Restart** to start your own game at any time.
 
-Missing a try is not part of these two levels; the status line still shows the tries the engine keeps (three). **Continue with Teddy** begins at the last level's safe entrance. F5 and F6 provide the engine's save and load screens.
+Missing a try is not part of these levels; the status line still shows the tries the engine keeps (three). **Continue with Teddy** begins at the last level's safe entrance. F5 and F6 provide the engine's save and load screens.
 
 The **Music on/off** button controls music separately from barks and other effects. Its setting is remembered between visits.
 

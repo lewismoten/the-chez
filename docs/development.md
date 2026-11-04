@@ -77,6 +77,7 @@ npm run check:browser -- --retry
 | `scripts/hypo-car.ts`                             | The 20, 25 and 30 mph car characters, each carrying its own speedometer.      |
 | `scripts/hypo-driveway.ts`                        | Level 1: four-way Teddy, pickups and the garage door.                         |
 | `scripts/hypo-street.ts`                          | Level 2: the flat street and the timed turtle crossing.                       |
+| `scripts/hypo-hill.ts`                             | Level 3: the hill, sheared along the car's path, with the 20 and 30 mph cars. |
 | `scripts/hypo-cards.ts`                           | Title, level and results cards; intro, garage and results cartoons.           |
 | `scripts/check-speed.ts`                          | Measures the three speeds in the headless simulation and the crest link.      |
 | `scripts/record-demo.ts`                          | Plays the game headless and saves the shipped `.REC` demonstration.           |

@@ -82,18 +82,19 @@ function resultsBase(): Pixels {
   return p;
 }
 
-/** The results card: the dial reads 25, and the verdict. */
-export function resultsCard(): Uint8Array {
+/** The results card: the dial, the top speed and the verdict (the second line, if any, is the reason). */
+export function resultsCard(mph: 25 | 30 = 25, reason?: string, stage: Stage = 0): Uint8Array {
   const p = resultsBase();
-  scaled(p, dial(25), 52, 54, 4);
+  scaled(p, dial(mph), 52, 54, 4);
   centered(p, 70, 'TOP SPEED:', C.cream, 1, undefined, 204);
-  centered(p, 88, '25 MPH.', C.white, 2, undefined, 204);
+  centered(p, 88, `${mph} MPH.`, C.white, 2, undefined, 204);
   centered(p, 120, 'INCONCLUSIVE.', C.red, 1, undefined, 204);
+  if (reason) centered(p, 134, reason, C.cream, 1, undefined, 204);
   return encodeGif({
     width: 320,
     height: 200,
     pixels: p.px,
-    palette: palette(0),
+    palette: palette(stage),
   });
 }
 
@@ -164,21 +165,23 @@ export function garageCartoon(): Uint8Array {
   return reel.fli(5);
 }
 
-/** The needle climbs to 25 and stops; the stamp lands. */
-export function resultsCartoon(): Uint8Array {
-  const reel = new Reel(palette(0));
+/** The needle climbs to the top speed and stops; the stamp lands. */
+export function resultsCartoon(top: 25 | 30 = 25, reason?: string, stage: Stage = 0): Uint8Array {
+  const reel = new Reel(palette(stage));
   const base = resultsBase();
-  for (const mph of [20, 25] as const)
+  const speeds = top === 25 ? ([20, 25] as const) : ([20, 25, 30] as const);
+  for (const mph of speeds)
     for (let i = 0; i < 6; i++)
       reel.frame(
         base,
         (p) => {
           scaled(p, dial(mph), 52, 54, 4);
           centered(p, 70, 'TOP SPEED:', C.cream, 1, undefined, 204);
-          if (mph === 25 && i > 1) centered(p, 88, '25 MPH.', C.white, 2, undefined, 204);
-          if (mph === 25 && i > 3) centered(p, 120, 'INCONCLUSIVE.', C.red, 1, undefined, 204);
+          if (mph === top && i > 1) centered(p, 88, `${top} MPH.`, C.white, 2, undefined, 204);
+          if (mph === top && i > 3) centered(p, 120, 'INCONCLUSIVE.', C.red, 1, undefined, 204);
+          if (mph === top && i > 4 && reason) centered(p, 134, reason, C.cream, 1, undefined, 204);
         },
-        mph === 20 ? 1 : 3,
+        mph === top ? 3 : 1,
       );
   return reel.fli(5);
 }

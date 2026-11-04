@@ -44,8 +44,11 @@ const LOTS: Lot[] = [...KINDS].map((k, i) => {
 });
 export const TOWN_LOTS = LOTS;
 
-class Scene {
-  readonly pic = new Pixels(COLS * 20, ROWS * 20, 0);
+export class Scene {
+  readonly pic: Pixels;
+  constructor(rows = ROWS) {
+    this.pic = new Pixels(COLS * 20, rows * 20, 0);
+  }
   /** Put a 20x20 block at tile (tx, ty), ty counted from the picture's top. */
   put(tx: number, ty: number, tile: Pixels): void {
     this.pic.blit(tile, tx * 20, ty * 20);
@@ -61,7 +64,7 @@ function sky(s: Scene): void {
 }
 
 /** A cloud: overlapping soft lumps, white on top and shaded under, dithered at its edge. */
-function cloud(s: Scene, x: number, y: number, w: number): void {
+export function cloud(s: Scene, x: number, y: number, w: number): void {
   const lumps: [number, number, number][] = [
     [w * 0.2, 9, 7],
     [w * 0.4, 5, 9],
@@ -113,7 +116,7 @@ function lamp(s: Scene, x: number, groundY: number): void {
 }
 
 /** A round-topped tree: a trunk with roots and a crown of lit lumps. */
-function tree(s: Scene, cx: number, groundY: number, kind: 'oak' | 'blossom' | 'small'): void {
+export function tree(s: Scene, cx: number, groundY: number, kind: 'oak' | 'blossom' | 'small'): void {
   const h = kind === 'small' ? 30 : 50;
   const r = kind === 'small' ? 12 : 17;
   s.pic.rect(cx - 2, groundY - h + 12, 5, h - 12, R('wood', 1));

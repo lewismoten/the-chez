@@ -19,6 +19,7 @@ import { STREET, CROSS_STATES, CROSS_TICKS } from './hypo-street.ts';
 import { carCharacter, PIXELS_PER_TICK, type Mph } from './hypo-car.ts';
 import { dial, palette, SLOT } from './hypo-art.ts';
 import { measure } from './check-speed.ts';
+import { carRise, HILL } from './hypo-hill.ts';
 
 const root = join(import.meta.dirname, '../public/game');
 const bytes = (name: string) => new Uint8Array(readFileSync(join(root, name)));
@@ -29,6 +30,7 @@ assert.equal(game.scenes.length, CHAPTERS.length + 2, 'the page must describe ev
 for (const [index, scene] of game.scenes.entries()) {
   if (index < 2) continue;
   const chapter = CHAPTERS[index - 2];
+  assert.equal(chapter.scene, index, `${chapter.name}: the page's scene number is the engine's`);
   assert.equal(scene.desc, chapter.name, 'the HUD and DOS level names must match');
   const entrance = index === 2 ? game.scenes[0].links[0] : game.scenes[index - 1].links[0];
   assert.equal(entrance.toScene, index, 'levels must be visited in order');
@@ -89,6 +91,16 @@ assert.equal(PIXELS_PER_TICK[20] * 25, PIXELS_PER_TICK[25] * 20, '20 is exactly 
 const shipped = parseCharacter(bytes('car25.chr'));
 assert.equal(shipped.sequences[5].frames[0].x, PIXELS_PER_TICK[25], 'Control Run ships the 25 mph car');
 assert.ok((await measure(25, 200, true)) >= 0, 'the crest link fires');
+for (const [file, mph, dy] of [
+  ['car20.chr', 20, -1],
+  ['car30.chr', 30, 1],
+] as const) {
+  const hill = parseCharacter(bytes(file));
+  const frames = hill.sequences[5].frames.filter((f) => f.pic2 < 50);
+  assert.ok(frames.length > 0 && frames.every((f) => f.x === PIXELS_PER_TICK[mph] && f.y === dy), `${file}: ${mph} mph, one pixel ${dy < 0 ? 'up' : 'down'} per tick`);
+  assert.equal(frames[0].pic1, slots[mph], `${file} carries the ${mph} dial`);
+  assert.equal(hill.sequences[7].frames.filter((f) => f.pic2 < 50).length, 0, `${file}: no reversing on a slope`);
+}
 
 // Stripes are a palette swap: the four trial palettes differ only in the three stripe slots.
 const slotsUsed: number[] = Object.values(SLOT);
@@ -101,6 +113,7 @@ for (const stage of [1, 2, 3] as const) {
   assert.notDeepEqual(swapped.slice(250 * 3, 253 * 3), base.slice(250 * 3, 253 * 3), `stage ${stage} must change the stripes`);
 }
 assert.deepEqual(Array.from(bytes('street.pal')), Array.from(base), 'Control Run has no stripes (the bare palette)');
+assert.deepEqual(Array.from(bytes('hill.pal')), Array.from(palette(1)), 'the hill trial has the first stripe');
 
 function stage(scene: number, x: number, y: number, progress = newCharInfo()) {
   const entry = game.scenes[scene];
@@ -150,6 +163,28 @@ for (let tick = 0; tick < CROSS_STATES * CROSS_TICKS * 2 && road.link === -1; ti
 assert.ok(passedAt >= 0, 'holding Right must get the car past the turtle on its own');
 assert.ok(blockedAt >= 0, 'the closed barrier must stop the car before it passes');
 assert.ok(passedAt > blockedAt, 'the car passes only after the barrier opens');
+
+// Levels 3 and 4: the 20 mph climb stays on the road's line, the crest link swaps in the 30 mph car at the top
+// (same map, new character file), the downhill stays on the line, and the finish link ends the game.
+assert.equal(game.scenes[4].files[1], game.scenes[5].files[1], 'both halves of the hill share one map');
+assert.notEqual(game.scenes[4].files[5], game.scenes[5].files[5], 'the crest swaps the car');
+for (const [scene, startX, startY, expect] of [
+  [4, HILL.startX, HILL.startY, 4],
+  [5, HILL.crestX, HILL.crestY, 5],
+] as const) {
+  const run = stage(scene, startX, startY);
+  await run.run(4);
+  const speedAt = scene === 4 ? 4 : 6;
+  run.press(77);
+  let ticks = 0;
+  while (run.link === -1 && ticks < 400) {
+    await run.tick();
+    ticks++;
+    assert.equal(run.pos.y, 20 * HILL.startY - carRise(run.pos.x), `the car stays on the road's line at x=${run.pos.x}`);
+  }
+  assert.equal(run.link, 0, `scene ${expect}: holding Right reaches the link`);
+  assert.ok(Math.abs(ticks * speedAt - (scene === 4 ? 640 : 960)) <= 40, `scene ${expect}: ${ticks} ticks at ${speedAt} px`);
+}
 
 // The shipped recording wins without a nap, visits both levels and uses one arrow at a time.
 const tour = new GameSim(readDisk(root));

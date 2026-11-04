@@ -10,6 +10,7 @@ import { chapterSong, openingSong, retrySong, winningSong } from './music.ts';
 import { card, garageCartoon, introCartoon, resultsCard, resultsCartoon, TITLE, TITLE_CARD } from './hypo-cards.ts';
 import { drivewayFiles, DRIVEWAY } from './hypo-driveway.ts';
 import { streetFiles, STREET } from './hypo-street.ts';
+import { hillFiles } from './hypo-hill.ts';
 import { CHAPTERS } from '../src/chapters.ts';
 
 const here = fileURLToPath(new URL('..', import.meta.url));
@@ -23,23 +24,30 @@ const text = (name: string, lines: string[]) => put(name, new TextEncoder().enco
 
 drivewayFiles(put);
 streetFiles(put);
+hillFiles(put);
 
 // Cards: the title, one per level, the results card and the retry card.
 put('menu.gif', card(TITLE_CARD, ['DOC LEO, PHD', 'TEDDY, FRONT SEAT'], 'A SCIENCE ADVENTURE', 3, 12));
 put('card1.gif', card('THE HYPOTHESIS', ['FETCH THE CLIPBOARD', 'AND THE STOPWATCH.'], 'ARROWS WALK. SPACE BARKS.', 0, 56));
 put('card2.gif', card('CONTROL RUN', ['NO STRIPES. 25 MPH.', 'WAIT FOR THE TURTLE.'], 'HOLD RIGHT TO DRIVE.', 0, 0));
+put('card3.gif', card('TRIAL 1: UPHILL', ['ONE STRIPE. 20 MPH.', 'IT IS A REAL HILL.'], 'HOLD RIGHT TO DRIVE.', 1, 26));
+put('card4.gif', card('OVER THE CREST', ['THE NEEDLE SAYS 30.', 'THE ROAD SAYS DOWNHILL.'], 'HOLD RIGHT TO DRIVE.', 1, 52));
 put('card1.lst', serializeSlideList([{ name: 'card1.gif', pause: 3 }]));
 put('card2.lst', serializeSlideList([{ name: 'card2.gif', pause: 3 }]));
-put('results.gif', resultsCard());
+put('card3.lst', serializeSlideList([{ name: 'card3.gif', pause: 3 }]));
+put('card4.lst', serializeSlideList([{ name: 'card4.gif', pause: 3 }]));
+put('results.gif', resultsCard(30, 'IT WAS A HILL.', 1));
 put('lost.gif', card('ONE MORE TRY?', ['SCIENCE NEVER GIVES UP.'], 'TEDDY BELIEVES IN YOU', 0, 72));
 put('intro.fli', introCartoon());
 put('garage.fli', garageCartoon());
 put('results.fli', resultsCartoon());
+put('hill.fli', resultsCartoon(30, 'IT WAS A HILL.', 1));
 put('lost.lst', serializeSlideList([{ name: 'lost.gif', pause: 0 }]));
 put('won.lst', serializeSlideList([{ name: 'results.gif', pause: 0 }]));
 put('intro.cmf', openingSong());
 put('yard.cmf', chapterSong(0));
 put('street.cmf', chapterSong(1));
+put('hill.cmf', chapterSong(2));
 put('win.cmf', winningSong());
 put('retry.cmf', retrySong());
 
@@ -68,6 +76,8 @@ text('help.txt', [
   'Street: hold RIGHT.',
   'Stop when the sign says',
   'WAIT. Go when it says GO.',
+  'Hill: hold RIGHT. The car',
+  'changes speed at the top.',
   'F5/F6: save and load.',
 ]);
 text('story.txt', [
@@ -112,15 +122,19 @@ end.files[0] = 'won.lst';
 end.files[1] = 'win.cmf';
 end.files[2] = 'lost.lst';
 end.files[3] = 'retry.cmf';
-const stems = ['yard', 'street'];
+const stems = ['yard', 'street', 'hill', 'hill'];
 const actors: [string, string][] = [
   ['teddy.chr', 'teddy.cbl'],
   ['car25.chr', 'car.cbl'],
+  ['car20.chr', 'car.cbl'],
+  ['car30.chr', 'car.cbl'],
 ];
-const exits = ['garage.fli', 'results.fli'];
+const exits = ['garage.fli', 'results.fli', '', 'hill.fli'];
 const doors = [
   { x: DRIVEWAY.doorX, y: DRIVEWAY.doorY },
   { x: STREET.finishX, y: STREET.row },
+  { x: CHAPTERS[2].doorX, y: CHAPTERS[2].doorY },
+  { x: CHAPTERS[3].doorX, y: CHAPTERS[3].doorY },
 ];
 CHAPTERS.forEach((chapter, index) => {
   const scene = emptyScene(ADVTYPE);

@@ -7,4 +7,6 @@ then the garage opens.
 Street: hold RIGHT.
 Stop when the sign says
 WAIT. Go when it says GO.
+Hill: hold RIGHT. The car
+changes speed at the top.
 F5/F6: save and load.

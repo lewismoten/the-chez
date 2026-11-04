@@ -40,7 +40,8 @@ export function carSprites(): Block[] {
   return sprites;
 }
 
-export function carCharacter(mph: Mph): Character {
+/** `hill` makes every driving frame also move one pixel up or down (and drops reversing, which can't follow a slope). */
+export function carCharacter(mph: Mph, hill?: 'up' | 'down'): Character {
   const character = newCharacter();
   character.meter[1] = 2;
   // PLAYGAME can resume frame -1 after two keys arrive together; neutral spacers keep that harmless.
@@ -51,12 +52,14 @@ export function carCharacter(mph: Mph): Character {
       jstkBut: 0,
     });
   const top = DIAL_SLOT[mph];
-  const frame = (pic: number, x = 0): Frame => ({
+  const dy = hill === 'up' ? -1 : hill === 'down' ? 1 : 0;
+  const frame = (pic: number, x = 0, y = 0): Frame => ({
     ...emptyFrame(),
     pic1: top,
     pic2: pic,
     pause: 1,
     x,
+    y,
   });
   const set = (index: number, frames: Frame[], options: Partial<Sequence> = {}) => {
     const sequence = character.sequences[index];
@@ -64,12 +67,14 @@ export function carCharacter(mph: Mph): Character {
     Object.assign(sequence, { sound: 30, jstkBut: 4 }, options);
   };
   for (const index of [0, 1, 2]) set(index, [frame(0)]);
-  const drive = (index: number, scan: number, dx: number) => set(index, [frame(0, dx), frame(1, dx)], { key: scan << 8 });
+  const drive = (index: number, scan: number, dx: number, y = 0) => set(index, [frame(0, dx, y), frame(1, dx, y)], { key: scan << 8 });
   const speed = PIXELS_PER_TICK[mph];
-  drive(5, 77, speed);
-  drive(13, 32, speed);
-  drive(7, 75, -BACKING);
-  drive(15, 30, -BACKING);
+  drive(5, 77, speed, dy);
+  drive(13, 32, speed, dy);
+  if (!hill) {
+    drive(7, 75, -BACKING);
+    drive(15, 30, -BACKING);
+  }
   // Space honks while the car sits still.
   set(11, [{ ...frame(2), pause: 3 }, frame(0)], {
     key: (57 << 8) | 32,

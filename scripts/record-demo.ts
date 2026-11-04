@@ -72,8 +72,18 @@ for (let i = 0; i < 200 && sim.scene === 2; i++) {
 }
 hold(undefined);
 // Level 2: hold Right the whole way; the barrier waits for GO by itself.
+// Levels 3 and 4 (the hill): Right again after each scene change, since the engine lets go of every key then.
 hold(RIGHT);
-for (let i = 0; i < 2500 && !sim.ended; i++) await step();
+let scene = sim.scene;
+for (let i = 0; i < 3000 && !sim.ended; i++) {
+  if (sim.scene !== scene) {
+    scene = sim.scene;
+    hold(undefined);
+    for (let wait = 0; wait < 40; wait++) await step();
+    hold(RIGHT);
+  }
+  await step();
+}
 hold(undefined);
 console.log('ended:', sim.ended, 'deaths:', sim.deaths, 'trail:', sim.trail.join(','), 'ticks:', total, 'events:', keys.length);
 if (sim.ended === 'won' && sim.deaths === 0) {

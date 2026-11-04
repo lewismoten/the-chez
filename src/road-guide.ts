@@ -10,7 +10,7 @@ export function roadMessage(chapter: ChapterInfo, found: number, nearGate = fals
 }
 
 export function fillRoadAtlas(list: HTMLOListElement): void {
-  for (const [index, chapter] of CHAPTERS.entries()) {
+  for (const [index, chapter] of CHAPTERS.filter((entry) => !entry.continues).entries()) {
     const item = document.createElement('li');
     const number = document.createElement('span');
     number.className = 'road-number';

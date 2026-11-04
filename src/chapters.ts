@@ -15,6 +15,12 @@ export interface ChapterInfo {
   counter?: number;
   /** What the progress tile shows when there is no counter: the level's top speed. */
   readout?: string;
+  /** The engine's scene number (0 title, 1 ending, then the levels in order). */
+  scene: number;
+  /** The car's speed in this scene, in mph (0 on foot). The page shows it. */
+  speed: number;
+  /** True when the scene is the second half of the level before it. */
+  continues?: true;
   actor: 'Teddy' | 'THE CHEZ';
   mode: 'walk' | 'drive';
 }
@@ -32,6 +38,8 @@ export const CHAPTERS: readonly ChapterInfo[] = [
     doorX: 21,
     doorY: 31,
     counter: 21,
+    scene: 2,
+    speed: 0,
     actor: 'Teddy',
     mode: 'walk',
   },
@@ -47,6 +55,43 @@ export const CHAPTERS: readonly ChapterInfo[] = [
     doorX: 90,
     doorY: 95,
     readout: '25 MPH',
+    scene: 3,
+    speed: 25,
+    actor: 'THE CHEZ',
+    mode: 'drive',
+  },
+  {
+    name: 'Trial 1: Uphill',
+    required: 0,
+    goal: 'SPEED',
+    mission: 'Hold Right and keep going. THE CHEZ climbs the hill at 20 mph, one stripe richer.',
+    help: 'Holding Right is safe. At the top the car changes gear by itself.',
+    blurb: 'One charcoal stripe, a real hill, and a speedometer that drops to 20.',
+    startX: 3,
+    startY: 94,
+    doorX: 35,
+    doorY: 86,
+    readout: '20 MPH',
+    scene: 4,
+    speed: 20,
+    actor: 'THE CHEZ',
+    mode: 'drive',
+  },
+  {
+    name: 'Trial 1: Downhill',
+    required: 0,
+    goal: 'SPEED',
+    mission: 'Over the crest. Hold Right: the road runs downhill and the needle reads 30.',
+    help: 'Holding Right is safe. The finish is at the bottom of the hill.',
+    blurb: 'The same hill the other way, at 30 mph. The stripes had nothing to do with it.',
+    startX: 35,
+    startY: 86,
+    doorX: 83,
+    doorY: 94,
+    readout: '30 MPH',
+    scene: 5,
+    speed: 30,
+    continues: true,
     actor: 'THE CHEZ',
     mode: 'drive',
   },
