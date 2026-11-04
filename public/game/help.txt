@@ -1,16 +1,10 @@
-TEDDY'S STRIPE CHASE
-LEFT/RIGHT/A/D: walk.
-UP/W: hop; umbrella FLOAT.
-SPACE: bark/squeak or TAKE.
-Park: UP then LEFT for leaf.
-Bring leaf RIGHT to wood gate.
-Downtown: WAIT, then GO.
-Club: hop stones; foam saves.
-Balloons give bonus stripes.
-Sky: wind lifts; hop the gaps.
-Z clouds nap. Three tries.
-Maze: 4 arrows. SPACE: DOWN.
-Umbrella: SPACE takes it.
-Hold UP: open. Let go: fold.
-Lap: LEFT drives; UP bounces.
-SPACE: horn. F5/F6: save/load.
+THE STRIPE HYPOTHESIS
+Arrows: walk or drive.
+A and D also work.
+SPACE: bark, or honk.
+Yard: fetch two things,
+then the garage opens.
+Street: hold RIGHT.
+Stop when the sign says
+WAIT. Go when it says GO.
+F5/F6: save and load.
