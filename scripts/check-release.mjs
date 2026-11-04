@@ -48,7 +48,7 @@ try {
   await page.locator("#watch-demo").click();
   await page.waitForFunction(
     () =>
-      document.querySelector("#status")?.textContent === "Teddy’s grand finale",
+      document.querySelector("#status")?.textContent === "The experiment ends",
     null,
     { timeout: 330_000 },
   );
@@ -58,7 +58,7 @@ try {
   );
   assert.equal(
     await page.locator("#stripe-progress").textContent(),
-    `${CHAPTERS.at(-1).required} / ${CHAPTERS.at(-1).required}`,
+    CHAPTERS.at(-1).readout,
   );
   await page.waitForTimeout(2000);
   await page.screenshot({ path: join(screenshots, "mobile-finale.png") });
@@ -87,13 +87,13 @@ try {
   await page.waitForFunction(
     () =>
       document.querySelector("#chapter-name")?.textContent ===
-        "The Stripe Road" &&
+        "The Hypothesis" &&
       document.querySelector("#status")?.textContent === "Playing · 3 tries",
   );
   assert.equal(await page.locator("#game-overlay").isVisible(), false);
-  assert.equal(await page.locator("#progress-label").textContent(), "STRIPES");
+  assert.equal(await page.locator("#progress-label").textContent(), "THINGS FETCHED");
   assert.equal(await page.locator("#bark").textContent(), "Bark!");
-  assert.equal(await page.locator("#hop").textContent(), "Hop ↑");
+  assert.equal(await page.locator("#hop").textContent(), "Up ↑");
   assert.equal(
     archiveRequests.length,
     1,
