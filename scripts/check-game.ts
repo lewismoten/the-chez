@@ -23,6 +23,9 @@ import { carRise, HILL } from './hypo-hill.ts';
 import { TAPE } from './hypo-tape.ts';
 import { TRICYCLE } from './hypo-tricycle.ts';
 import { WIND } from './hypo-garage.ts';
+import { MOWER } from './hypo-mower.ts';
+import { NIGHT, nightPalette, NIGHT_KEEP } from './hypo-night.ts';
+import { DOWN, downRise } from './hypo-down.ts';
 
 const root = join(import.meta.dirname, '../public/game');
 const bytes = (name: string) => new Uint8Array(readFileSync(join(root, name)));
@@ -62,7 +65,7 @@ for (const name of ['story.txt', 'help.txt', 'credits.txt']) {
   assert.ok(lines.length <= 16 && lines.every((line) => line.length <= 30), `${name}: notice lines must be 30 characters or fewer`);
 }
 assert.ok(new TextDecoder().decode(bytes('credits.txt')).includes('Claude Sonnet 5.5'), 'the credits name the AI that wrote the game');
-for (const name of ['intro.fli', 'garage.fli', 'results.fli', 'tric.fli', 'wind.fli', 'hill.fli']) {
+for (const name of ['intro.fli', 'garage.fli', 'results.fli', 'tric.fli', 'wind.fli', 'hill.fli', 'mower.fli', 'night.fli', 'conclusion.fli']) {
   assert.deepEqual(fliFaults(bytes(name)), [], `${name}: animation must fit the original DOS player`);
   const movie = parseFli(bytes(name));
   const seconds = (movie.frameCount * movie.speed) / 70;
@@ -304,6 +307,89 @@ for (const [scene, startX, startY, expect] of [
   assert.ok(Math.abs(ticks * speedAt - (scene === 7 ? 640 : 960)) <= 40, `scene ${expect}: ${ticks} ticks at ${speedAt} px`);
 }
 
+// Level 9, the Mower: a rainy park road. The mower keeps one set pace and never blocks; puddles slow the car on its
+// lane (a left pull on one block frame in three) but never stop it; holding Right alone beats the mower to the line.
+{
+  const entry = game.scenes[9];
+  assert.equal(entry.files[0], 'mower.pal');
+  const mons = parseMonsters(bytes(entry.files[3]));
+  const mowerMon = mons.find((m) => m.used && m.end === -1 && m.towards === 0)!;
+  assert.ok(mowerMon.march[0][0].pic < PIXELS_PER_TICK[25], 'the mower is slower than the car');
+  assert.ok(mowerMon.march[0].every((c) => c.pic === 0 || c.pic === mowerMon.march[0][0].pic), 'the mower holds one set pace');
+  const run = stage(9, MOWER.startX, MOWER.row);
+  await run.run(4);
+  const hp = run.w.ci.meter[0];
+  run.press(77);
+  const xs: number[] = [];
+  for (let tick = 0; tick < 900 && run.link === -1; tick++) {
+    await run.tick();
+    xs.push(run.pos.x);
+  }
+  assert.equal(run.link, 0, 'holding Right alone gets through every puddle to the finish line');
+  assert.equal(run.w.ci.meter[0], hp, 'the rainy race never hurts');
+  // puddles slow the car: the slowest stretch across one is well under 5 px per tick, and the car keeps moving
+  const [first, width] = MOWER.puddles[0];
+  const enter = xs.findIndex((x) => x >= first * 20);
+  const leave = xs.findIndex((x) => x >= (first + width) * 20);
+  const rate = ((first + width) * 20 - first * 20) / (leave - enter);
+  assert.ok(rate < 4.3 && rate > 1.5, `a puddle slows the car (${rate.toFixed(2)} px per tick across it)`);
+  const mowerAt = (tick: number) => MOWER.riderX * 20 + 10 + tick * mowerMon.march[0][0].pic;
+  assert.ok(mowerAt(xs.length) < (MOWER.finishX + 1) * 20, 'the mower is still short of the line when the car arrives');
+}
+
+// Level 10, the Night Trial: a night swap of the street (lamps, lit windows and the car's lamps stay bright), nothing in
+// the road, and the lit garage at the end of it.
+{
+  const entry = game.scenes[10];
+  assert.equal(entry.files[0], 'night.pal');
+  assert.equal(entry.files[6], 'carnight.cbl', 'the car drives with its headlights on');
+  const night = bytes('night.pal');
+  assert.deepEqual(Array.from(night), Array.from(nightPalette()));
+  const day = palette(3);
+  let darker = 0;
+  for (let i = 0; i < 256; i++) {
+    const same = night.slice(i * 3, i * 3 + 3).every((v, k) => v === day[i * 3 + k]);
+    if (NIGHT_KEEP.includes(i) || slotsUsed.includes(i)) assert.ok(same, `slot ${i} stays bright at night`);
+    else if (!same) darker++;
+  }
+  assert.ok(darker > 100, 'the rest of the palette is swapped for night');
+  assert.equal(parseMonsters(bytes(entry.files[3])).filter((m) => m.used).length, 0, 'nothing is in the night road');
+  const run = stage(10, NIGHT.startX, NIGHT.row);
+  await run.run(4);
+  const hp = run.w.ci.meter[0];
+  run.press(77);
+  for (let tick = 0; tick < 600 && run.link === -1; tick++) await run.tick();
+  assert.equal(run.link, 0, 'holding Right drives home to the garage');
+  assert.equal(run.w.ci.meter[0], hp, 'the night drive never hurts');
+}
+
+// Level 11, Thirty Downhill: the 30 mph car stays on the road's line the whole way (one pixel down for every six across),
+// the sneaker float's nine monsters keep a steady pace below the car's, and holding Right passes it and finishes.
+{
+  const entry = game.scenes[11];
+  assert.equal(entry.files[5], 'car30.chr');
+  const mons = parseMonsters(bytes(entry.files[3])).filter((m) => m.used);
+  assert.equal(mons.length, 9, 'the float is nine monsters');
+  assert.ok(mons.every((m) => m.march[0][0].pic === DOWN.floatSpeed && m.march[0][1].pic === DOWN.floatSpeed && m.thru === 1), 'the float holds one pace and never blocks');
+  assert.ok(DOWN.floatSpeed < PIXELS_PER_TICK[30], 'the float is slower than the 30 mph car');
+  const run = stage(11, DOWN.startX, DOWN.startY);
+  await run.run(4);
+  const hp = run.w.ci.meter[0];
+  run.press(77);
+  let ticks = 0;
+  while (run.link === -1 && ticks < 500) {
+    await run.tick();
+    ticks++;
+    assert.equal(run.pos.y, 20 * (DOWN.startY + DOWN.drop) - downRise(run.pos.x), `the car stays on the route's line at x=${run.pos.x}`);
+  }
+  assert.equal(run.link, 0, 'holding Right reaches the finish');
+  assert.equal(run.w.ci.meter[0], hp, 'the finale never hurts');
+  assert.ok(Math.abs(ticks * PIXELS_PER_TICK[30] - (DOWN.finishX - DOWN.startX) * 20) <= 40, `${ticks} ticks at 6 px`);
+  const first = run.w.mi.find((_, i) => run.w.mm[i].monnum < 64);
+  assert.ok(first, 'the float is still on the road when the car arrives');
+  assert.ok(first!.curx[0] * 20 < run.pos.x - 60, 'the car finished well ahead of the float');
+}
+
 // The shipped recording wins without a nap, visits both levels and uses one arrow at a time.
 const tour = new GameSim(readDisk(root));
 const events = parseRecording(bytes('tour.rec'));
@@ -311,7 +397,7 @@ const allowed = new Set([72, 75, 77, 80, 57, 28]);
 const held = new Set<number>();
 let event = 0,
   due = events[0]?.delta ?? Infinity;
-for (let tick = 1; tick <= 9000 && !tour.ended; tick++) {
+for (let tick = 1; tick <= 20000 && !tour.ended; tick++) {
   while (event < events.length && due <= tick) {
     const key = events[event].key;
     assert.ok(allowed.has(key & 0x7f), `the recording must use arrows, Space and Enter only (key ${key & 0x7f})`);

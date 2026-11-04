@@ -7,7 +7,7 @@ import { serializeSlideList } from '@lewismoten/gamemaker-sandbox-tools/formats/
 import { parseSoundSet, serializeSoundSet } from '@lewismoten/gamemaker-sandbox-tools/formats/sound';
 import { SPEAKER, mix, osc, sample } from '@lewismoten/gamemaker-sandbox-tools/audio';
 import { chapterSong, openingSong, retrySong, winningSong } from './music.ts';
-import { card, garageCartoon, introCartoon, resultsCard, resultsCartoon, TITLE, TITLE_CARD } from './hypo-cards.ts';
+import { card, garageCartoon, introCartoon, resultsCartoon, TITLE, TITLE_CARD } from './hypo-cards.ts';
 import { addStripeCartoon, stripeCartoon } from './hypo-stripes.ts';
 import { drivewayFiles, DRIVEWAY } from './hypo-driveway.ts';
 import { streetFiles, STREET } from './hypo-street.ts';
@@ -15,6 +15,11 @@ import { hillFiles } from './hypo-hill.ts';
 import { TAPE, tapeFiles } from './hypo-tape.ts';
 import { TRICYCLE, tricycleFiles } from './hypo-tricycle.ts';
 import { WIND, garageFiles } from './hypo-garage.ts';
+import { MOWER, mowerFiles } from './hypo-mower.ts';
+import { goldLook, nightLook, rainLook } from './hypo-looks.ts';
+import { NIGHT, nightFiles } from './hypo-night.ts';
+import { DOWN, downFiles } from './hypo-down.ts';
+import { conclusionCartoon, endingCards } from './hypo-finale.ts';
 import { CHAPTERS } from '../src/chapters.ts';
 
 const here = fileURLToPath(new URL('..', import.meta.url));
@@ -32,6 +37,9 @@ hillFiles(put);
 tapeFiles(put);
 tricycleFiles(put);
 garageFiles(put);
+mowerFiles(put);
+nightFiles(put);
+downFiles(put);
 
 // Cards: the title, one per level, the results card and the retry card.
 put('menu.gif', card(TITLE_CARD, ['DOC LEO, PHD', 'TEDDY, FRONT SEAT'], 'A SCIENCE ADVENTURE', 3, 12));
@@ -42,8 +50,11 @@ put('card4.gif', card('TRIAL 1:\nTHE TRICYCLE', ['A KID ON A TRICYCLE.', 'HENS H
 put('card5.gif', card('WIND TUNNEL', ['DOC LEO BUILT A DRAFT.', 'FANS LIFT. BENCHES CATCH.'], 'ARROWS WALK. STEP INTO A FAN.', 2, 20));
 put('card6.gif', card('UPHILL TRIAL', ['THREE STRIPES. 20 MPH.', 'IT IS A REAL HILL.'], 'HOLD RIGHT TO DRIVE.', 3, 26));
 put('card7.gif', card('OVER THE CREST', ['THE NEEDLE SAYS 30.', 'THE ROAD SAYS DOWNHILL.'], 'HOLD RIGHT TO DRIVE.', 3, 52));
-for (let n = 1; n <= 7; n++) put(`card${n}.lst`, serializeSlideList([{ name: `card${n}.gif`, pause: 3 }]));
-put('results.gif', resultsCard(30, 'IT WAS A HILL.', 3));
+put('card8.gif', card('TRIAL 3:\nTHE MOWER', ['THE NEIGHBOR MOWS IN RAIN.', 'PUDDLES SLOW THE CAR.'], 'HOLD RIGHT TO DRIVE.', 3, 30, rainLook));
+put('card9.gif', card('NIGHT TRIAL', ['THE WHITE PINSTRIPE IS ON.', 'DRIVE HOME. LAMPS ARE LIT.'], 'HOLD RIGHT TO DRIVE.', 3, 60, nightLook));
+put('card10.gif', card('THIRTY\nDOWNHILL', ['A FLOAT SHAPED LIKE A SHOE.', 'THE NEEDLE READS 30.'], 'HOLD RIGHT TO DRIVE.', 3, 8, goldLook));
+for (let n = 1; n <= 10; n++) put(`card${n}.lst`, serializeSlideList([{ name: `card${n}.gif`, pause: 3 }]));
+endingCards().forEach((card, i) => put(`end${i + 1}.gif`, card));
 put('lost.gif', card('ONE MORE TRY?', ['SCIENCE NEVER GIVES UP.'], 'TEDDY BELIEVES IN YOU', 0, 72));
 put('intro.fli', introCartoon());
 put('garage.fli', garageCartoon());
@@ -51,9 +62,12 @@ put('results.fli', resultsCartoon());
 put('stripe.fli', stripeCartoon(0));
 put('tric.fli', resultsCartoon(25, 'A TRICYCLE KEPT UP.', 1, (reel) => addStripeCartoon(reel, 1)));
 put('wind.fli', stripeCartoon(2));
-put('hill.fli', resultsCartoon(30, 'IT WAS A HILL.', 3));
+put('hill.fli', resultsCartoon(30, 'THE ROAD WAS TILTED.', 3));
+put('night.fli', resultsCartoon(25, 'NOBODY SAW THE NEEDLE.', 3, undefined, nightLook));
+put('conclusion.fli', conclusionCartoon());
+put('mower.fli', resultsCartoon(25, 'IT WAS RAINING.', 3, undefined, rainLook));
 put('lost.lst', serializeSlideList([{ name: 'lost.gif', pause: 0 }]));
-put('won.lst', serializeSlideList([{ name: 'results.gif', pause: 0 }]));
+put('won.lst', serializeSlideList([4, 7, 7, 0].map((pause, i) => ({ name: `end${i + 1}.gif`, pause }))));
 put('intro.cmf', openingSong());
 put('yard.cmf', chapterSong(0));
 put('street.cmf', chapterSong(1));
@@ -61,6 +75,9 @@ put('tape.cmf', chapterSong(4));
 put('tric.cmf', chapterSong(3));
 put('garage.cmf', chapterSong(5));
 put('hill.cmf', chapterSong(2));
+put('mower.cmf', chapterSong(7));
+put('night.cmf', chapterSong(8));
+put('down.cmf', chapterSong(9));
 put('win.cmf', winningSong());
 put('retry.cmf', retrySong());
 
@@ -135,7 +152,7 @@ end.files[0] = 'won.lst';
 end.files[1] = 'win.cmf';
 end.files[2] = 'lost.lst';
 end.files[3] = 'retry.cmf';
-const stems = ['yard', 'street', 'tape', 'tric', 'garage', 'hill', 'hill'];
+const stems = ['yard', 'street', 'tape', 'tric', 'garage', 'hill', 'hill', 'mower', 'night', 'down'];
 const actors: [string, string][] = [
   ['teddy.chr', 'teddy.cbl'],
   ['car25.chr', 'car.cbl'],
@@ -144,8 +161,11 @@ const actors: [string, string][] = [
   ['teddy-side.chr', 'teddy.cbl'],
   ['car20.chr', 'car.cbl'],
   ['car30.chr', 'car.cbl'],
+  ['car25.chr', 'car.cbl'],
+  ['car25.chr', 'carnight.cbl'],
+  ['car30.chr', 'car.cbl'],
 ];
-const exits = ['garage.fli', 'results.fli', 'stripe.fli', 'tric.fli', 'wind.fli', '', 'hill.fli'];
+const exits = ['garage.fli', 'results.fli', 'stripe.fli', 'tric.fli', 'wind.fli', '', 'hill.fli', 'mower.fli', 'night.fli', 'conclusion.fli'];
 const doors = [
   { x: DRIVEWAY.doorX, y: DRIVEWAY.doorY },
   { x: STREET.finishX, y: STREET.row },
@@ -154,6 +174,9 @@ const doors = [
   { x: WIND.doorX, y: WIND.doorY },
   { x: CHAPTERS[5].doorX, y: CHAPTERS[5].doorY },
   { x: CHAPTERS[6].doorX, y: CHAPTERS[6].doorY },
+  { x: MOWER.finishX, y: MOWER.row },
+  { x: NIGHT.finishX, y: NIGHT.row },
+  { x: DOWN.finishX, y: CHAPTERS[9].doorY },
 ];
 CHAPTERS.forEach((chapter, index) => {
   const scene = emptyScene(ADVTYPE);

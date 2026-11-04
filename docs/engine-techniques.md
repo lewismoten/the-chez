@@ -30,9 +30,19 @@ A downhill or uphill stretch is a scene link on the crest block into a scene wit
 
 `scripts/hypo-garage.ts` builds Level 5, Teddy on foot with gravity. Gravity is per block (`grav` bits: 1 up, 2 right, 4 down, 8 left), taken from the block Teddy is mostly in, and adds one pixel a tick each tick (movement is capped at 11). Every block pulls down; a fan's draft is two columns of blocks with `grav` 1 (a three-frame animated chain of streaks) from a grate in the floor or bench up through the bench above, which is solid on top only (`solid` 1), so Teddy rises through it, overshoots and lands back on it. A post of crates beside each draft keeps a player who holds Right inside the draft until the bench top is cleared; the bench then catches him. Standing still in a draft works too. The grates are animated chains too (three turns of a box fan seen from above). The third bench holds a counter pickup (the stripe roll) and the door, which stays shut until the roll is in. `teddyData(true)` in `scripts/hypo-driveway.ts` drops walking up and down for this level.
 
+## Rain, puddles and night: one street, three palettes
+
+`paintTown` in `scripts/hypo-town.ts` paints the street scenery in four moods (`street`, `race`, `park`, `night`), and `scripts/hypo-weather.ts` holds what weather adds. Rain streaks repeat every 20 pixels and are drawn last, so they add no art blocks. A palette swap (`timeOfDay` in `scripts/hypo-art.ts`) drains or tints every color except the three stripe slots and any `keep` slots: the rain palette keeps its drops, the night palette keeps the lamp and window light and the car's lamps. Lamp light is the glow ramp dithered thinner toward the edge of an ellipse, and the night garage is a lit open bay drawn into the last lot. `scripts/hypo-road.ts` cuts any of these into a block set with the car's lane as the floor.
+
+A puddle (`scripts/hypo-mower.ts`) is built from animated blocks: three ripple frames for each of a left cap, a middle and a right cap, on the car's row and the road row below. On the car's row, frame 0 has left gravity (grav 12) and frames 1 and 2 do not; cells start on different frames of the chain, so the ripples travel and the car is pulled back for about a third of the time. Left gravity alone on every cell is a wall (the car holds still), so the animation is what turns a wall into a slowdown: the car crosses at about 3 px a tick instead of 5, and `check:game` proves it still arrives.
+
+## A float that follows a slope
+
+`scripts/hypo-down.ts` is the hill's downhill made longer: the 30 mph car falls one pixel for every six across, and the road art follows the same line column by column, so everything on the bank repeats every 240 pixels (a whole-block shift) and the picture still cuts into under 150 blocks. The parade float (`scripts/hypo-float.ts`) is nine monsters of one path in lockstep, each a block of a 60 by 60 picture that is sheared to follow the road. A monster path is relative to its start, so a corner more than half the map away is walked backward through the wrap; two legs of about 36 and 84 blocks along the 1-in-6 line keep it going forward. Its speed is one value on both legs, below the car's, so a car that holds Right passes it.
+
 ## The shipped recording
 
-`npm run record:demo` plays the built game headless with arrows only, never holding two keys, and saves `assets/teddy-tour.rec`. `check:game` replays it, requires a win without a nap, and requires the keys to stay among arrows, Space and Enter.
+`npm run record:demo` plays the built game headless through all ten levels with arrows only, never holding two keys, and saves `assets/teddy-tour.rec`. `check:game` replays it, requires a win without a nap, and requires the keys to stay among arrows, Space and Enter.
 
 ## Website state and guidance
 

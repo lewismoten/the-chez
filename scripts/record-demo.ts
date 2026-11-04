@@ -128,10 +128,10 @@ for (let i = 0; i < 3000 && sim.scene === 5; i++) {
 }
 hold(undefined);
 for (let wait = 0; wait < 40; wait++) await step();
-// The hill (the last two levels): hold Right; again after each scene change.
+// The hill and every trial after it: hold Right; again after each scene change.
 hold(RIGHT);
 scene = sim.scene;
-for (let i = 0; i < 3000 && !sim.ended; i++) {
+for (let i = 0; i < 12000 && !sim.ended; i++) {
   if (sim.scene !== scene) {
     scene = sim.scene;
     hold(undefined);

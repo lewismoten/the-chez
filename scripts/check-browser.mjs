@@ -1,12 +1,12 @@
 // Plays the hill with the real keyboard in the real browser engine: the 20 mph climb (the car moves 4 px and
-// rises 1 px a frame), the crest scene change, and the 30 mph descent (6 px across, 1 down), then the ending.
+// rises 1 px a frame), the crest scene change, and the 30 mph descent (6 px across, 1 down), then the next trial.
 // The engine is only watched (its world is read each frame); every input is a key press.
 import assert from 'node:assert/strict';
 import { CHAPTERS } from '../src/chapters.ts';
 import { carRise } from './hypo-hill.ts';
 import { continueAt, withPage } from './page-check.mjs';
 
-const [, , , , , uphill, downhill] = CHAPTERS;
+const [, , , , , uphill, downhill, afterHill] = CHAPTERS;
 const hook = ['onFrame: (world) => {', 'onFrame: (world) => { (window.__trace ??= []).push([world.chr.x[0] * 20 + world.chr.x[1], world.chr.y[0] * 20 + world.chr.y[1], document.querySelector("#chapter-name").textContent]);'];
 
 await withPage({ port: 4175, width: 1280, height: 900, patches: [hook] }, async ({ page, errors, url }) => {
@@ -30,12 +30,12 @@ await withPage({ port: 4175, width: 1280, height: 900, patches: [hook] }, async 
   await page.waitForTimeout(5000);
   const mark = await page.evaluate(() => window.__trace.length);
   await page.keyboard.down('ArrowRight');
-  await page.waitForFunction((name) => document.querySelector('#chapter-name').textContent === name, 'Curtain call', { timeout: 90_000 });
+  await page.waitForFunction((name) => document.querySelector('#chapter-name').textContent === name, afterHill.name, { timeout: 90_000 });
   await page.keyboard.up('ArrowRight');
   const run = (await page.evaluate(() => window.__trace)).slice(mark).filter((s) => s[2] === downhill.name);
   assert.ok(steps(run, 6) > 100, 'the 30 mph car moves 6 px and 1 px down per frame');
-  // (the last sample is the frame that moves to the ending)
+  // (the last sample is the frame that moves to the next trial)
   assert.ok(run.filter((s) => s[0] >= 700 && s[0] < 1640).every((s) => s[1] === 1880 - carRise(s[0])), 'the descending car stays on the road line');
   assert.deepEqual(errors, []);
 });
-console.log('The hill by keyboard in the browser engine: 20 mph up, crest swap, 30 mph down, ending: passed');
+console.log('The hill by keyboard in the browser engine: 20 mph up, crest swap, 30 mph down, the next trial: passed');
