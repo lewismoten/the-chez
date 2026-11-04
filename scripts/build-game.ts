@@ -1,22 +1,16 @@
-// Build Teddy's nine-chapter DOS Game-Maker stripe chase from source art and format helpers.
+// Build The Stripe Hypothesis, a DOS Game-Maker game, from source art and the tools' format helpers.
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ADVTYPE, emptyScene, newGame, serializeGame } from '@lewismoten/gamemaker-sandbox-tools/formats/game';
-import { matchColor } from '@lewismoten/gamemaker-sandbox-tools/formats/palette';
-import { encodeGif } from '@lewismoten/gamemaker-sandbox-tools/formats/gif';
 import { serializeSlideList } from '@lewismoten/gamemaker-sandbox-tools/formats/graphicScripts';
 import { parseSoundSet, serializeSoundSet } from '@lewismoten/gamemaker-sandbox-tools/formats/sound';
-import { serializeCharacter } from '@lewismoten/gamemaker-sandbox-tools/formats/character';
-import { crewCharacters, walkingCharacter } from './crew-characters.ts';
-import { stripeCar } from './stripe-car.ts';
-import { clubArt, centered as clubCentered } from '../assets/source/teddy/art/draw.ts';
-import { Pixels } from '@lewismoten/gamemaker-sandbox-tools/drawing';
-import { centered } from '@lewismoten/gamemaker-sandbox-tools/drawing';
 import { SPEAKER, mix, osc, sample } from '@lewismoten/gamemaker-sandbox-tools/audio';
-import { chapterSong, umbrellaSong, openingSong, retrySong, winningSong } from './music.ts';
-import { driveCartoon, losingCartoon, openingCartoon, winningCartoon } from './cartoons.ts';
-import { buildChapter, CHAPTERS } from './chapters.ts';
+import { chapterSong, openingSong, retrySong, winningSong } from './music.ts';
+import { card, garageCartoon, introCartoon, resultsCard, resultsCartoon, TITLE } from './hypo-cards.ts';
+import { drivewayFiles, DRIVEWAY } from './hypo-driveway.ts';
+import { streetFiles, STREET } from './hypo-street.ts';
+import { CHAPTERS } from '../src/chapters.ts';
 
 const here = fileURLToPath(new URL('..', import.meta.url));
 const source = join(here, 'assets/source/teddy/disk');
@@ -25,181 +19,87 @@ rmSync(output, { recursive: true, force: true });
 mkdirSync(output, { recursive: true });
 const bytes = (name: string) => new Uint8Array(readFileSync(join(source, name)));
 const put = (name: string, data: Uint8Array) => writeFileSync(join(output, name), data);
+const text = (name: string, lines: string[]) => put(name, new TextEncoder().encode(lines.join('\r\n') + '\r\n'));
 
-// The tutorial is an original course, built by the same native pipeline as the later roads.
-const { palette: pal, ink } = buildChapter(
-  {
-    source: 'backyard',
-    stem: 'stripe',
-    name: 'The Stripe Road',
-    carX: 77,
-    startX: 10,
-    required: 10,
-    counter: 21,
-    sampleX: 6,
-    quip: '',
-    beat: '',
-    pieces: [11, 16, 21, 26, 31, 36, 41, 46, 51, 56, 61, 66, 71].map((x) => ({ x, y: 39 })),
-  },
-  bytes,
-  put,
-);
+drivewayFiles(put);
+streetFiles(put);
 
-// Draw a dedicated title and finish screen in the DOS picture format.
-function screen(name: string, headline: string, line: string, scenePal = pal, sceneInk = ink, beat = '', restored = 0, goal = '') {
-  const navy = matchColor(scenePal, 4, 13, 19);
-  const cream = matchColor(scenePal, 61, 56, 43);
-  const gold = matchColor(scenePal, 63, 46, 21);
-  const dark = matchColor(scenePal, 9, 12, 15);
-  const p = new Pixels(320, 200, navy);
-  p.rect(0, 151, 320, 49, dark);
-  p.rect(0, 154, 320, 3, gold);
-  p.blit(stripeCar(sceneInk, restored, 'right', 3), 100, 84, 255);
-  clubCentered(p, 20, clubArt(headline), cream, 2);
-  if (beat) centered(p, 58, beat, cream, 1);
-  if (goal) centered(p, 164, goal, cream, 1);
-  centered(p, 177, line, gold, 1);
-  put(name, encodeGif({ width: 320, height: 200, pixels: p.px, palette: scenePal }));
-}
-screen('card1.gif', 'THE STRIPE ROAD', 'UP: HOP OVER THE CRATES.', pal, ink, "TEDDY'S NOSE IS ON THE CASE.", 0, 'FIND 10 STRIPE PIECES');
-put('card1.lst', serializeSlideList([{ name: 'card1.gif', pause: 4 }]));
-screen('menu.gif', "TEDDY'S STRIPE CHASE", 'A VERY SMALL CAR. A HUGE QUEST.');
-screen('won.gif', 'TEDDY DID IT!', 'THE CHEZ IS 900% MORE DASHING', pal, ink, '', 1);
-screen('epilogue.gif', 'THE WHOLE CREW WON', 'TEAMWORK MAKES EVERY ROAD FUN', pal, ink, 'TEDDY FOUND THE WAY HOME.', 1);
-screen('lost.gif', 'ONE MORE TRY?', 'TEDDY BELIEVES IN YOU');
-put('intro.fli', openingCartoon(pal, ink));
-put('drive.fli', driveCartoon(pal, ink, 'MAPLE STREET', 1));
-put('win.fli', winningCartoon(pal, ink));
-put('lost.fli', losingCartoon(pal, ink));
-put(
-  'won.lst',
-  serializeSlideList([
-    { name: 'win.fli', pause: 0 },
-    { name: 'epilogue.gif', pause: 4 },
-    { name: 'won.gif', pause: 0 },
-  ]),
-);
-put(
-  'lost.lst',
-  serializeSlideList([
-    { name: 'lost.fli', pause: 0 },
-    { name: 'lost.gif', pause: 0 },
-  ]),
-);
+// Cards: the title, one per level, the results card and the retry card.
+put('menu.gif', card(TITLE, ['DOC LEO, PHD', 'TEDDY, FRONT SEAT'], 'A SCIENCE ADVENTURE'));
+put('card1.gif', card('THE HYPOTHESIS', ['FETCH THE CLIPBOARD', 'AND THE STOPWATCH.'], 'ARROWS WALK. SPACE BARKS.'));
+put('card2.gif', card('CONTROL RUN', ['NO STRIPES. 25 MPH.', 'WAIT FOR THE TURTLE.'], 'HOLD RIGHT TO DRIVE.'));
+put('card1.lst', serializeSlideList([{ name: 'card1.gif', pause: 3 }]));
+put('card2.lst', serializeSlideList([{ name: 'card2.gif', pause: 3 }]));
+put('results.gif', resultsCard());
+put('lost.gif', card('ONE MORE TRY?', ['SCIENCE NEVER GIVES UP.'], 'TEDDY BELIEVES IN YOU'));
+put('intro.fli', introCartoon());
+put('garage.fli', garageCartoon());
+put('results.fli', resultsCartoon());
+put('lost.lst', serializeSlideList([{ name: 'lost.gif', pause: 0 }]));
+put('won.lst', serializeSlideList([{ name: 'results.gif', pause: 0 }]));
 put('intro.cmf', openingSong());
 put('yard.cmf', chapterSong(0));
+put('street.cmf', chapterSong(1));
 put('win.cmf', winningSong());
 put('retry.cmf', retrySong());
 
-// The stripe's bright two-note chirp and the door's little electric click are new sounds.
+// Sounds: Teddy's real bark, a pickup chirp, the garage door and the horn.
 const snd = parseSoundSet(bytes('teddy.snd'));
 snd.freqs[7] = SPEAKER.arpeggio([784, 1175, 1568]);
-snd.digital[7] = 'stripe';
+snd.digital[7] = 'ping';
 snd.freqs[8] = SPEAKER.fall(660, 240);
 snd.digital[8] = 'gate';
-snd.freqs[18] = SPEAKER.arpeggio([392, 330, 262]);
-snd.digital[18] = 'yawn';
 snd.freqs[20] = SPEAKER.arpeggio([440, 660, 880]);
 snd.digital[20] = 'meep';
-snd.freqs[21] = SPEAKER.arpeggio([988, 1480, 740]);
-snd.digital[21] = 'chicken';
-snd.freqs[22] = SPEAKER.arpeggio([330, 660, 990]);
-snd.digital[22] = 'fwoomp';
-put('stripe.snd', serializeSoundSet(snd));
-put('fwoomp.voc', sample(0.28, mix([osc.sine((t) => 170 + t * 3000), 0.42], [osc.square((t) => 350 + t * 2000), 0.06])));
-put('stripe.voc', sample(0.22, mix([osc.sine(784), 0.42], [osc.sine((t) => 1175 + t * 1500), 0.35])));
-put('chicken.voc', sample(0.24, mix([osc.sine((t) => 700 + Math.sin(t * 35) * 450), 0.6], [osc.square((t) => 1400 - t * 1800), 0.12])));
+put('hypo.snd', serializeSoundSet(snd));
+put('ping.voc', sample(0.22, mix([osc.sine(784), 0.42], [osc.sine((t) => 1175 + t * 1500), 0.35])));
 put('meep.voc', sample(0.3, mix([osc.sine((t) => (t < 0.14 ? 440 : 660)), 0.5], [osc.square((t) => (t < 0.14 ? 880 : 1320)), 0.16])));
 copyFileSync(join(here, 'assets/gwinn-door.voc'), join(output, 'gate.voc'));
-copyFileSync(join(here, 'assets/teddy-yawn.voc'), join(output, 'yawn.voc'));
-
-crewCharacters(bytes, put);
-const teddy = walkingCharacter(bytes);
-// PLAYGAME stores extra lives: two extras plus the current attempt gives three tries.
-teddy.meter[1] = 2;
-teddy.sequences[2].sound = 30;
-put('teddy.chr', serializeCharacter(teddy));
-copyFileSync(join(source, 'teddy.cbl'), join(output, 'teddy.cbl'));
-for (const name of [
-  'blip.voc',
-  'boing.voc',
-  'chomp.voc',
-  'crunch.voc',
-  'dig.voc',
-  'flop.voc',
-  'giggle.voc',
-  'honk.voc',
-  'rumble.voc',
-  'scratch.voc',
-  'sniff.voc',
-  'snore.voc',
-  'splash.voc',
-  'woof.voc',
-  'yelp.voc',
-  'yum.voc',
-]) {
-  try {
-    copyFileSync(join(source, name), join(output, name));
-  } catch {
-    /* Optional sound. */
-  }
-}
 copyFileSync(join(here, 'assets/teddy-bark.voc'), join(output, 'woof.voc'));
 copyFileSync(join(here, 'assets/teddy-tour.rec'), join(output, 'tour.rec'));
-const text = (name: string, lines: string[]) => put(name, new TextEncoder().encode(lines.join('\r\n') + '\r\n'));
+
 text('help.txt', [
-  "TEDDY'S STRIPE CHASE",
-  'LEFT/RIGHT/A/D: walk.',
-  'UP/W: hop; umbrella FLOAT.',
-  'SPACE: bark/squeak or TAKE.',
-  'Park: UP then LEFT for leaf.',
-  'Bring leaf RIGHT to wood gate.',
-  'Downtown: WAIT, then GO.',
-  'Club: hop stones; foam saves.',
-  'Balloons give bonus stripes.',
-  'Sky: wind lifts; hop the gaps.',
-  'Z clouds nap. Three tries.',
-  'Maze: 4 arrows. SPACE: DOWN.',
-  'Umbrella: SPACE takes it.',
-  'Hold UP: open. Let go: fold.',
-  'Lap: LEFT drives; UP bounces.',
-  'SPACE: horn. F5/F6: save/load.',
+  TITLE,
+  'Arrows: walk or drive.',
+  'A and D also work.',
+  'SPACE: bark, or honk.',
+  'Yard: fetch two things,',
+  'then the garage opens.',
+  'Street: hold RIGHT.',
+  'Stop when the sign says',
+  'WAIT. Go when it says GO.',
+  'F5/F6: save and load.',
 ]);
 text('story.txt', [
-  "TEDDY'S STRIPE CHASE",
+  TITLE,
   '',
-  'THE CHEZ lost its stripes.',
-  'Doc Leo says new ones will',
-  'make it go 900% faster.',
-  'The wind says: prove it.',
+  'Doc Leo, PhD, says racing',
+  'stripes make THE CHEZ go',
+  'faster. The experiment',
+  'starts with a clipboard.',
   '',
-  'Teddy volunteers his nose.',
-  'Gwinn volunteers to bark',
-  'at anything suspicious.',
-  '',
-  'Nine roads. Many stripes.',
-  'One corgi-sized hero.',
-  '',
-  'A team goes farther than',
-  'one very speedy nose.',
+  'Teddy rides up front,',
+  'taking notes. Gwinn',
+  'is not taking notes.',
 ]);
 text('credits.txt', [
-  "TEDDY'S STRIPE CHASE",
+  TITLE,
   '',
   'For Lewis Moten, Teddy,',
-  'Gwinn, Doc Leo and THE CHEZ.',
+  'Gwinn, Doc Leo, THE CHEZ.',
   '',
   'Engine, source art, car:',
   'Game-Maker Sandbox Edition',
   'by Lewis Moten (MIT)',
   '',
-  'Dog barks/yawn: Lewis Moten',
-  'Game, art, text, music,',
-  'and sounds:',
+  'Dog barks: Lewis Moten',
+  'Code, art, text, levels:',
+  'Claude Opus 5.5',
+  'Music themes (OPL2):',
   'OpenAI Codex (GPT-6/6.1)',
 ]);
 
-const game = newGame('STRIPE CHASE');
+const game = newGame('STRIPE HYPOTHESIS');
 const [title, end] = game.scenes;
 title.files[0] = 'intro.fli';
 title.files[1] = 'intro.cmf';
@@ -212,79 +112,24 @@ end.files[0] = 'won.lst';
 end.files[1] = 'win.cmf';
 end.files[2] = 'lost.lst';
 end.files[3] = 'retry.cmf';
-const level = emptyScene(ADVTYPE);
-level.desc = 'The Stripe Road';
-level.pos = { x: 140, y: 110 };
-level.files = [
-  'stripe.pal',
-  'stripe.map',
-  'stripe.bbl',
-  'stripe.mon',
-  'stripe.mbl',
-  'teddy.chr',
-  'teddy.cbl',
-  'stripe.snd',
-  'yard.cmf',
-  'card1.lst',
-  'drive.fli',
-  ...new Array(9).fill(''),
-];
-level.links[0] = { toScene: 3, from: { x: 77, y: 39 }, to: { x: CHAPTERS[0].startX, y: 39 } };
-title.links[0] = { toScene: 2, from: { x: 0, y: 0 }, to: { x: 10, y: 39 } };
-game.scenes.push(level);
+const stems = ['yard', 'street'];
+const actors: [string, string][] = [['teddy.chr', 'teddy.cbl'], ['car25.chr', 'car.cbl']];
+const exits = ['garage.fli', 'results.fli'];
+const doors = [{ x: DRIVEWAY.doorX, y: DRIVEWAY.doorY }, { x: STREET.finishX, y: STREET.row }];
 CHAPTERS.forEach((chapter, index) => {
-  const { palette, ink: chapterInk } = buildChapter(chapter, bytes, put);
-  const card = `card${index + 2}.gif`;
-  const list = `card${index + 2}.lst`;
-  screen(
-    card,
-    chapter.name.toUpperCase(),
-    chapter.quip,
-    palette,
-    chapterInk,
-    chapter.beat,
-    chapter.stem === 'lap' ? 1 : 0,
-    `FIND ${chapter.required} ${chapter.stem === 'lap' ? 'CHEER FLAGS' : 'STRIPE PIECES'}`,
-  );
-  put(list, serializeSlideList([{ name: card, pause: ['park', 'sky', 'maze', 'umbrella', 'lap'].includes(chapter.stem) ? 4 : 2 }]));
-  put(`${chapter.stem}.cmf`, chapter.stem === 'umbrella' ? umbrellaSong() : chapterSong(chapter.stem === 'lap' ? 7 : index + 1));
-  const next = CHAPTERS[index + 1];
-  const drive = next ? `drive${index + 2}.fli` : '';
-  if (next) put(drive, driveCartoon(palette, chapterInk, next.name.toUpperCase(), index + 2));
   const scene = emptyScene(ADVTYPE);
+  const stem = stems[index];
   scene.desc = chapter.name;
-  scene.pos = { x: 190 + index * 50, y: 110 };
-  const actorFiles: Record<string, [string, string]> = {
-    lap: ['lap.chr', 'lap.cbl'],
-    maze: ['maze.chr', 'gwinn.cbl'],
-    city: ['docleo.chr', 'docleo.cbl'],
-    umbrella: ['umbrella.chr', 'umbrella.cbl'],
-  };
-  const [actor, pictures] = actorFiles[chapter.stem] ?? ['teddy.chr', 'teddy.cbl'];
-  scene.files = [
-    `${chapter.stem}.pal`,
-    `${chapter.stem}.map`,
-    `${chapter.stem}.bbl`,
-    `${chapter.stem}.mon`,
-    `${chapter.stem}.mbl`,
-    actor,
-    pictures,
-    'stripe.snd',
-    `${chapter.stem}.cmf`,
-    list,
-    drive,
-    ...new Array(9).fill(''),
-  ];
-  scene.links[0] = { toScene: next ? index + 4 : 1, from: { x: chapter.carX, y: 39 }, to: next ? { x: next.startX, y: 39 } : { x: 0, y: 0 } };
+  scene.pos = { x: 140 + index * 50, y: 110 };
+  scene.files = [`${stem}.pal`, `${stem}.map`, `${stem}.bbl`, `${stem}.mon`, `${stem}.mbl`, ...actors[index], 'hypo.snd', `${stem}.cmf`, `card${index + 1}.lst`, exits[index], ...new Array(9).fill('')];
+  const next = CHAPTERS[index + 1];
+  scene.links[0] = { toScene: next ? index + 3 : 1, from: doors[index], to: next ? { x: next.startX, y: next.startY } : { x: 0, y: 0 } };
   game.scenes.push(scene);
 });
-put('stripe.gam', serializeGame(game));
+title.links[0] = { toScene: 2, from: { x: 0, y: 0 }, to: { x: CHAPTERS[0].startX, y: CHAPTERS[0].startY } };
+put('hypo.gam', serializeGame(game));
 writeFileSync(
   join(output, 'manifest.json'),
-  JSON.stringify(
-    readdirSync(output)
-      .filter((name) => name !== 'manifest.json')
-      .sort(),
-  ),
+  JSON.stringify(readdirSync(output).filter((name) => name !== 'manifest.json').sort()),
 );
 console.log(`Built ${output}`);
