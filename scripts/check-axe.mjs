@@ -5,10 +5,10 @@ import { createRequire } from 'node:module';
 import { withPage } from './page-check.mjs';
 
 const axePath = createRequire(import.meta.url).resolve('axe-core/axe.min.js');
-let port = 4179;
+let port = 5431;
 for (const width of [1440, 390])
   for (const scheme of ['light', 'dark'])
-    await withPage({ port: port++ > 4180 ? 4179 : port - 1, width, height: width === 390 ? 800 : 900, scheme }, async ({ page, errors, url }) => {
+    await withPage({ port: port++, width, height: width === 390 ? 800 : 900, scheme }, async ({ page, errors, url }) => {
       await page.goto(url);
       await page.locator('#road-atlas summary').click();
       await page.addScriptTag({ path: axePath });

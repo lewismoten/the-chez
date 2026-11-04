@@ -21,9 +21,11 @@ npm run check:archives
 `check` typechecks the application. `build` typechecks and builds it with Vite. The browser checks require locally installed Google Chrome; Playwright uses its `chrome` channel.
 
 - `check:release` builds into a temporary directory and previews it on port 4176. Public page controls play the complete shipped demonstration, check the mobile finale, and start a new game. It checks for missing assets and browser errors, removes the scratch build, and stops its server.
-- `check:guidance` uses port 4177. It checks actor-specific hints and uses public keyboard controls to pass Maple Street’s three crate barriers. Spending the native gate quota must keep the completed goal visible through the transition.
+- `check:guidance` uses port 4177. It checks each level's guidance text, the road atlas (one entry per level) and the tip on a phone after continuing at the hill.
+- `check:browser` uses port 4175. It plays the hill with the real keyboard in the browser engine: the 20 mph climb, the crest scene change, the 30 mph descent and the ending, reading the engine's world every frame.
+- `check:axe` uses ports 5431 to 5434. axe-core at 1440 and 390, light and dark, and no sideways scroll at 390.
 - `check:archives` uses a scratch production server on port 4180. It checks the ZIP download, single-file bundled loading with loose game requests blocked, ZIP/SFX imports, keyboard access, and accessibility at 1440/390 in light/dark settings.
-- `check:music` uses port 4178. It checks muted intros, chapter changes, current-track resume, persistent settings, and audible barks while music is off.
+- `check:music` uses port 4178. It checks muted intros, level songs, current-track resume, the saved setting, and audible barks while music is off.
 
 The checks use their own servers and leave the maintainer’s port 5173 server alone.
 
