@@ -22,6 +22,8 @@ npm run build
 npm run preview
 ```
 
+The build uses relative URLs, so it works at any path. Pushing a `pages-v*` tag (or running the Pages workflow by hand) builds it and deploys it to GitHub Pages.
+
 ## Documentation
 
 - [Development and verification](docs/development.md)
