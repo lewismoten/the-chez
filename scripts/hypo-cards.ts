@@ -183,5 +183,17 @@ export function resultsCartoon(top: 25 | 30 = 25, reason?: string, stage: Stage 
         },
         mph === top ? 3 : 1,
       );
+  // hold the finished card (all three lines) so the player can read it before the next scene
+  reel.frame(
+    base,
+    (p) => {
+      scaled(p, dial(top), 52, 54, 4);
+      centered(p, 70, 'TOP SPEED:', C.cream, 1, undefined, 204);
+      centered(p, 88, `${top} MPH.`, C.white, 2, undefined, 204);
+      centered(p, 120, 'INCONCLUSIVE.', C.red, 1, undefined, 204);
+      if (reason) centered(p, 134, reason, C.cream, 1, undefined, 204);
+    },
+    40,
+  );
   return reel.fli(5);
 }

@@ -80,7 +80,7 @@ export const CHEZ_WHEELS = [9.35, 31.1];
 export const CHEZ_AXLE = 16.75;
 const TIRE = 3.25;
 /** The roof's black panel comes down to here. */
-const ROOF_EDGE = 3.5;
+const ROOF_EDGE = 4.6;
 /** The racing stripes' band: its middle along the front, the step up it takes over the rear
  * quarter (from KINK[1] back to KINK[0], an S curve), where it ends at the back, and each dark
  * stripe's width and the gap between their middles (both at least a pixel apart when small). */
@@ -155,7 +155,7 @@ function profile(k: ChezInk, port: boolean, s: number, t = s): Pixels {
       if (!onChez(X, Y)) continue;
       // flat red sides, lit along the top of the hood's slope, shadowed under the door
       let c = k.body[Y > 16.9 ? 0 : X > 17.9 && Y - 1.3 - (X - 17.9) * fall < Math.max(0.9, 1.5 * px) ? 2 : 1];
-      if (Y < ROOF_EDGE || (Y < 1.3 + px && X < 17.9 + 1 / s))
+      if (Y < ROOF_EDGE || (Y < 1.3 + px && X < 17.9 + 1 / s) || (X > 17.9 && X < 24.6 && Y < 4.6 + (X - 20.5) * (3.7 / 4)))
         c = k.roof; // (at least a pixel of it)
       else if (inPoly(CHEZ_WINDOW, X, Y)) c = k.glass[0];
       else if (X >= BAND_END - (s >= 2 ? px : 0)) {

@@ -20,9 +20,10 @@ export function carSprite(): Pixels {
     for (let y = 0; y <= bottom(x); y++) {
       if (x > FLAT + y) continue; // above the windshield's slope
       let c = x === FLAT + y && y < 10 ? light : mid;
-      if (y <= 2) c = C.black; // the roof, three rows thick
+      if (y <= 3) c = C.black; // the roof, four rows thick
       else if (y <= 6 && x >= 6 && x < FLAT + y - 2) c = glass; // the door window
       else if (y <= 6 && x === FLAT + y - 2) c = glint;
+      else if (y <= 6 && x > FLAT + y - 2) c = C.black; // the windshield's tinted top, black like the roof
       else if (x === 5 && y <= 12) c = red; // the door's back seam
       else if (y >= 12 || x === 3) c = red;
       p.set(x, y, c);

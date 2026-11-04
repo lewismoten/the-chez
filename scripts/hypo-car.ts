@@ -21,14 +21,14 @@ export function carSprites(): Block[] {
   for (let y = 0; y < CAR_H; y++) for (let x = 0; x < 20; x++) sprites[0].pixels[(y + TOP) * 20 + x] = car.px[y * 20 + x];
   // Teddy's matching ears and white blaze peek out of the passenger door window.
   for (const [x, y, c] of [
-    [7, 3, C.tan],
-    [9, 3, C.tan],
     [7, 4, C.tan],
-    [8, 4, C.white],
     [9, 4, C.tan],
     [7, 5, C.tan],
     [8, 5, C.white],
     [9, 5, C.tan],
+    [7, 6, C.tan],
+    [8, 6, C.white],
+    [9, 6, C.tan],
   ])
     sprites[0].pixels[(y + TOP) * 20 + x] = c;
   sprites[1].pixels.set(sprites[0].pixels);
