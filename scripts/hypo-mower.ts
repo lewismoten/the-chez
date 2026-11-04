@@ -7,7 +7,7 @@ import { reindexMonsters, serializeMap } from '@lewismoten/gamemaker-sandbox-too
 import { newMonsterSet, serializeMonsters } from '@lewismoten/gamemaker-sandbox-tools/formats/monster';
 import { serializeCharacter } from '@lewismoten/gamemaker-sandbox-tools/formats/character';
 import { corner, mon } from './hypo-monsters.ts';
-import { palette, timeOfDay } from './hypo-art.ts';
+import { C, palette, timeOfDay } from './hypo-art.ts';
 import { R } from './hypo-colors.ts';
 import { carCharacter } from './hypo-car.ts';
 import { mower } from './hypo-critters.ts';
@@ -24,7 +24,7 @@ export const MOWER = {
 };
 
 export function mowerFiles(put: (name: string, data: Uint8Array) => void): void {
-  const pal = timeOfDay(palette(3), 'rain', [R('drop', 0)]);
+  const pal = timeOfDay(palette(3), 'rain', [R('drop', 0), C.red]);
   const road = roadBlocks('park', MOWER.puddles);
   const set = newMonsterSet();
   set[0] = mon(

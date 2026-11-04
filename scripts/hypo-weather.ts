@@ -8,10 +8,10 @@ import { micro } from '../assets/source/teddy/art/draw.ts';
 
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 
-/** Slanted rain: five streaks per 20x20 cell, the same in every cell, drawn over the finished picture. */
+/** Slanted rain: two streaks per 20x20 cell, the same in every cell, drawn over the finished picture. */
 export function rainOver(pic: Pixels): void {
   const streaks: [number, number][] = [];
-  for (let i = 0; i < 5; i++) streaks.push([Math.floor(hash(i, 1, 77) * 20), Math.floor(hash(i, 2, 77) * 20)]);
+  for (let i = 0; i < 2; i++) streaks.push([Math.floor(hash(i, 1, 77) * 20), Math.floor(hash(i, 2, 77) * 20)]);
   for (let cy = 0; cy < pic.h / 20; cy++)
     for (let cx = 0; cx < pic.w / 20; cx++)
       for (const [sx, sy] of streaks)

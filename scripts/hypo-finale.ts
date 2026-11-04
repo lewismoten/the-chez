@@ -6,7 +6,7 @@ import { clubArt, centered as clubCentered } from '../assets/source/teddy/art/dr
 import { POSES } from '../assets/source/teddy/sprites/teddy.ts';
 import { GWINN } from '../assets/source/teddy/sprites/gwinn.ts';
 import { docLeo } from '../assets/source/teddy/sprites/people.ts';
-import { C, car, dial, palette } from './hypo-art.ts';
+import { C, dial, palette } from './hypo-art.ts';
 import { R } from './hypo-colors.ts';
 import { scaled } from './hypo-cards.ts';
 import { hash } from './hypo-tiles.ts';
@@ -38,24 +38,22 @@ function hall(t: number, beat: Beat): Pixels {
   for (let x = 18; x < 302; x += 12) p.rect(x, 160, 1, 30, R('stone', 2));
   p.rect(18, 160, 284, 3, R('flag', 0));
   p.rect(18, 187, 284, 3, R('flag', 0));
-  // THE CHEZ's model on the table, with its stripes
-  p.blit(car('right', 1), 252, 136, 255);
   // the board: white, framed, the dial and the result
-  p.rect(86, 60, 148, 92, R('wood', 1));
-  p.rect(90, 64, 140, 84, C.white);
-  p.frame(90, 64, 140, 84, C.navy);
+  p.rect(60, 56, 200, 96, R('wood', 1));
+  p.rect(64, 60, 192, 88, C.white);
+  p.frame(64, 60, 192, 88, C.navy);
   const swing = beat === 'build' ? [20, 20, 25, 25, 30][Math.min(4, t >> 1)] : 30;
-  scaled(p, dial(swing as 20 | 25 | 30), 98, 74, 2);
-  centered(p, 74, 'TOP SPEED:', C.dark, 1, undefined, 190);
-  if (beat !== 'build' || t > 5) centered(p, 88, '30 MPH.', C.red, 2, undefined, 190);
-  if (beat !== 'build' || t > 8) centered(p, 112, 'CONCLUSIVE!', C.green, 1, undefined, 190);
-  p.rect(98, 130, 124, 1, R('stone', 2));
-  centered(p, 135, 'THE ROAD WAS THE STRIPE.', C.dark, 1, undefined, 160);
+  scaled(p, dial(swing as 20 | 25 | 30), 72, 76, 2);
+  centered(p, 76, 'TOP SPEED:', C.dark, 1, undefined, 188);
+  if (beat !== 'build' || t > 5) centered(p, 92, '30 MPH.', C.red, 2, undefined, 188);
+  if (beat !== 'build' || t > 8) centered(p, 116, 'CONCLUSIVE!', C.green, 1, undefined, 188);
+  p.rect(72, 130, 176, 1, R('stone', 2));
+  centered(p, 136, 'THE ROAD DID IT.', C.dark, 1, undefined, 160);
   // Teddy behind the table (in the chair), Gwinn on the floor, Doc Leo jumping when it is time
-  scaled(p, POSES.front, 36, 112, 2);
+  scaled(p, POSES.front, 12, 112, 2);
   scaled(p, GWINN[t % 4 < 2 ? 'gwinn1' : 'gwinn2'], 10, 150 + (beat === 'party' ? (t % 2) * 2 : 0), 2);
   const jump = beat === 'party' ? Math.abs(Math.sin(t * 0.7)) * 14 : 0;
-  scaled(p, docLeo(undefined, beat !== 'build' && t % 4 < 2), 248, Math.round(74 - jump), 2);
+  scaled(p, docLeo(undefined, beat !== 'build' && t % 4 < 2), 270, Math.round(74 - jump), 2);
   // confetti
   if (beat !== 'build')
     for (let k = 0; k < 40; k++) {
@@ -65,12 +63,12 @@ function hall(t: number, beat: Beat): Pixels {
     }
   // Teddy's last line
   if (beat === 'line') {
-    p.rect(14, 58, 104, 24, C.cream);
-    p.frame(14, 58, 104, 24, C.dark);
-    p.line(40, 82, 46, 108, C.dark);
-    p.line(52, 82, 46, 108, C.dark);
-    p.rect(41, 82, 11, 2, C.cream);
-    centered(p, 66, 'IT\'S A HILL.', C.dark, 1, undefined, 66);
+    p.rect(8, 44, 108, 22, C.cream);
+    p.frame(8, 44, 108, 22, C.dark);
+    p.line(22, 66, 26, 108, C.dark);
+    p.line(34, 66, 26, 108, C.dark);
+    p.rect(23, 66, 11, 2, C.cream);
+    centered(p, 52, 'IT\'S A HILL.', C.dark, 1, undefined, 62);
   }
   return p;
 }
@@ -111,8 +109,8 @@ export function endingCards(): Uint8Array[] {
   clubCentered(results, 36, clubArt('TRIAL RESULTS'), C.dark, 1, undefined);
   return [
     gif(results),
-    creditsCard('THE STRIPE HYPOTHESIS', ['A MADE-UP 1994 RELEASE,', 'MADE IN 2026.', 'DESIGN NOTE: CLAUDE OPUS 5.5', 'CODE, ART, TEXT: CLAUDE SONNET 5.5']),
-    creditsCard('AND ALSO', ['EARLIER VERSION MUSIC:', 'OPENAI CODEX', 'BARKS: LEWIS MOTEN\'S DOGS', 'ENGINE: GAME-MAKER SANDBOX']),
-    creditsCard(TITLE_CARD.replace('\n', ' '), ['THE END.', 'TEDDY WOULD LIKE A WALK.'], 'PRESS ANY KEY'),
+    creditsCard('THE STRIPE HYPOTHESIS', ['A MADE-UP 1994 RELEASE,', 'MADE IN 2026.', 'DESIGN NOTE:', 'CLAUDE OPUS 5.5', 'CODE, ART AND TEXT:', 'CLAUDE SONNET 5.5']),
+    creditsCard('AND ALSO', ['EARLIER VERSION MUSIC:', 'OPENAI CODEX', 'DOG RECORDINGS:', 'LEWIS MOTEN', 'ENGINE: GAME-MAKER', 'SANDBOX EDITION']),
+    creditsCard(TITLE_CARD.replace('\n', ' '), ['THE END.', 'TEDDY WOULD LIKE A WALK.'], 'THANKS FOR PLAYING'),
   ];
 }

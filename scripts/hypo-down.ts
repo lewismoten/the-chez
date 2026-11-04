@@ -15,12 +15,13 @@ import { corner, mon } from './hypo-monsters.ts';
 import { cloud, ROW, Scene, tree } from './hypo-town.ts';
 import { skyAt } from './hypo-tiles.ts';
 
-export const DOWN = { startX: 3, startY: ROW - 16, drop: 15, finishX: 93, floatSpeed: 5, floatLegs: [[36, 6], [84, 14]] as [number, number][] };
+const FLAT = ROW - 3; // the car's row on the flat at the bottom, three rows clear of the map's end
+export const DOWN = { startX: 9, startY: FLAT - 13, drop: 13, finishX: 87, floatSpeed: 5, floatLegs: [[36, 6], [78, 13]] as [number, number][] };
 const DROP_PX = DOWN.drop * 20;
 const START_PX = DOWN.startX * 20;
 const FIRST_ROW = DOWN.startY - 6;
 const ROWS = 100 - FIRST_ROW;
-const BASE = (ROW - 1 - FIRST_ROW) * 20; // the sidewalk's top edge on the flat, in picture pixels
+const BASE = (FLAT - FIRST_ROW) * 20; // the sidewalk's top edge on the flat, in picture pixels
 
 /** How many pixels the road stands above the flat under the car whose left edge is at `x`. */
 export function downRise(x: number): number {
@@ -87,13 +88,13 @@ export function paintDown(): Scene {
   }
   // everything on the bank repeats every 240 pixels (two whole-block shifts of 40 pixels), so the picture still dedupes
   const bankTop = (x: number) => BASE - 40 - rise(x) + 12;
-  for (let x = 180; x < 1760; x += 240) tree(s, x, bankTop(x), 'oak');
+  for (let x = 420; x < 1700; x += 240) tree(s, x, bankTop(x), 'oak');
   const shirts = [R('flag', 1), R('flag', 2), R('flag', 3), R('flag', 0)];
-  for (let x = 90, k = 0; x < 1780; x += 240, k++) {
+  for (let x = 330, k = 0; x < 1700; x += 240, k++) {
     cheerer(s, x, bankTop(x) + 9, shirts[k % 2], shirts[2]);
     cheerer(s, x + 14, bankTop(x + 14) + 9, shirts[3], shirts[1]);
   }
-  for (let x = 300; x < 1700; x += 480) limit(s, x, BASE - 40 - rise(x) + 40);
+  for (let x = 300; x < 1600; x += 480) limit(s, x, BASE - 40 - rise(x) + 40);
   // parade barricades along the near edge of the road, and cottages in the valley below it
   for (let x = 0; x < W; x++) {
     const edge = BASE - 40 - rise(x) + 100;
@@ -103,8 +104,8 @@ export function paintDown(): Scene {
     s.pic.px[(edge + 7) * W + x] = striped;
     if (x % 20 < 2) for (let y = 1; y < 12; y++) s.pic.px[(edge + y) * W + x] = R('iron', 1);
   }
-  for (let x = 150; x < 1800; x += 240) cottage(s, x, BASE - 40 - rise(x) + 100 + 60);
-  post(s, 100, 'START');
+  for (let x = 390; x < 1700; x += 240) cottage(s, x, BASE - 40 - rise(x) + 100 + 60);
+  post(s, START_PX + 70, 'START');
   post(s, DOWN.finishX * 20 - 140, 'FINISH');
   // the checkered finish line across both lanes
   for (let x = DOWN.finishX * 20 - 12; x < DOWN.finishX * 20 + 28; x++)
@@ -134,8 +135,8 @@ function cut(s: Scene): { tiles: Pixels[]; map: Uint16Array } {
 /** The float's start: the cell column where its sole centre falls best inside its 60-pixel picture, and that picture's row. */
 function floatStart(): { x: number; top: number; rc: number } {
   let best = { x: 0, top: 0, rc: 0, score: 99 };
-  for (let x = 6; x <= 13; x++) {
-    const ref = 1880 - downRise(x * 20 + 30 - 10); // the car's line under the float's centre
+  for (let x = DOWN.startX + 3; x <= DOWN.startX + 10; x++) {
+    const ref = 20 * FLAT - downRise(x * 20 + 30 - 10); // the car's line under the float's centre
     const rc = ((ref + 59) % 20) + 36;
     const score = Math.abs(rc - 46);
     if (score < best.score) best = { x, top: (ref + 59 - rc) / 20, rc, score };

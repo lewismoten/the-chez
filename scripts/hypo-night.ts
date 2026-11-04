@@ -12,7 +12,7 @@ import { ROW } from './hypo-town.ts';
 
 export const NIGHT = { startX: 8, finishX: 90, row: ROW };
 /** Slots the night keeps bright: lamp and window light, the car's lamps and the dial's gold, white and cream. */
-export const NIGHT_KEEP = [C.gold, C.white, C.cream, R('glow', 0), R('glow', 1)];
+export const NIGHT_KEEP = [C.gold, C.white, C.cream, C.red, R('glow', 0), R('glow', 1)];
 export const nightPalette = (): Uint8Array => timeOfDay(palette(3), 'night', NIGHT_KEEP);
 
 /** The car with its headlights on: a lit lamp at the front and light dithered on the bumper and the ground ahead. */

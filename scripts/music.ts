@@ -57,10 +57,12 @@ export function openingSong(): Uint8Array {
 
 export function winningSong(): Uint8Array {
   const fanfare = ['C5 q, E5 q, G5 q, C6 q', 'A5 q, G5 q, E5 q, G5 q', 'C6 h, A5 q, G5 q', 'E5 q, G5 q, C6 h'];
+  const twice = <T>(bars: T[]) => [...bars, ...bars];
+  // two rounds, so the ending music runs about 13 seconds, the length of the credits cards
   return tune(150, [
-    v(0, lead, join(fanfare), 120),
-    v(1, bass, join(BASS), 100),
-    v(2, bell, join(['C5 h, G5 h', 'F5 h, C6 h', 'A5 h, E6 h', 'G5 h, C6 h']), 78),
+    v(0, lead, join(twice(fanfare)), 120),
+    v(1, bass, join(twice(BASS)), 100),
+    v(2, bell, join(twice(['C5 h, G5 h', 'F5 h, C6 h', 'A5 h, E6 h', 'G5 h, C6 h'])), 78),
   ]);
 }
 

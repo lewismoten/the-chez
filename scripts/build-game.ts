@@ -63,11 +63,11 @@ put('stripe.fli', stripeCartoon(0));
 put('tric.fli', resultsCartoon(25, 'A TRICYCLE KEPT UP.', 1, (reel) => addStripeCartoon(reel, 1)));
 put('wind.fli', stripeCartoon(2));
 put('hill.fli', resultsCartoon(30, 'THE ROAD WAS TILTED.', 3));
-put('night.fli', resultsCartoon(25, 'NOBODY SAW THE NEEDLE.', 3, undefined, nightLook));
+put('night.fli', resultsCartoon(25, 'IT WAS DARK.', 3, undefined, nightLook));
 put('conclusion.fli', conclusionCartoon());
 put('mower.fli', resultsCartoon(25, 'IT WAS RAINING.', 3, undefined, rainLook));
 put('lost.lst', serializeSlideList([{ name: 'lost.gif', pause: 0 }]));
-put('won.lst', serializeSlideList([4, 7, 7, 0].map((pause, i) => ({ name: `end${i + 1}.gif`, pause }))));
+put('won.lst', serializeSlideList([4, 7, 7, 8].map((pause, i) => ({ name: `end${i + 1}.gif`, pause }))));
 put('intro.cmf', openingSong());
 put('yard.cmf', chapterSong(0));
 put('street.cmf', chapterSong(1));
@@ -108,6 +108,8 @@ text('help.txt', [
   'WAIT. Go when it says GO.',
   'Hill: hold RIGHT. The car',
   'changes speed at the top.',
+  'Rain: puddles slow you.',
+  'Night and finale: RIGHT.',
   'F5/F6: save and load.',
 ]);
 text('story.txt', [
@@ -133,6 +135,8 @@ text('credits.txt', [
   'by Lewis Moten (MIT)',
   '',
   'Dog barks: Lewis Moten',
+  'Design note:',
+  'Claude Opus 5.5',
   'Code, art, text, levels:',
   'Claude Sonnet 5.5',
   'Music themes (OPL2):',

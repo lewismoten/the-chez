@@ -9,4 +9,6 @@ Stop when the sign says
 WAIT. Go when it says GO.
 Hill: hold RIGHT. The car
 changes speed at the top.
+Rain: puddles slow you.
+Night and finale: RIGHT.
 F5/F6: save and load.

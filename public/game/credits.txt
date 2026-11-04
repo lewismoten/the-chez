@@ -8,6 +8,8 @@ Game-Maker Sandbox Edition
 by Lewis Moten (MIT)
 
 Dog barks: Lewis Moten
+Design note:
+Claude Opus 5.5
 Code, art, text, levels:
 Claude Sonnet 5.5
 Music themes (OPL2):
