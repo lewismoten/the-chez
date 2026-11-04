@@ -16,6 +16,7 @@
     "check:guidance": "tsx scripts/check-guidance.mjs",
     "build:art": "tsx scripts/build-art.ts",
     "check:music": "tsx scripts/check-music.mjs",
+    "check:axe": "tsx scripts/check-axe.mjs",
     "check:isolation": "tsx scripts/check-isolation.mjs",
     "build:zip": "tsx scripts/build-zip.ts",
     "check:archives": "tsx scripts/check-archives.mjs"

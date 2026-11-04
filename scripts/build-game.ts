@@ -30,7 +30,7 @@ hillFiles(put);
 put('menu.gif', card(TITLE_CARD, ['DOC LEO, PHD', 'TEDDY, FRONT SEAT'], 'A SCIENCE ADVENTURE', 3, 12));
 put('card1.gif', card('THE HYPOTHESIS', ['FETCH THE CLIPBOARD', 'AND THE STOPWATCH.'], 'ARROWS WALK. SPACE BARKS.', 0, 56));
 put('card2.gif', card('CONTROL RUN', ['NO STRIPES. 25 MPH.', 'WAIT FOR THE TURTLE.'], 'HOLD RIGHT TO DRIVE.', 0, 0));
-put('card3.gif', card('TRIAL 1: UPHILL', ['ONE STRIPE. 20 MPH.', 'IT IS A REAL HILL.'], 'HOLD RIGHT TO DRIVE.', 1, 26));
+put('card3.gif', card('UPHILL TRIAL', ['ONE STRIPE. 20 MPH.', 'IT IS A REAL HILL.'], 'HOLD RIGHT TO DRIVE.', 1, 26));
 put('card4.gif', card('OVER THE CREST', ['THE NEEDLE SAYS 30.', 'THE ROAD SAYS DOWNHILL.'], 'HOLD RIGHT TO DRIVE.', 1, 52));
 put('card1.lst', serializeSlideList([{ name: 'card1.gif', pause: 3 }]));
 put('card2.lst', serializeSlideList([{ name: 'card2.gif', pause: 3 }]));
