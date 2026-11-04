@@ -4,7 +4,7 @@
 import { emptyBlock, type Block } from '@lewismoten/gamemaker-sandbox-tools/formats/blocks';
 import { emptyFrame, newCharacter, type Character, type Frame, type Sequence } from '@lewismoten/gamemaker-sandbox-tools/formats/character';
 import { C, dial } from './hypo-art.ts';
-import { carSprite } from './hypo-carsprite.ts';
+import { CAR_H, carSprite } from './hypo-carsprite.ts';
 
 export type Mph = 20 | 25 | 30;
 /** Pixels per tick for each speed: the speedometer's number divided by five. */
@@ -16,23 +16,26 @@ const DIAL_SLOT: Record<Mph, number> = { 20: 3, 25: 4, 30: 5 };
 export function carSprites(): Block[] {
   const sprites = Array.from({ length: 50 }, (_, i) => emptyBlock(i, true));
   const car = carSprite();
-  for (let y = 0; y < 10; y++) for (let x = 0; x < 20; x++) sprites[0].pixels[(y + 10) * 20 + x] = car.px[y * 20 + x];
+  // The car fills the lower block's bottom 16 rows (the dial above it fills the top block).
+  const TOP = 20 - CAR_H;
+  for (let y = 0; y < CAR_H; y++) for (let x = 0; x < 20; x++) sprites[0].pixels[(y + TOP) * 20 + x] = car.px[y * 20 + x];
   // Teddy's matching ears and white blaze peek out of the passenger door window.
   for (const [x, y, c] of [
-    [6, 12, C.tan],
-    [8, 12, C.tan],
-    [6, 13, C.tan],
-    [7, 13, C.white],
-    [8, 13, C.tan],
-    [6, 14, C.tan],
-    [7, 14, C.white],
-    [8, 14, C.tan],
+    [7, 3, C.tan],
+    [9, 3, C.tan],
+    [7, 4, C.tan],
+    [8, 4, C.white],
+    [9, 4, C.tan],
+    [7, 5, C.tan],
+    [8, 5, C.white],
+    [9, 5, C.tan],
   ])
-    sprites[0].pixels[y * 20 + x] = c;
+    sprites[0].pixels[(y + TOP) * 20 + x] = c;
   sprites[1].pixels.set(sprites[0].pixels);
-  for (const x of [5, 15]) sprites[1].pixels[18 * 20 + x] = C.gold;
+  // wheels turning: a gold spoke on each white wheel
+  for (const x of [5, 14]) sprites[1].pixels[(13 + TOP) * 20 + x] = C.gold;
   sprites[2].pixels.set(sprites[0].pixels);
-  for (let y = 12; y < 18; y++) sprites[2].pixels[y * 20 + 2] = C.gold;
+  for (let y = 8; y < 14; y++) sprites[2].pixels[(y + TOP) * 20] = C.gold;
   for (const mph of [20, 25, 30] as Mph[]) sprites[DIAL_SLOT[mph]].pixels.set(dial(mph).px);
   return sprites;
 }
