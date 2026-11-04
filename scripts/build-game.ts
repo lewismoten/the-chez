@@ -25,13 +25,13 @@ drivewayFiles(put);
 streetFiles(put);
 
 // Cards: the title, one per level, the results card and the retry card.
-put('menu.gif', card(TITLE_CARD, ['DOC LEO, PHD', 'TEDDY, FRONT SEAT'], 'A SCIENCE ADVENTURE'));
-put('card1.gif', card('THE HYPOTHESIS', ['FETCH THE CLIPBOARD', 'AND THE STOPWATCH.'], 'ARROWS WALK. SPACE BARKS.'));
-put('card2.gif', card('CONTROL RUN', ['NO STRIPES. 25 MPH.', 'WAIT FOR THE TURTLE.'], 'HOLD RIGHT TO DRIVE.'));
+put('menu.gif', card(TITLE_CARD, ['DOC LEO, PHD', 'TEDDY, FRONT SEAT'], 'A SCIENCE ADVENTURE', 3, 12));
+put('card1.gif', card('THE HYPOTHESIS', ['FETCH THE CLIPBOARD', 'AND THE STOPWATCH.'], 'ARROWS WALK. SPACE BARKS.', 0, 56));
+put('card2.gif', card('CONTROL RUN', ['NO STRIPES. 25 MPH.', 'WAIT FOR THE TURTLE.'], 'HOLD RIGHT TO DRIVE.', 0, 0));
 put('card1.lst', serializeSlideList([{ name: 'card1.gif', pause: 3 }]));
 put('card2.lst', serializeSlideList([{ name: 'card2.gif', pause: 3 }]));
 put('results.gif', resultsCard());
-put('lost.gif', card('ONE MORE TRY?', ['SCIENCE NEVER GIVES UP.'], 'TEDDY BELIEVES IN YOU'));
+put('lost.gif', card('ONE MORE TRY?', ['SCIENCE NEVER GIVES UP.'], 'TEDDY BELIEVES IN YOU', 0, 72));
 put('intro.fli', introCartoon());
 put('garage.fli', garageCartoon());
 put('results.fli', resultsCartoon());

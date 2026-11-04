@@ -1,6 +1,7 @@
-// Level 2, Control Run: a flat street driven at 25 mph with no stripes. Halfway along, a turtle
+// Level 2, Control Run: a town street driven at 25 mph with no stripes. Halfway along, a turtle
 // crosses on a native timed cycle: the barrier, the turtle and a countdown sign are block
 // variants that change together (WAIT, then GO), so holding Right is safe and waiting wins.
+// The scenery is painted by hypo-town.ts; this file adds the crossing, the solid road and the files.
 import { emptyBlock, serializeBlocks, type Block } from '@lewismoten/gamemaker-sandbox-tools/formats/blocks';
 import { newMap, serializeMap } from '@lewismoten/gamemaker-sandbox-tools/formats/map';
 import { newMonsterSet, serializeMonsters } from '@lewismoten/gamemaker-sandbox-tools/formats/monster';
@@ -8,158 +9,139 @@ import { serializeCharacter } from '@lewismoten/gamemaker-sandbox-tools/formats/
 import { Pixels } from '@lewismoten/gamemaker-sandbox-tools/drawing';
 import { micro } from '../assets/source/teddy/art/draw.ts';
 import { C, palette } from './hypo-art.ts';
+import { R } from './hypo-colors.ts';
 import { carCharacter, carSprites } from './hypo-car.ts';
+import { paintTown, ROW } from './hypo-town.ts';
 
-export const STREET = { startX: 8, finishX: 90, crossX: 46, row: 39 };
-/** Twelve states of nine ticks: six of WAIT with the bar draining, then six of GO. */
-export const CROSS_STATES = 12;
-export const CROSS_TICKS = 9;
-const BARRIER = 20;
-const SIGN = 50;
+export const STREET = { startX: 8, finishX: 90, crossX: 46, row: ROW };
+/** Six states of eighteen ticks: three of WAIT with the bar draining, then three of GO. */
+export const CROSS_STATES = 6;
+export const CROSS_TICKS = 18;
+const CLOSED_STATES = CROSS_STATES / 2;
+const TOP = ROW - 5;
+/** Block ids of the three timed chains (the art uses the ids below them). */
+const BARRIER = 150 - 4 * CROSS_STATES;
+const ARM = BARRIER + CROSS_STATES;
+const SIGN = ARM + CROSS_STATES;
+
+const closed = (s: number) => s < CLOSED_STATES;
+
+/** The turtle in the road: a domed shell with scutes, a head, two legs, an eye. */
+function turtle(p: Pixels): void {
+  const o = 4;
+  for (let y = 4; y < 16; y++)
+    for (let x = 1; x < 17; x++) {
+      const dx = (x - 8.5) / 8,
+        dy = (y - 15) / 10;
+      if (dx * dx + dy * dy < 1) {
+        const lit = dx * -0.4 + dy * -0.7;
+        p.set(x, y + o, R('leaf', lit > 0.35 ? 3 : lit > -0.15 ? 2 : 1));
+      }
+    }
+  for (const [x, y] of [[5, 8], [9, 7], [13, 9], [7, 11], [11, 12]]) p.rect(x, y + o, 3, 2, R('wood', 2));
+  p.rect(0, 15 + o, 18, 1, R('leaf', 0));
+  p.rect(16, 10 + o, 4, 5, R('leaf', 3));
+  p.rect(17, 9 + o, 3, 1, R('leaf', 3));
+  p.set(18, 11 + o, C.black);
+  for (const x of [3, 12]) p.rect(x, 15 + o, 3, 1, R('leaf', 2));
+}
+
+/** The crossing arm, down over the road's edge: a red and white striped bar on a post. */
+function arm(p: Pixels): void {
+  p.rect(0, 2, 3, 18, C.white);
+  p.rect(0, 2, 1, 18, R('stone', 2));
+  for (let x = 3; x < 20; x++) for (let y = 10; y < 18; y++) p.set(x, y, ((x + y) >> 2) % 2 ? R('flag', 0) : C.white);
+  p.rect(3, 10, 17, 1, R('iron', 1));
+  p.rect(3, 17, 17, 1, R('iron', 1));
+}
+
+/** The sign's face (40x20): WAIT or GO, and the countdown bar draining one cell per state. */
+function signFace(s: number): Pixels {
+  const wait = closed(s);
+  const face = new Pixels(40, 20, C.dark);
+  face.frame(0, 0, 40, 20, wait ? C.red : R('leaf', 3));
+  face.frame(1, 1, 38, 18, R('iron', 0));
+  micro(face, wait ? 5 : 13, 3, wait ? 'WAIT' : 'GO', C.white, 2);
+  const left = CLOSED_STATES - (s % CLOSED_STATES);
+  for (let n = 0; n < CLOSED_STATES; n++) face.rect(3 + n * 12, 14, 11, 3, n < left ? (wait ? C.red : R('leaf', 3)) : C.dark);
+  return face;
+}
 
 export function streetFiles(put: (name: string, data: Uint8Array) => void): void {
   const pal = palette(0);
   const blocks = Array.from({ length: 150 }, (_, i) => emptyBlock(i));
   const map = newMap();
-  const draw = (id: number, fn: (p: Pixels) => void, solid = 0) => {
-    const p = new Pixels(20, 20, C.sky);
-    fn(p);
-    blocks[id].pixels.set(p.px);
-    blocks[id].solid = solid;
-  };
+  const town = paintTown();
+  const cut = town.cut();
+  if (cut.tiles.length > BARRIER) throw new Error(`The street needs ${cut.tiles.length} art blocks; ${BARRIER} fit below the timed chains`);
   for (const block of blocks) block.grav = 4;
-  draw(0, () => undefined);
-  draw(
-    1,
-    (p) => {
-      p.rect(0, 0, 20, 20, C.asphalt);
-      p.rect(0, 0, 20, 2, C.white);
-    },
-    15,
-  );
-  draw(2, (p) => p.rect(0, 0, 20, 20, C.asphalt), 15);
-  const brick = C.tan,
-    roofRed = C.red;
-  draw(3, (p) => {
-    p.rect(0, 0, 20, 20, brick);
-    p.rect(5, 4, 10, 8, C.sky);
-    p.frame(5, 4, 10, 8, C.white);
-  });
-  draw(4, (p) => {
-    p.rect(0, 0, 20, 20, brick);
-    p.rect(7, 6, 6, 14, C.dark);
-  });
-  draw(5, (p) => {
-    p.rect(0, 8, 20, 12, roofRed);
-    p.rect(0, 8, 20, 2, C.dark);
-  });
-  draw(6, (p) => p.rect(8, 0, 4, 20, C.dark));
-  draw(7, (p) => {
-    p.disc(10, 12, 9, C.green);
-    p.disc(7, 9, 4, C.green);
-  });
-  draw(8, (p) => {
-    p.rect(0, 0, 20, 20, C.sky);
-    p.rect(8, 0, 4, 20, C.white);
-  });
-  // The finish: checkered flag cells (no collision; touching one ends the level).
-  draw(9, (p) => {
-    p.rect(8, 0, 3, 20, C.white);
-    for (let y = 0; y < 8; y++) for (let x = 0; x < 10; x++) p.set(11 + x, y, (x + y) % 2 ? C.black : C.white);
-  });
-  draw(10, (p) => {
-    for (let y = 0; y < 20; y++) for (let x = 0; x < 20; x++) p.set(x, y, ((x >> 2) + (y >> 2)) % 2 ? C.black : C.white);
-  });
-  // Scenery: houses on both sides of the crossing, trees at the edges.
-  const house = (x: number, w: number) => {
-    for (let y = 37; y <= 39; y++) for (let c = 0; c < w; c++) map.blocks[y * 100 + x + c] = y === 39 && c === 1 ? 4 : 3;
-    for (let c = 0; c < w; c++) map.blocks[36 * 100 + x + c] = 5;
+  cut.tiles.forEach((tile, id) => blocks[id].pixels.set(tile.px));
+  map.blocks.set(cut.map);
+  // The road's far lane is the floor the car stands on.
+  const solidId = new Map<number, number>();
+  const solidCopy = (id: number): number => {
+    let n = solidId.get(id);
+    if (n === undefined) {
+      n = cut.tiles.length + solidId.size;
+      if (n >= BARRIER) throw new Error('No room for another solid copy of an art block');
+      blocks[n].pixels.set(blocks[id].pixels);
+      blocks[n].solid = 15;
+      blocks[n].grav = 4;
+      solidId.set(id, n);
+    }
+    return n;
   };
-  for (let y = 0; y < 100; y++) for (let x = 0; x < 100; x++) map.blocks[y * 100 + x] = y === 40 ? 1 : y > 40 ? 2 : 0;
-  for (const x of [14, 22, 30, 56, 64, 74, 82]) house(x, 3);
-  for (const x of [11, 19, 27, 38, 61, 70, 86]) {
-    map.blocks[39 * 100 + x] = 6;
-    map.blocks[38 * 100 + x] = 7;
-  }
-  for (let y = 0; y < 41; y++) for (const x of [3, 97]) map.blocks[y * 100 + x] = 8;
-  // The finish ribbon and arch.
-  for (let y = 33; y <= 39; y++) map.blocks[y * 100 + STREET.finishX - 1] = 9;
-  map.blocks[STREET.row * 100 + STREET.finishX] = 10;
-  map.blocks[38 * 100 + STREET.finishX] = 10;
+  for (let x = 0; x < 100; x++) map.blocks[(ROW + 1) * 100 + x] = solidCopy(map.blocks[(ROW + 1) * 100 + x]);
+  // The street's two ends are buildings you cannot drive through.
+  for (const x of [0, 99]) for (const y of [ROW - 1, ROW]) map.blocks[y * 100 + x] = solidCopy(map.blocks[y * 100 + x]);
 
   // The turtle crossing: block chains whose ids advance together every CROSS_TICKS.
-  const chain = (base: number, make: (state: number, p: Pixels) => boolean, solidWhen: (state: number) => boolean): void => {
+  const bg = (tx: number, ty: number, w = 1): Pixels => town.scene.pic.crop(tx * 20, (ty - TOP) * 20, w * 20, 20);
+  const chain = (base: number, make: (state: number) => Pixels, solid: (state: number) => boolean): void => {
     for (let s = 0; s < CROSS_STATES; s++) {
       const id = base + s;
-      const p = new Pixels(20, 20, C.sky);
-      make(s, p);
       blocks[id] = {
         ...blocks[0],
-        pixels: Uint8Array.from(p.px),
+        id,
+        pixels: Uint8Array.from(make(s).px),
         nextBl: base + ((s + 1) % CROSS_STATES),
         ntime: CROSS_TICKS,
         touchBl: id,
-        solid: solidWhen(s) ? 15 : 0,
+        solid: solid(s) ? 15 : 0,
         grav: 4,
       };
     }
   };
-  const closed = (s: number) => s < 6;
-  // Row 39: the turtle sits in the road while closed. Row 38: the crossing arm over it.
   chain(
     BARRIER,
-    (s, p) => {
-      if (!closed(s)) return false;
-      p.disc(10, 15, 8, C.green);
-      p.rect(0, 16, 20, 4, C.sky);
-      p.rect(3, 16, 14, 4, C.green);
-      for (const x of [6, 10, 14]) p.rect(x, 9, 2, 3, C.gold);
-      p.rect(17, 14, 3, 5, C.green);
-      p.set(18, 15, C.black);
-      return true;
+    (s) => {
+      const p = bg(STREET.crossX, ROW);
+      if (closed(s)) {
+        const t = new Pixels(20, 20, 255);
+        turtle(t);
+        p.blit(t, 0, 0, 255);
+      }
+      return p;
     },
     closed,
   );
   chain(
-    BARRIER + 12,
-    (s, p) => {
-      if (!closed(s)) return false;
-      for (let x = 0; x < 20; x++) for (let y = 12; y < 20; y++) p.set(x, y, ((x + y) >> 2) % 2 ? C.red : C.white);
-      p.rect(0, 0, 3, 20, C.white);
-      return true;
+    ARM,
+    (s) => {
+      const p = bg(STREET.crossX, ROW - 1);
+      if (closed(s)) {
+        const t = new Pixels(20, 20, 255);
+        arm(t);
+        p.blit(t, 0, 0, 255);
+      }
+      return p;
     },
     closed,
   );
-  const sign = (half: number, row: number) => (s: number, p: Pixels) => {
-    const wait = closed(s);
-    const face = new Pixels(40, 40, C.sky);
-    face.rect(0, 0, 40, 40, C.dark);
-    face.frame(0, 0, 40, 40, wait ? C.red : C.green);
-    micro(face, wait ? 5 : 13, 5, wait ? 'WAIT' : 'GO', C.white, 2);
-    // The countdown bar: six cells that drain, one every nine ticks.
-    const left = 6 - (s % 6);
-    for (let n = 0; n < 6; n++) face.rect(3 + n * 6, 26, 5, 8, n < left ? (wait ? C.red : C.green) : C.dark);
-    p.blit(face.crop(half * 20, row * 20, 20, 20), 0, 0);
-    return true;
-  };
-  for (const [index, [half, row]] of [
-    [0, 0],
-    [1, 0],
-    [0, 1],
-    [1, 1],
-  ].entries()) {
-    chain(SIGN + index * 12, sign(half, row), () => false);
-  }
-  const crossing = (x: number) => x;
-  map.blocks[39 * 100 + crossing(STREET.crossX)] = BARRIER;
-  map.blocks[38 * 100 + crossing(STREET.crossX)] = BARRIER + 12;
-  for (const [index, [dx, dy]] of [
-    [0, 0],
-    [1, 0],
-    [0, 1],
-    [1, 1],
-  ].entries())
-    map.blocks[(35 + dy) * 100 + STREET.crossX - 1 + dx] = SIGN + index * 12;
+  for (const half of [0, 1]) chain(SIGN + half * CROSS_STATES, (s) => signFace(s).crop(half * 20, 0, 20, 20), () => false);
+  map.blocks[ROW * 100 + STREET.crossX] = BARRIER;
+  map.blocks[(ROW - 1) * 100 + STREET.crossX] = ARM;
+  for (const half of [0, 1]) map.blocks[(ROW - 3) * 100 + STREET.crossX - 1 + half] = SIGN + half * CROSS_STATES;
 
   put('street.pal', pal);
   put('street.map', serializeMap(map));

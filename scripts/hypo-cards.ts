@@ -6,6 +6,8 @@ import { POSES } from '../assets/source/teddy/sprites/teddy.ts';
 import { GWINN } from '../assets/source/teddy/sprites/gwinn.ts';
 import { docLeo } from '../assets/source/teddy/sprites/people.ts';
 import { C, car, dial, palette, type Stage } from './hypo-art.ts';
+import { townView } from './hypo-town.ts';
+import { CHEZ_WINDOW } from '../assets/source/chez.ts';
 
 export const TITLE = 'THE STRIPE HYPOTHESIS';
 export const TITLE_CARD = 'THE STRIPE\nHYPOTHESIS';
@@ -18,15 +20,49 @@ function scaled(p: Pixels, src: Pixels, x: number, y: number, scale: number): vo
     }
 }
 
-/** A 320x200 card: headline in the club font, the car, and short lines of text. */
-export function card(headline: string, lines: string[], footer: string, stage: Stage = 0): Uint8Array {
-  const p = new Pixels(320, 200, C.navy);
-  p.rect(0, 151, 320, 49, C.dark);
-  p.rect(0, 154, 320, 3, C.gold);
-  p.blit(car('right', 3), 100, 84, 255);
-  headline.split('\n').forEach((part, i, all) => clubCentered(p, all.length > 1 ? 8 + i * 20 : 20, clubArt(part), C.cream, 2));
-  lines.forEach((line, i) => centered(p, 58 + i * 12, line, C.cream, 1));
-  centered(p, 177, footer, C.gold, 1);
+function inside(poly: readonly (readonly [number, number])[], x: number, y: number): boolean {
+  let hit = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i];
+    const [xj, yj] = poly[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) hit = !hit;
+  }
+  return hit;
+}
+
+/** THE CHEZ at `scale`, with Teddy's head looking out of the door window, clipped to the glass. */
+function carWithTeddy(scale: number): Pixels {
+  const out = car('right', scale);
+  const head = POSES.front.crop(2, 4, 16, 11);
+  const k = Math.max(1, Math.floor(scale / 4));
+  const x0 = Math.round(15.4 * scale - (head.w * k) / 2);
+  const y0 = Math.round(8.3 * scale) - head.h * k;
+  for (let y = 0; y < head.h * k; y++)
+    for (let x = 0; x < head.w * k; x++) {
+      const c = head.get(Math.floor(x / k), Math.floor(y / k));
+      if (c !== 255 && inside(CHEZ_WINDOW, (x0 + x + 0.5) / scale, (y0 + y + 0.5) / scale)) out.set(x0 + x, y0 + y, c);
+    }
+  return out;
+}
+
+/** A dark plaque with a gold rule, for text over the street picture. */
+function plaque(p: Pixels, x: number, y: number, w: number, h: number): void {
+  p.rect(x, y, w, h, C.dark);
+  p.frame(x, y, w, h, C.gold);
+  p.frame(x + 2, y + 2, w - 4, h - 4, C.navy);
+}
+
+/** A 320x200 card: the street behind a plaque with the headline, the car at full size, and short lines of text. */
+export function card(headline: string, lines: string[], footer: string, stage: Stage = 0, tile = 0): Uint8Array {
+  const p = townView(tile);
+  const parts = headline.split('\n');
+  const height = 12 + parts.length * 20 + lines.length * 11;
+  plaque(p, 40, 4, 240, height);
+  parts.forEach((part, i) => clubCentered(p, 12 + i * 20, clubArt(part), C.cream, 2));
+  lines.forEach((line, i) => centered(p, 14 + parts.length * 20 + i * 11, line, C.cream, 1));
+  p.blit(carWithTeddy(4), 80, 4 + height + 4 > 80 ? 4 + height + 6 : 80, 255);
+  plaque(p, 40, 176, 240, 18);
+  centered(p, 181, footer, C.gold, 1);
   return encodeGif({
     width: 320,
     height: 200,
@@ -35,18 +71,24 @@ export function card(headline: string, lines: string[], footer: string, stage: S
   });
 }
 
+/** The results page: the street, a panel with the dial and verdict, and a footer. */
+function resultsBase(): Pixels {
+  const p = townView(24);
+  plaque(p, 40, 4, 240, 26);
+  clubCentered(p, 10, clubArt('TRIAL RESULTS'), C.cream, 2);
+  plaque(p, 40, 40, 240, 112);
+  plaque(p, 40, 176, 240, 18);
+  centered(p, 181, 'TEDDY IS NOT CONVINCED.', C.gold, 1);
+  return p;
+}
+
 /** The results card: the dial reads 25, and the verdict. */
 export function resultsCard(): Uint8Array {
-  const p = new Pixels(320, 200, C.navy);
-  p.rect(0, 0, 320, 200, C.navy);
-  clubCentered(p, 14, clubArt('TRIAL RESULTS'), C.cream, 2);
-  p.rect(40, 50, 240, 104, C.dark);
-  p.frame(40, 50, 240, 104, C.gold);
-  scaled(p, dial(25), 52, 62, 4);
-  centered(p, 66, 'TOP SPEED:', C.cream, 1, undefined, 190);
-  centered(p, 84, '25 MPH.', C.white, 2, undefined, 190);
-  centered(p, 116, 'INCONCLUSIVE.', C.red, 1, undefined, 190);
-  centered(p, 168, 'TEDDY IS NOT CONVINCED.', C.gold, 1);
+  const p = resultsBase();
+  scaled(p, dial(25), 52, 54, 4);
+  centered(p, 70, 'TOP SPEED:', C.cream, 1, undefined, 204);
+  centered(p, 88, '25 MPH.', C.white, 2, undefined, 204);
+  centered(p, 120, 'INCONCLUSIVE.', C.red, 1, undefined, 204);
   return encodeGif({
     width: 320,
     height: 200,
@@ -125,19 +167,16 @@ export function garageCartoon(): Uint8Array {
 /** The needle climbs to 25 and stops; the stamp lands. */
 export function resultsCartoon(): Uint8Array {
   const reel = new Reel(palette(0));
-  const base = new Pixels(320, 200, C.navy);
-  clubCentered(base, 14, clubArt('TRIAL RESULTS'), C.cream, 2);
-  base.rect(40, 50, 240, 104, C.dark);
-  base.frame(40, 50, 240, 104, C.gold);
+  const base = resultsBase();
   for (const mph of [20, 25] as const)
     for (let i = 0; i < 6; i++)
       reel.frame(
         base,
         (p) => {
-          scaled(p, dial(mph), 52, 62, 4);
-          centered(p, 66, 'TOP SPEED:', C.cream, 1, undefined, 190);
-          if (mph === 25 && i > 1) centered(p, 84, '25 MPH.', C.white, 2, undefined, 190);
-          if (mph === 25 && i > 3) centered(p, 116, 'INCONCLUSIVE.', C.red, 1, undefined, 190);
+          scaled(p, dial(mph), 52, 54, 4);
+          centered(p, 70, 'TOP SPEED:', C.cream, 1, undefined, 204);
+          if (mph === 25 && i > 1) centered(p, 88, '25 MPH.', C.white, 2, undefined, 204);
+          if (mph === 25 && i > 3) centered(p, 120, 'INCONCLUSIVE.', C.red, 1, undefined, 204);
         },
         mph === 20 ? 1 : 3,
       );

@@ -6,6 +6,7 @@ import { matchColor, parsePalette } from '@lewismoten/gamemaker-sandbox-tools/fo
 import { Pixels } from '@lewismoten/gamemaker-sandbox-tools/drawing';
 import { chezPicture, type ChezInk } from '../assets/source/chez.ts';
 import { micro } from '../assets/source/teddy/art/draw.ts';
+import { R, addStreetColors } from './hypo-colors.ts';
 
 /** Palette slots the car's stripes use: lower stripe, upper stripe, white pinstripe. */
 export const SLOT = { low: 250, high: 251, pin: 252 } as const;
@@ -33,6 +34,7 @@ export const C = {
 /** The palette for a trial: the shared art, plus the three stripe slots for that stage. */
 export function palette(stage: Stage): Uint8Array {
   const p = BASE.slice();
+  addStreetColors(p);
   const set = (slot: number, rgb: number[]) => p.set(rgb, slot * 3);
   const red = Array.from(BASE.subarray(C.red * 3, C.red * 3 + 3));
   set(SLOT.low, stage >= 1 ? [9, 10, 12] : red);
@@ -42,9 +44,9 @@ export function palette(stage: Stage): Uint8Array {
 }
 
 export const carInk: ChezInk = {
-  body: [C.red, C.red, C.red],
-  trim: C.black,
-  glass: [C.black, C.white],
+  body: [R('carRed', 0), R('carRed', 1), R('carRed', 2)],
+  trim: R('carRed', 0),
+  glass: [R('glass', 0), R('glass', 2)],
   roof: C.black,
   tire: C.black,
   hub: C.white,
@@ -57,7 +59,7 @@ export const carInk: ChezInk = {
 
 /** THE CHEZ with stripe pixels in the reserved slots; pair it with palette(stage). */
 export function car(facing: 'left' | 'right' = 'right', scale = 1): Pixels {
-  const plain = chezPicture({ ...carInk, stripe: C.red, pin: C.red }, facing, scale);
+  const plain = chezPicture({ ...carInk, stripe: R('carRed', 1), pin: R('carRed', 1) }, facing, scale);
   const marked = chezPicture({ ...carInk, stripe: SLOT.low, pin: SLOT.pin }, facing, scale);
   const out = plain.crop(0, 0, plain.w, plain.h);
   for (let i = 0; i < out.px.length; i++) {
@@ -65,20 +67,6 @@ export function car(facing: 'left' | 'right' = 'right', scale = 1): Pixels {
     const y = Math.floor(i / plain.w) / scale;
     out.px[i] = marked.px[i] === SLOT.pin ? SLOT.pin : y < 13 ? SLOT.high : SLOT.low;
   }
-  return out;
-}
-
-/** The 20x10 actor car, halved from the large drawing (it keeps the stripe slots). */
-export function carActor(): Pixels {
-  const big = car('right', 1);
-  const out = new Pixels(20, 10, 255);
-  for (let y = 0; y < 10; y++)
-    for (let x = 0; x < 20; x++) {
-      // Prefer a stripe pixel from the 2x2 patch so the stripes survive the halving.
-      const patch = [0, 1, 2, 3].map((n) => big.px[(y * 2 + (n >> 1)) * 40 + x * 2 + (n & 1)]);
-      const stripe = patch.find((c) => c === SLOT.low || c === SLOT.high);
-      out.px[y * 20 + x] = stripe ?? patch[3];
-    }
   return out;
 }
 

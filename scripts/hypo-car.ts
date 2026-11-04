@@ -3,7 +3,8 @@
 // speedometer showing that same number. A scene link on the hill's crest swaps the file.
 import { emptyBlock, type Block } from '@lewismoten/gamemaker-sandbox-tools/formats/blocks';
 import { emptyFrame, newCharacter, type Character, type Frame, type Sequence } from '@lewismoten/gamemaker-sandbox-tools/formats/character';
-import { C, carActor, dial } from './hypo-art.ts';
+import { C, dial } from './hypo-art.ts';
+import { carSprite } from './hypo-carsprite.ts';
 
 export type Mph = 20 | 25 | 30;
 /** Pixels per tick for each speed: the speedometer's number divided by five. */
@@ -14,16 +15,18 @@ const DIAL_SLOT: Record<Mph, number> = { 20: 3, 25: 4, 30: 5 };
 
 export function carSprites(): Block[] {
   const sprites = Array.from({ length: 50 }, (_, i) => emptyBlock(i, true));
-  const car = carActor();
+  const car = carSprite();
   for (let y = 0; y < 10; y++) for (let x = 0; x < 20; x++) sprites[0].pixels[(y + 10) * 20 + x] = car.px[y * 20 + x];
   // Teddy's matching ears and white blaze peek out of the passenger door window.
   for (const [x, y, c] of [
-    [9, 11, C.tan],
-    [11, 11, C.tan],
-    [9, 12, C.tan],
-    [10, 12, C.white],
-    [11, 12, C.tan],
-    [10, 13, C.white],
+    [6, 12, C.tan],
+    [8, 12, C.tan],
+    [6, 13, C.tan],
+    [7, 13, C.white],
+    [8, 13, C.tan],
+    [6, 14, C.tan],
+    [7, 14, C.white],
+    [8, 14, C.tan],
   ])
     sprites[0].pixels[y * 20 + x] = c;
   sprites[1].pixels.set(sprites[0].pixels);
