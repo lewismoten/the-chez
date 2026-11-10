@@ -19,7 +19,10 @@
     "check:axe": "tsx scripts/check-axe.mjs",
     "check:isolation": "tsx scripts/check-isolation.mjs",
     "build:zip": "tsx scripts/build-zip.ts",
-    "check:archives": "tsx scripts/check-archives.mjs"
+    "check:archives": "tsx scripts/check-archives.mjs",
+    "check:loading": "node --import tsx scripts/check-loading.mjs",
+    "check:buttons": "node --import tsx scripts/check-buttons.mjs",
+    "check:launch": "node --import tsx scripts/check-launch.mjs"
   },
   "repository": {
     "type": "git",

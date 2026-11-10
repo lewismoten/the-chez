@@ -30,3 +30,9 @@ The build uses relative URLs, so it works at any path. Pushing a `pages-v*` tag 
 - [Playing the sample game](docs/playing.md)
 - [Game data and engine techniques](docs/engine-techniques.md)
 - [Credits and notices](NOTICE.md)
+
+## Playback and credits
+
+The bundled game has ten playable levels, counting both hill scenes, followed by the conclusion cartoon. A connection is needed to download the bundled ZIP; offline play is not guaranteed. Selected game files are read locally in your browser. Folder imports are limited to 4,096 files and 128 MiB before reading their contents.
+
+The page self-hosts DM Sans (copyright 2014 The DM Sans Project Authors) and Space Grotesk (copyright 2020 The Space Grotesk Project Authors), both under SIL Open Font License 1.1. Fonts and complete licenses are in [public/fonts/](public/fonts/); see [credits and notices](NOTICE.md). There is no Google Fonts request at runtime.

@@ -16,9 +16,12 @@ npm run check:guidance
 npm run check:music
 npm run check:isolation
 npm run check:archives
+npm run check:loading
+npm run check:buttons
+npm run check:launch
 ```
 
-`check` typechecks the application. `build` typechecks and builds it with Vite. The browser checks require locally installed Google Chrome; Playwright uses its `chrome` channel.
+`check:loading`, `check:buttons`, and `check:launch` run regressions for download recovery, folder limits, button inputs, launch cleanup and overlay focus without a browser server. `check` typechecks the application. `build` typechecks and builds it with Vite. The browser checks require locally installed Google Chrome; Playwright uses its `chrome` channel.
 
 - `check:release` builds into a temporary directory and previews it on port 4176. Public page controls play the complete shipped demonstration, check the mobile finale, and start a new game. It checks for missing assets and browser errors, removes the scratch build, and stops its server.
 - `check:guidance` uses port 4177. It checks each level's guidance text, the road atlas (one entry per level) and the tip on a phone after continuing at the hill.
