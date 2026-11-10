@@ -42,7 +42,7 @@ A puddle (`scripts/hypo-mower.ts`) is built from animated blocks: three ripple f
 
 ## The shipped recording
 
-`npm run record:demo` plays the built game headless through all ten levels with arrows only, never holding two keys, and saves `assets/teddy-tour.rec`. `check:game` replays it, requires a win without a nap, and requires the keys to stay among arrows, Space and Enter.
+`npm run record:demo` plays the built game headless through all ten playable levels (including both hill scenes) with arrows only, never holding two keys, and saves `assets/teddy-tour.rec`. `check:game` replays it, requires a win without a nap, and requires the keys to stay among arrows, Space and Enter.
 
 ## Website state and guidance
 

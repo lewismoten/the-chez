@@ -1,6 +1,6 @@
 # Playing the bundled game
 
-The Stripe Hypothesis is the game fixture included with this engine verification project. Doc Leo, PhD, swears racing stripes make THE CHEZ go faster. Teddy rides along with a clipboard. There are ten levels (the hill counts as two scenes of play, and the last level is a cartoon); each of the first three trials adds a stripe.
+The Stripe Hypothesis is the game fixture included with this engine verification project. Doc Leo, PhD, swears racing stripes make THE CHEZ go faster. Teddy rides along with a clipboard. There are ten levels (the hill counts as two playable scenes; the conclusion cartoon follows these levels); each of the first three trials adds a stripe.
 
 Start the application using the [setup instructions](../README.md), then choose **Play as Teddy**.
 

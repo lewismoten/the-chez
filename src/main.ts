@@ -2,6 +2,7 @@
 import './style.css';
 import { type GameFiles, Machine, runGame } from '@lewismoten/gamemaker-sandbox-engine';
 import { bundledFiles, selectedFiles } from './game-files';
+import { bindGameButton } from './game-button';
 import { CHAPTERS } from './chapters';
 import { fillRoadAtlas, roadMessage } from './road-guide';
 import { createMusicControl } from './music-control';
@@ -38,7 +39,16 @@ const chapterLabels = CHAPTERS.map((chapter) => chapter.name);
 const chapterGoals = CHAPTERS.map((chapter) => chapter.required);
 const goalText = (index: number) => (chapterGoals[index] > 0 ? `0 / ${chapterGoals[index]}` : (CHAPTERS[index].readout ?? ''));
 
-function chapterControls(index: number) {
+function chapterControls(index?: number) {
+  if (index === undefined) {
+    for (const direction of ['left', 'right'])
+      document.querySelector(`#${direction}`)!.setAttribute('aria-label', `Move ${direction}`);
+    progressLabel.textContent = 'GAME';
+    document.querySelector('#move-label')!.textContent = 'Move';
+    document.querySelector('#bark-label')!.textContent = 'Action (Space)';
+    document.querySelector('#bark')!.textContent = 'Action';
+    return;
+  }
   const driving = CHAPTERS[index]?.mode === 'drive';
   for (const direction of ['left', 'right'])
     document.querySelector(`#${direction}`)!.setAttribute('aria-label', `${driving ? 'Drive THE\u00a0CHEZ' : 'Move Teddy'} ${direction}`);
@@ -46,6 +56,11 @@ function chapterControls(index: number) {
   document.querySelector('#move-label')!.textContent = driving ? 'Drive THE\u00a0CHEZ' : 'Move Teddy';
   document.querySelector('#bark-label')!.textContent = driving ? 'Honk' : 'Bark';
   document.querySelector('#bark')!.textContent = driving ? 'Honk!' : 'Bark!';
+}
+
+function showOverlay() {
+  overlay.hidden = false;
+  overlayTitle.focus({ preventScroll: true });
 }
 
 async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: number) {
@@ -64,7 +79,7 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
   machine = current;
   overlay.hidden = true;
   status.textContent = demo ? 'Teddy’s demo' : 'Playing';
-  chapterControls(chapterIndex);
+  chapterControls(skipMenu ? chapterIndex : undefined);
   if (skipMenu) {
     chapterName.textContent = chapterLabels[chapterIndex];
     stripeProgress.textContent = goalText(chapterIndex);
@@ -76,8 +91,8 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
   }
   canvas.focus({ preventScroll: true });
   canvas.closest('.game-shell')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  await current.audio.resume();
   try {
+    await current.audio.resume();
     await runGame(current, game, {
       record: skipMenu && !demo,
       playback,
@@ -185,7 +200,7 @@ async function run(files: GameFiles, skipMenu: boolean, demo = false, resume?: n
       if (demo && retryScene !== undefined)
         overlayText.textContent = `${chapterLabels[retryScene - 2]} is saved for you. Continue there with three fresh tries.`;
       startButton.textContent = outcome === 'lost' ? 'Try this road again' : canContinue ? 'Continue with Teddy' : 'Play as Teddy';
-      overlay.hidden = false;
+      showOverlay();
     }
   } finally {
     musicLink.release();
@@ -199,13 +214,18 @@ async function startBundled(demo = false) {
   startButton.disabled = true;
   watchButton.disabled = true;
   status.textContent = 'Loading game…';
+  engineStatus.textContent = '';
   try {
     await run(await bundledFiles(), true, demo, demo ? undefined : retryScene);
   } catch (error) {
     if (error instanceof Error && error.message === 'Game aborted') return;
     status.textContent = 'Could not start';
-    engineStatus.textContent = error instanceof Error ? error.message : 'Could not start the game.';
-    overlay.hidden = false;
+    const message = error instanceof Error ? error.message : 'Could not start the game. Try again.';
+    engineStatus.textContent = message;
+    overlayTitle.textContent = 'Could not start';
+    overlayText.textContent = message;
+    startButton.textContent = 'Retry';
+    showOverlay();
   } finally {
     if (request === launch) {
       startButton.disabled = false;
@@ -273,11 +293,6 @@ for (const [id, scan] of [
   ['bark', 57],
 ] as const) {
   const button = document.querySelector<HTMLButtonElement>(`#${id}`)!;
-  button.addEventListener('pointerdown', (event) => {
-    event.preventDefault();
-    button.setPointerCapture(event.pointerId);
-    machine?.keyboard.inject(scan, true);
-  });
-  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(type, () => machine?.keyboard.inject(scan, false));
+  bindGameButton(button, scan, () => machine);
 }
 window.addEventListener('pagehide', () => machine?.destroy());
