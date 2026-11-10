@@ -76,9 +76,12 @@
   .touch-controls{width:100%;margin-left:0}
 }
 
-/* Music is an ordinary, keyboard-reachable game control; keep all six targets visible. */
-@media(max-width:650px){.touch-controls{grid-template-columns:repeat(6,minmax(0,1fr))}}
+/* Wrap controls below the game so every target has room for touch and its label. */
+.touch-controls{flex-wrap:wrap}
+.touch-controls button{min-width:44px;flex-shrink:0}
+@media(max-width:650px){.touch-controls{grid-template-columns:repeat(auto-fit,minmax(64px,1fr))}}
 #music-toggle[aria-pressed="false"]{background:#e2dac8}
+.touch-controls button:active,.touch-controls button[data-pressed="true"]{background:#20323b;color:#fff8e9;border-color:#20323b;box-shadow:inset 0 3px 0 #0b181a}
 
 /* File pickers keep native keyboard access and visible focus on their large labels. */
 #game-archive{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}

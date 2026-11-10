@@ -5,11 +5,13 @@ type GameInput = Pick<Machine, 'keyboard'>;
 export function bindGameButton(button: HTMLButtonElement, scan: number, getMachine: () => GameInput | undefined) {
   let held: GameInput | undefined;
   const press = () => {
+    button.setAttribute('data-pressed', 'true');
     if (held) return;
     held = getMachine();
     held?.keyboard.inject(scan, true);
   };
   const release = () => {
+    button.setAttribute('data-pressed', 'false');
     held?.keyboard.inject(scan, false);
     held = undefined;
   };
