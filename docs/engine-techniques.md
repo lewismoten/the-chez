@@ -8,7 +8,7 @@ For controls, see [Playing the bundled game](playing.md). For rebuilding and che
 
 `scripts/hypo-car.ts` builds THE CHEZ as a native `.CHR` in three speeds. The steering frames are not momentum frames: each tick moves the car a fixed number of pixels (`PIXELS_PER_TICK`: 4, 5 or 6), so 20, 25 and 30 mph are exact in the engine. Releasing the key stops the car, which keeps play easy for slow hands. The speedometer is the top block (`pic1`) of every frame of the same character, drawn by `dial(mph)` in `scripts/hypo-art.ts`, so the number on screen is the number the file moves at. Moving the dial with the car means it needs no map blocks and works on a scrolling view.
 
-A downhill or uphill stretch is a scene link on the crest block into a scene with the same map and the other speed's character file. `scripts/check-speed.ts` measures all three speeds in the headless simulation and proves a crest link fires. `check:game` repeats those checks on the shipped files. Phase 1 ships only the 25 mph car (Control Run is flat); the 30 and 20 mph cars are built and checked, ready for the hill levels.
+A downhill or uphill stretch is a scene link on the crest block into a scene with the same map and the other speed's character file. `scripts/check-speed.ts` measures all three speeds in the headless simulation and proves a crest link fires. `check:game` repeats those checks on the shipped files. The scene graph uses the 25 mph car on the flat trials, the 20 mph car uphill, and the 30 mph car downhill and in the finale.
 
 ## Stripes as a palette swap
 
@@ -42,7 +42,7 @@ A puddle (`scripts/hypo-mower.ts`) is built from animated blocks: three ripple f
 
 ## The shipped recording
 
-`npm run record:demo` plays the built game headless through all ten playable levels (including both hill scenes) with arrows only, never holding two keys, and saves `assets/teddy-tour.rec`. `check:game` replays it, requires a win without a nap, and requires the keys to stay among arrows, Space and Enter.
+`npm run record:demo` plays the built game headless through all ten playable levels (including both hill scenes) with arrows and Space (the honk), never holding two keys, and saves `assets/teddy-tour.rec`. `check:game` replays it, requires a win without a nap, and requires the keys to stay among arrows, Space and Enter.
 
 ## Website state and guidance
 

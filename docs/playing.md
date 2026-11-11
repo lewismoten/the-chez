@@ -1,6 +1,6 @@
 # Playing the bundled game
 
-The Stripe Hypothesis is the game fixture included with this engine verification project. Doc Leo, PhD, swears racing stripes make THE CHEZ go faster. Teddy rides along with a clipboard. There are ten levels (the hill counts as two playable scenes; the conclusion cartoon follows these levels); each of the first three trials adds a stripe.
+The Stripe Hypothesis is the game fixture included with this engine verification project. Doc Leo, PhD, swears racing stripes make THE CHEZ go faster. Teddy rides along with a clipboard. There are ten playable scenes across nine numbered stages (the hill is two scenes), and a conclusion cartoon follows them. The three stripes are added after Gwinn and the Tape, Trial 1: Tricycle, and Wind Tunnel.
 
 Start the application using the [setup instructions](../README.md), then choose **Play as Teddy**.
 
@@ -17,7 +17,7 @@ Arrows carry the whole game: the four arrows walk Teddy in the driveway and the 
 7. **Trial 3: Mower.** A rainy park road in the rain palette swap (the street's own colors drained to gray-blue, with slanted rain painted over it). The neighbor's riding mower, with the neighbor under an umbrella, keeps a set slow pace in the lane below. Puddles ripple across the car's lane and slow it (a pull back on one block frame in three), but never stop it; the car that holds Right is first to the line. Nothing hurts. The results card reads **TOP SPEED: 25 MPH. INCONCLUSIVE. IT WAS RAINING.**
 8. **Night Trial.** The same street after dark: the night palette swap, lamp posts that throw dithered pools of light on the road, lit windows, the car driving with its headlights on, and a lit open garage at the end of the street. Hold Right to drive home. The results card reads **TOP SPEED: 25 MPH. INCONCLUSIVE. IT WAS DARK.**
 9. **Thirty Downhill.** The finale: a long parade route that only goes down, in warm afternoon light. The needle reads 30 the whole way (the speedometer riding above the car), and a parade float shaped like a giant sneaker, with two friendly clowns waving from it, rolls down the lane below at a steady 25 mph. Hold Right to pass it and reach the finish line at the bottom.
-10. **Conclusion.** A science-fair hall: Doc Leo's board reads **TOP SPEED: 30 MPH. CONCLUSIVE!** while he celebrates, and Teddy has the last word: "It's a hill." Then the credits cards, and the ending music plays out before the last card waits for a key.
+After the ninth stage, the **Conclusion** cartoon plays in a science-fair hall: Doc Leo's board reads **TOP SPEED: 30 MPH. CONCLUSIVE!** while he celebrates, and Teddy has the last word: "It's a hill." Then the credits cards, and the ending music plays out before the last card waits for a key.
 
 After the control run, a results cartoon reads **TOP SPEED: 25 MPH. INCONCLUSIVE.** After the hill, the card reads **TOP SPEED: 30 MPH. INCONCLUSIVE. THE ROAD WAS TILTED.** Teddy is not convinced until the finale.
 
