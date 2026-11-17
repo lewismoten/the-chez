@@ -278,7 +278,8 @@ playSelected.addEventListener('click', async () => {
     await run(files, false);
     engineStatus.textContent = 'Game ended.';
   } catch (error) {
-    engineStatus.textContent = error instanceof Error ? error.message : 'Could not start this game.';
+    if (!(error instanceof Error && error.message === 'Game aborted'))
+      engineStatus.textContent = error instanceof Error ? error.message : 'Could not start this game.';
   } finally {
     playSelected.disabled = false;
   }
