@@ -126,7 +126,7 @@ try {
   await page.waitForFunction(() =>
     document
       .querySelector("#engine-status")
-      ?.textContent?.includes("several games"),
+      ?.textContent?.toLowerCase().includes("several games"),
   );
   assert.ok(
     !(await page.locator("#engine-status").textContent()).includes(
