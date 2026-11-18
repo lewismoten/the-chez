@@ -262,7 +262,7 @@ function chooseFiles(files: FileList | null) {
   const hasGame = selected.some((file) => /\.(gam|zip|exe|gmpak|gz)$/i.test(file.name));
   playSelected.disabled = !hasGame;
   filesStatus.textContent = hasGame
-    ? `${selected.length} files ready to play.`
+    ? `${selected.length} files selected. Choose Play selected game to load them.`
     : selected.length
       ? 'Choose a game folder, ZIP, or self-extracting ZIP.'
       : 'No other game selected.';
