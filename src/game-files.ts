@@ -35,7 +35,7 @@ export async function bundledFiles(): Promise<GameFiles> {
     failedBefore = true;
     throw new Error(
       error instanceof BadDownload
-        ? 'The game download looks damaged. Try again in a moment.'
+        ? 'The game download was incomplete or not a game ZIP. Check your connection and try again.'
         : 'Could not load The Stripe Hypothesis. Check your connection and try again.',
     );
   }
