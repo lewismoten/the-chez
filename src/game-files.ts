@@ -4,7 +4,7 @@ import { unpackGame, unpackGames } from "@lewismoten/gamemaker-sandbox-archives"
 let archive: Promise<ArrayBuffer> | undefined;
 
 export async function bundledFiles(): Promise<GameFiles> {
-  // Only retain bytes that have successfully unpacked into a playable game.
+  // Only cache bytes after unpacking succeeds and a main game file is found.
   const pending = archive ??= (async () => {
     const response = await fetch(`${import.meta.env.BASE_URL}hypothesis.zip`);
     if (!response.ok) throw new Error('Game download failed.');
@@ -35,7 +35,7 @@ export async function selectedFiles(files: File[]): Promise<GameFiles> {
   if (games.length !== 1)
     throw new Error(
       games.length
-        ? "This archive contains several games. Extract it and choose one game's folder."
+        ? "Several games were found. Choose a folder containing one game, or extract the archive and choose one game's folder."
         : "No Game-Maker .GAM file was found in these files.",
     );
   return new GameFiles(games[0].entries);
